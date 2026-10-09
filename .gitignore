@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# render output + caches (never commit)
+/out/
+/.reel-cache/
+*.mp4
+!tests/golden/*.mp4
+
+.DS_Store
+
+# API keys for the optional LLM and speech services: never commit them
+.env
+.env.*
+!.env.example
+
+# Reel Studio: the web app's sources live in ui/ (its build is committed under src/reel/server/static/)
+ui/node_modules/
+ui/.vite/
+ui/coverage/
+/studio/

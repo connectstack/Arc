@@ -1,0 +1,53 @@
+# Install once:  uv run pre-commit install   (or: pre-commit install)
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+        exclude: ^(examples/.*\.json|schema/.*\.json|templates/.*\.json)$
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1500"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.7
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  # Never commit an API key (the optional LLM stage reads them from the environment or a git-ignored .env)
+  - repo: local
+    hooks:
+      - id: no-api-keys
+        name: no API keys in committed files
+        entry: 'sk-(proj-|ant-)?[A-Za-z0-9_-]{24,}|sk_[a-f0-9]{32,}|ELEVENLABS_API_KEY=[^\s#]{8,}'
+        language: pygrep
+        types: [text]
+        exclude: ^(\.env\.example|tests/.*|docs/prompts/.*)$
+
+  # Project-specific guards: run through the project's own environment so they
+  # always see the real registries.
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (src)
+        entry: .venv/bin/python -m mypy src
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: reel-lint-examples
+        name: reel lint examples/*.json
+        entry: .venv/bin/python -m reel lint
+        language: system
+        files: ^examples/.*\.json$
+      - id: reel-generated-files-fresh
+        name: schema, template manifest and LLM prompts are up to date
+        entry: .venv/bin/python -m reel schema --check
+        language: system
+        pass_filenames: false
+        files: ^(src/reel/(core/spec|core/camera|core/captions|templates|actions|styles|audio/sfx|llm).*|schema/.*|docs/prompts/.*)$

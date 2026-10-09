@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "reel"
+version = "0.1.0"
+description = "Offline, template-driven script-to-animation reel renderer: JSON scene spec -> 1080x1920 H.264 MP4"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["animation", "video", "skia", "ffmpeg", "reels", "procedural"]
+dependencies = [
+  "pydantic>=2.6,<3",
+  "skia-python>=138",
+  "numpy>=1.26",
+  "pillow>=10.3",
+  "typer>=0.12",
+  "rich>=13.7",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+tts = ["piper-tts>=1.2"]
+ui = ["fastapi>=0.115", "uvicorn>=0.30"]  # `reel serve`: Reel Studio, the local web app
+dev = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "pytest>=8",
+  "pytest-cov>=5",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "pre-commit>=3.7",
+]
+
+[project.scripts]
+reel = "reel.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/reel"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/reel", "schema", "examples", "docs", "tests", "ui", "README.md", "pyproject.toml"]
+
+# ---------------------------------------------------------------- tooling
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "C4", "PIE", "PT"]
+ignore = [
+  "E501",    # long lines are left to the formatter
+  "RUF012",  # mutable class attrs: registries/dataclasses use them deliberately
+  "B905",    # zip() strict= is noise for our fixed-length pairs
+  "B027",    # StylePack hook methods are deliberately empty defaults
+  "SIM108",
+  "RUF001", "RUF002", "RUF003",  # intentional unicode (arrows, x) in docs/strings
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011", "PT006", "PT011", "PT018"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+markers = [
+  "render: tests that render real frames with skia (a few seconds each)",
+  "ffmpeg: tests that need the ffmpeg binary",
+  "slow: tests that take more than ~10 seconds",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

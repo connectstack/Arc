@@ -1,0 +1,930 @@
+=== SYSTEM PROMPT (5657 characters, about 1414 tokens) ===
+You turn a SCRIPT into ONE JSON scene spec for "reel", an offline renderer of 45-60 second vertical animated shorts (9:16). Reply with that JSON object only: no prose, no markdown fences, no comments, no trailing commas, no indentation. A machine validates it; every problem is sent back and you resend the FULL corrected JSON. Use only names from the CATALOG, spelled exactly. Never invent params. Leave out every optional field.
+
+SHAPE (CAPITALS are CATALOG names; times are seconds counted from the start of the scene)
+{"version":"1.0","meta":{"title":str,"style":"paper_cutout","seed":0,"target_duration_sec":50},
+"characters":[{"id":str,"archetype":ARCHETYPE,"palette":{"shirt":"#rrggbb"}}],
+"scenes":[{"id":"s01","duration_sec":s,"background":{"template":BACKGROUND,"params":{...}},
+"layers":[{"character":id,"position":SLOT,"actions":[{"name":ACTION,"t0":s,"t1":s}]}],
+"captions":[{"text":str,"t0":s,"t1":s,"style":CAPTION_STYLE,"speaker":id}],
+"transition_out":{"type":TRANSITION,"duration":s}}]}
+
+RULES (all are checked)
+- Write 8-10 scenes of 4-7 s each. Keep the reply short.
+- DURATION: total = (sum of every duration_sec) - (sum of the transition durations, counting 0 for the last scene and for "cut"). The total MUST be 45-60 s: aim for 50 s. Example: 9 scenes adding up to 52.0 s with 4 transitions of 0.5 s (2.0 s) give 52.0 - 2.0 = 50 s.
+- Times stay inside the scene: 0 <= t0 < t1 <= duration_sec. Give an action at least its "min" length from the catalog.
+- Ids are unique: scenes "s01", "s02", ...; character ids lowercase. Define every character once in "characters" with its own shirt colour. At most 2 characters per scene, at most 2 actions per layer, ONE caption per scene (under 12 words).
+- SLOT is left, center or right (two characters: left and right).
+- A character who arrives later begins with enter_from (they start off screen and walk to their slot).
+- A caption said by a character has that character's id as "speaker"; narration has none.
+  The speaker talks by itself, so never add a talk action.
+- The FIRST scene also has a "title" caption (2-6 words) lasting about 2.5 s.
+- End on a "shout" caption (3 words at most).
+- Match background, time_of_day and mood to what happens, and vary them. Captions are the script's own words, in order: copy them, never reword (a long sentence goes over several captions); a script line 'Name: words' is a caption with text 'words' only and "speaker" = that character's id. Keep the order of events and the twist. Do not write camera, sfx, props, ease or audio.
+
+CATALOG (the only names you may use)
+BACKGROUNDS (scene "background" = {"template": NAME, "params": {...}}); every one takes time_of_day=dawn|day|dusk|night; mood=neutral|warm|cool|dramatic|playful|gloomy
+- abstract: Soft gradient stage with floating geometric shapes | pattern=blobs|circles|blocks|waves|rays
+- forest: Layered woodland, misty hills | season=spring|summer|autumn|winter
+- rooftop: City rooftop with a layered skyline | skyline=dense|sparse|harbor
+- room: Interior set with a window onto the sky | room=bedroom|living|office|kitchen
+- stage: Studio / theatre stage for titles and punchlines | backdrop=curtain|spotlight|city_lights|confetti
+- street: Charming city street | weather=clear|rain|snow|fog
+- whiteboard: Explainer set, a clean whiteboard filling the frame | grid=none|dots|lines
+
+ACTIONS (min = shortest length in s; * = moves the character)
+- cry (min 1): Tears, trembling shoulders and a hand wiping the eye | style=sob|weep|bawl
+- enter_from* (min 0.6): Enter the frame from an edge | style=walk|run|slide|drop
+- exit_to* (min 0.6): Leave the frame through an edge | side=left|right|auto
+- fall (min 0.8): Slip, trip or faint | kind=slip|trip|faint
+- idle (min 0.3): Stand and breathe | mood=calm|bored|nervous|happy|tired|angry|sad|proud
+- jump* (min 0.5): Crouch, leap, land with squash and settle | style=normal|cheer|tuck|star
+- laugh (min 0.8): Squinting, shaking laugh | style=chuckle|belly|cackle
+- look_at (min 0.3): Turn head and eyes towards a target | target=character id|slot|[x,y]
+- pick_up (min 1): Crouch, grab an item from the floor and stand up with it | prop=string
+- point (min 0.5): Extend an arm and point at a direction | target=character id|slot|[x,y]
+- run* (min 0.6): Run to a point or slot | to=character id|slot|[x,y]; dx=-2..2
+- surprise (min 0.5): Jolt, recoil with wide eyes and an exclamation burst
+- think (min 1): Hand to chin | aha=true|false
+- walk* (min 0.6): Walk to a point or slot | to=character id|slot|[x,y]; dx=-2..2
+- wave (min 0.8): Raise a hand beside the head and wave hello | hand=auto|right|left|both
+
+TRANSITIONS (scene "transition_out" = {"type": NAME, "duration": 0.4-0.8})
+- crossfade
+- cut (duration 0)
+- page_flip | direction=left|right
+- wipe | direction=left|right|up|down
+
+CAPTION STYLES
+- shout: Huge slam-in text with a camera-shake feel
+- subtitle: Reading text on the ground line
+- title: Large headline in the upper third
+
+ARCHETYPES
+- boss: Sharp suit and tie
+- elder: Slightly stooped with white hair
+- everyman: Friendly all-rounder, medium build
+- hero: Tall and broad-shouldered
+- kid: Small with a big head and short limbs
+- robot: Boxy metal body
+
+EXAMPLE (format only; write your own content)
+{"id":"mia","archetype":"kid","palette":{"shirt":"#e63946","pants":"#264653"}}
+{"id":"s02","duration_sec":5.2,"background":{"template":"abstract","params":{"time_of_day":"dusk"}},"layers":[{"character":"mia","position":"left","actions":[]}],"captions":[{"text":"Hi there!","t0":0.8,"t1":3.4,"style":"subtitle","speaker":"mia"}],"transition_out":{"type":"wipe","duration":0.5}}
+
+Answer with ONE JSON object and nothing else.
+
+=== USER MESSAGE ===
+Turn this script into the scene spec. Style: "paper_cutout". Target length: 50 s (meta.target_duration_sec = 50). meta.seed = 0. Keep it SHORT: 8-10 scenes, one caption each. The captions must be this script's own words, in order: the same language, nothing reworded, nothing added.
+
+SCRIPT
+<<<
+Mia tiptoes into the kitchen at midnight. The cookie jar is empty!
+"Grandpa, someone stole our cookies!" she whispers.
+Grandpa walks in, yawning. "Impossible. I guarded that jar all day."
+>>>
+
+Reply with the JSON object only.
+
+=== JSON SCHEMA (16198 characters; sent through the provider's structured-output channel, not in the prompt text) ===
+{
+ "$defs": {
+  "ActionSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "name": {
+     "description": "Registered action: walk, wave, talk, ...",
+     "title": "Name",
+     "type": "string",
+     "enum": [
+      "cry",
+      "enter_from",
+      "exit_to",
+      "fall",
+      "idle",
+      "jump",
+      "laugh",
+      "look_at",
+      "pick_up",
+      "point",
+      "run",
+      "surprise",
+      "talk",
+      "think",
+      "walk",
+      "wave"
+     ]
+    },
+    "t0": {
+     "minimum": 0,
+     "title": "T0",
+     "type": "number"
+    },
+    "t1": {
+     "minimum": 0,
+     "title": "T1",
+     "type": "number"
+    },
+    "params": {
+     "additionalProperties": true,
+     "title": "Params",
+     "type": "object"
+    }
+   },
+   "required": [
+    "name",
+    "t0",
+    "t1"
+   ],
+   "title": "ActionSpec",
+   "type": "object"
+  },
+  "AudioSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "music": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Path to a music file, 'procedural' or 'procedural:<mood>' for the built-in generated bed, or null for no music",
+     "title": "Music"
+    },
+    "voiceover": {
+     "default": "none",
+     "enum": [
+      "tts",
+      "file",
+      "none"
+     ],
+     "title": "Voiceover",
+     "type": "string"
+    },
+    "ducking": {
+     "default": true,
+     "description": "lower the music under voice",
+     "title": "Ducking",
+     "type": "boolean"
+    },
+    "voiceover_file": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Audio file used when voiceover='file'",
+     "title": "Voiceover File"
+    },
+    "tts_voice": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Default TTS voice id/model",
+     "title": "Tts Voice"
+    },
+    "music_gain_db": {
+     "default": -16.0,
+     "maximum": 12,
+     "minimum": -60,
+     "title": "Music Gain Db",
+     "type": "number"
+    },
+    "voice_gain_db": {
+     "default": 0.0,
+     "maximum": 12,
+     "minimum": -60,
+     "title": "Voice Gain Db",
+     "type": "number"
+    },
+    "sfx_gain_db": {
+     "default": -8.0,
+     "maximum": 12,
+     "minimum": -60,
+     "title": "Sfx Gain Db",
+     "type": "number"
+    },
+    "auto_sfx": {
+     "default": false,
+     "description": "add footsteps/landings emitted by actions",
+     "title": "Auto Sfx",
+     "type": "boolean"
+    }
+   },
+   "title": "AudioSpec",
+   "type": "object"
+  },
+  "BackgroundSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "template": {
+     "description": "Background template, e.g. room | street | forest | abstract",
+     "title": "Template",
+     "type": "string",
+     "enum": [
+      "abstract",
+      "forest",
+      "rooftop",
+      "room",
+      "stage",
+      "street",
+      "whiteboard"
+     ]
+    },
+    "params": {
+     "additionalProperties": true,
+     "description": "Template parameters (time_of_day, mood, density, ...)",
+     "title": "Params",
+     "type": "object"
+    }
+   },
+   "required": [
+    "template"
+   ],
+   "title": "BackgroundSpec",
+   "type": "object"
+  },
+  "CameraMoveSpec": {
+   "additionalProperties": false,
+   "description": "One camera move. `from`/`to` meaning depends on `type`:\npan [x,y] screen-fraction offset | zoom scale (1=none) | dolly 0..1 push-in |\nshake intensity 0..1 | rack_focus a depth ('background'|'midground'|'foreground'|0..1).",
+   "properties": {
+    "type": {
+     "description": "pan | zoom | shake | dolly | rack_focus ...",
+     "title": "Type",
+     "type": "string",
+     "enum": [
+      "dolly",
+      "pan",
+      "rack_focus",
+      "shake",
+      "zoom"
+     ]
+    },
+    "from": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "maxItems": 2,
+       "minItems": 2,
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "From"
+    },
+    "to": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "maxItems": 2,
+       "minItems": 2,
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "To"
+    },
+    "t0": {
+     "minimum": 0,
+     "title": "T0",
+     "type": "number"
+    },
+    "t1": {
+     "minimum": 0,
+     "title": "T1",
+     "type": "number"
+    },
+    "ease": {
+     "default": "ease_in_out",
+     "description": "easing curve name",
+     "title": "Ease",
+     "type": "string",
+     "enum": [
+      "anticipate",
+      "anticipate_overshoot",
+      "bounce",
+      "bounce_in",
+      "ease_in",
+      "ease_in_cubic",
+      "ease_in_out",
+      "ease_in_out_quint",
+      "ease_out",
+      "ease_out_cubic",
+      "elastic",
+      "expo_out",
+      "hold",
+      "linear",
+      "overshoot",
+      "sine_in_out",
+      "spring"
+     ]
+    },
+    "params": {
+     "additionalProperties": true,
+     "title": "Params",
+     "type": "object"
+    }
+   },
+   "required": [
+    "type",
+    "t0",
+    "t1"
+   ],
+   "title": "CameraMoveSpec",
+   "type": "object"
+  },
+  "CameraSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "moves": {
+     "items": {
+      "$ref": "#/$defs/CameraMoveSpec"
+     },
+     "title": "Moves",
+     "type": "array"
+    }
+   },
+   "title": "CameraSpec",
+   "type": "object"
+  },
+  "CaptionSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "text": {
+     "title": "Text",
+     "type": "string",
+     "minLength": 2
+    },
+    "t0": {
+     "minimum": 0,
+     "title": "T0",
+     "type": "number"
+    },
+    "t1": {
+     "minimum": 0,
+     "title": "T1",
+     "type": "number"
+    },
+    "style": {
+     "default": "subtitle",
+     "description": "subtitle | title | shout",
+     "title": "Style",
+     "type": "string",
+     "enum": [
+      "shout",
+      "subtitle",
+      "title"
+     ]
+    },
+    "speaker": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Character id who says it (drives lip-sync)",
+     "title": "Speaker"
+    }
+   },
+   "required": [
+    "text",
+    "t0",
+    "t1",
+    "style"
+   ],
+   "title": "CaptionSpec",
+   "type": "object"
+  },
+  "CharacterSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "description": "Unique id referenced by scene layers",
+     "minLength": 1,
+     "title": "Id",
+     "type": "string"
+    },
+    "archetype": {
+     "description": "Body/face template, e.g. everyman | kid | elder | hero | robot",
+     "title": "Archetype",
+     "type": "string",
+     "enum": [
+      "boss",
+      "elder",
+      "everyman",
+      "hero",
+      "kid",
+      "robot"
+     ]
+    },
+    "palette": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "description": "Colour overrides by role (skin, hair, shirt, shirt2, pants, shoes, accent), hex",
+     "title": "Palette",
+     "type": "object"
+    },
+    "name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Display name (used for TTS voice mapping)",
+     "title": "Name"
+    }
+   },
+   "required": [
+    "id",
+    "archetype"
+   ],
+   "title": "CharacterSpec",
+   "type": "object"
+  },
+  "FxSpec": {
+   "additionalProperties": false,
+   "description": "Optional per-spec overrides of the style's post-processing. ``null`` keeps the style default;\n``0`` switches an effect off.  Values are strengths, not absolute units.",
+   "properties": {
+    "grain": {
+     "anyOf": [
+      {
+       "maximum": 2,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "film grain strength",
+     "title": "Grain"
+    },
+    "vignette": {
+     "anyOf": [
+      {
+       "maximum": 2,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "corner darkening strength",
+     "title": "Vignette"
+    },
+    "bloom": {
+     "anyOf": [
+      {
+       "maximum": 2,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "glow around bright areas",
+     "title": "Bloom"
+    },
+    "chromatic_aberration": {
+     "anyOf": [
+      {
+       "maximum": 2,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "subtle RGB fringing towards the frame edges",
+     "title": "Chromatic Aberration"
+    },
+    "saturation": {
+     "anyOf": [
+      {
+       "maximum": 2,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "1 = style default",
+     "title": "Saturation"
+    },
+    "contrast": {
+     "anyOf": [
+      {
+       "maximum": 2,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "1 = style default",
+     "title": "Contrast"
+    },
+    "warmth": {
+     "anyOf": [
+      {
+       "maximum": 1,
+       "minimum": -1,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "-1 cool .. +1 warm colour grade",
+     "title": "Warmth"
+    },
+    "letterbox": {
+     "anyOf": [
+      {
+       "maximum": 0.3,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "fraction of frame height blanked top and bottom",
+     "title": "Letterbox"
+    }
+   },
+   "title": "FxSpec",
+   "type": "object"
+  },
+  "LayerSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "character": {
+     "description": "Character id",
+     "title": "Character",
+     "type": "string"
+    },
+    "position": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "maxItems": 2,
+       "minItems": 2,
+       "type": "array"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "description": "[x,y] of the feet in screen fractions, or a named slot of the background (left | center | right | far_left | far_right | ...)",
+     "title": "Position"
+    },
+    "actions": {
+     "items": {
+      "$ref": "#/$defs/ActionSpec"
+     },
+     "title": "Actions",
+     "type": "array",
+     "maxItems": 3
+    }
+   },
+   "required": [
+    "character",
+    "position",
+    "actions"
+   ],
+   "title": "LayerSpec",
+   "type": "object"
+  },
+  "MetaSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "title": {
+     "description": "Working title of the reel",
+     "title": "Title",
+     "type": "string"
+    },
+    "style": {
+     "description": "Style pack name, e.g. paper_cutout | stickman | flat_vector",
+     "title": "Style",
+     "type": "string",
+     "enum": [
+      "flat_vector",
+      "paper_cutout",
+      "stickman"
+     ]
+    },
+    "seed": {
+     "default": 0,
+     "description": "Seeds every random choice: same spec + seed => same video",
+     "title": "Seed",
+     "type": "integer"
+    },
+    "target_duration_sec": {
+     "default": 50.0,
+     "description": "Intended length, 45-60 seconds",
+     "maximum": 60.0,
+     "minimum": 45.0,
+     "title": "Target Duration Sec",
+     "type": "number"
+    }
+   },
+   "required": [
+    "title",
+    "style"
+   ],
+   "title": "MetaSpec",
+   "type": "object"
+  },
+  "SafeArea": {
+   "additionalProperties": false,
+   "description": "Fractions of the frame kept clear of captions (platform UI overlays on reels/shorts).",
+   "properties": {
+    "top": {
+     "default": 0.1,
+     "maximum": 0.4,
+     "minimum": 0,
+     "title": "Top",
+     "type": "number"
+    },
+    "bottom": {
+     "default": 0.2,
+     "maximum": 0.4,
+     "minimum": 0,
+     "title": "Bottom",
+     "type": "number"
+    },
+    "left": {
+     "default": 0.07,
+     "maximum": 0.4,
+     "minimum": 0,
+     "title": "Left",
+     "type": "number"
+    },
+    "right": {
+     "default": 0.07,
+     "maximum": 0.4,
+     "minimum": 0,
+     "title": "Right",
+     "type": "number"
+    }
+   },
+   "title": "SafeArea",
+   "type": "object"
+  },
+  "SceneSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "title": "Id",
+     "type": "string"
+    },
+    "duration_sec": {
+     "type": "number",
+     "enum": [
+      4.0,
+      4.5,
+      5.0,
+      5.5,
+      6.0,
+      6.5,
+      7.0
+     ],
+     "description": "scene length in seconds"
+    },
+    "background": {
+     "$ref": "#/$defs/BackgroundSpec"
+    },
+    "layers": {
+     "items": {
+      "$ref": "#/$defs/LayerSpec"
+     },
+     "title": "Layers",
+     "type": "array",
+     "maxItems": 2
+    },
+    "captions": {
+     "items": {
+      "$ref": "#/$defs/CaptionSpec"
+     },
+     "title": "Captions",
+     "type": "array",
+     "maxItems": 3
+    },
+    "transition_out": {
+     "$ref": "#/$defs/TransitionSpec"
+    }
+   },
+   "required": [
+    "id",
+    "duration_sec",
+    "background",
+    "layers",
+    "captions"
+   ],
+   "title": "SceneSpec",
+   "type": "object"
+  },
+  "SfxSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "name": {
+     "title": "Name",
+     "type": "string",
+     "enum": [
+      "alarm",
+      "applause",
+      "bell",
+      "boing",
+      "boom",
+      "bubble",
+      "buzz",
+      "camera_shutter",
+      "chime",
+      "click",
+      "cymbal",
+      "ding",
+      "door_knock",
+      "door_slam",
+      "drumroll",
+      "fail",
+      "footstep",
+      "gasp",
+      "heartbeat",
+      "jump",
+      "land",
+      "laugh",
+      "magic",
+      "page_flip",
+      "pickup",
+      "pop",
+      "punch",
+      "record_scratch",
+      "slap",
+      "sparkle",
+      "splash",
+      "success",
+      "swoosh",
+      "tada",
+      "thud",
+      "tick",
+      "typing",
+      "whistle",
+      "whoosh",
+      "wind",
+      "zap"
+     ]
+    },
+    "t": {
+     "minimum": 0,
+     "title": "T",
+     "type": "number"
+    },
+    "volume": {
+     "default": 1.0,
+     "maximum": 2,
+     "minimum": 0,
+     "title": "Volume",
+     "type": "number"
+    }
+   },
+   "required": [
+    "name",
+    "t"
+   ],
+   "title": "SfxSpec",
+   "type": "object"
+  },
+  "TransitionSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "default": "cut",
+     "description": "cut | crossfade | wipe | page_flip",
+     "title": "Type",
+     "type": "string",
+     "enum": [
+      "crossfade",
+      "cut",
+      "page_flip",
+      "wipe"
+     ]
+    },
+    "duration": {
+     "default": 0.0,
+     "description": "seconds; overlaps the next scene",
+     "maximum": 3.0,
+     "minimum": 0,
+     "title": "Duration",
+     "type": "number"
+    },
+    "params": {
+     "additionalProperties": true,
+     "title": "Params",
+     "type": "object"
+    }
+   },
+   "title": "TransitionSpec",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "version": {
+   "default": "1.0",
+   "title": "Version",
+   "type": "string"
+  },
+  "meta": {
+   "$ref": "#/$defs/MetaSpec"
+  },
+  "characters": {
+   "items": {
+    "$ref": "#/$defs/CharacterSpec"
+   },
+   "title": "Characters",
+   "type": "array",
+   "minItems": 1
+  },
+  "scenes": {
+   "items": {
+    "$ref": "#/$defs/SceneSpec"
+   },
+   "minItems": 8,
+   "title": "Scenes",
+   "type": "array",
+   "maxItems": 12
+  }
+ },
+ "required": [
+  "meta",
+  "characters",
+  "scenes"
+ ],
+ "title": "Reel scene spec",
+ "type": "object",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://reel.local/schema/scene_spec.schema.json",
+ "description": "JSON scene spec v1.0: everything the offline renderer needs to produce a 45-60 s 1080x1920 reel. All times are scene-local seconds; positions are screen fractions."
+}

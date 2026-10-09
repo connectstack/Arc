@@ -1,0 +1,588 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "खोया हुआ छाता",
+    "style": "paper_cutout",
+    "seed": 1248
+  },
+  "characters": [
+    {
+      "id": "mia",
+      "archetype": "kid",
+      "palette": {
+        "shirt": "#e63946",
+        "pants": "#264653"
+      }
+    },
+    {
+      "id": "pip",
+      "archetype": "elder",
+      "palette": {
+        "shirt": "#2a9d8f",
+        "accent": "#f4a261"
+      }
+    },
+    {
+      "id": "bolt",
+      "archetype": "robot",
+      "palette": {
+        "shirt": "#f4a261",
+        "pants": "#355070",
+        "accent": "#e56b6f"
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "s01",
+      "duration_sec": 5.71,
+      "background": {
+        "template": "street",
+        "params": {
+          "weather": "rain",
+          "district": "downtown"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "dolly",
+            "from": 0,
+            "to": 0.1,
+            "t0": 0,
+            "t1": 5.71
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "mia",
+          "position": "center",
+          "actions": [
+            {
+              "name": "enter_from",
+              "t0": 0,
+              "t1": 1.142
+            },
+            {
+              "name": "think",
+              "t0": 1.65,
+              "t1": 4.15
+            },
+            {
+              "name": "talk",
+              "t0": 1.713,
+              "t1": 3.426,
+              "params": {
+                "text": "बारिश में घूमना कितना मज़ेदार है!"
+              }
+            },
+            {
+              "name": "wave",
+              "t0": 4.2,
+              "t1": 5.56
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "खोया हुआ छाता",
+          "t0": 0.571,
+          "t1": 3.997,
+          "style": "title"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "footstep",
+          "t": 0.2,
+          "volume": 0.5
+        }
+      ],
+      "transition_out": {
+        "type": "crossfade",
+        "duration": 0.6
+      }
+    },
+    {
+      "id": "s02",
+      "duration_sec": 6.85,
+      "background": {
+        "template": "street",
+        "params": {
+          "weather": "rain",
+          "district": "downtown"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "pan",
+            "from": [
+              0.5,
+              0.5
+            ],
+            "to": [
+              0.5,
+              0.6
+            ],
+            "t0": 0,
+            "t1": 6.85
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "pip",
+          "position": "left",
+          "actions": [
+            {
+              "name": "enter_from",
+              "t0": 0,
+              "t1": 1.37
+            },
+            {
+              "name": "look_at",
+              "t0": 2.283,
+              "t1": 3.425
+            },
+            {
+              "name": "point",
+              "t0": 3.28,
+              "t1": 4.78,
+              "params": {
+                "direction": "up",
+                "jabs": 2
+              }
+            },
+            {
+              "name": "talk",
+              "t0": 3.653,
+              "t1": 5.708,
+              "params": {
+                "text": "अरे नहीं! मेरा छाता कहाँ गया?"
+              }
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "पिप:",
+          "t0": 2.283,
+          "t1": 3.425,
+          "speaker": "pip"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "gasp",
+          "t": 3.425
+        }
+      ],
+      "transition_out": {
+        "type": "page_flip",
+        "duration": 0.6
+      }
+    },
+    {
+      "id": "s03",
+      "duration_sec": 7.99,
+      "background": {
+        "template": "forest",
+        "params": {
+          "time_of_day": "day",
+          "mood": "neutral"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "dolly",
+            "from": 0,
+            "to": 0.2,
+            "t0": 0,
+            "t1": 7.99
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "mia",
+          "position": "center",
+          "actions": [
+            {
+              "name": "talk",
+              "t0": 0.571,
+              "t1": 2.283,
+              "params": {
+                "text": "चिंता मत कीजिए, मैं ढूंढ दूँगी!"
+              }
+            },
+            {
+              "name": "run",
+              "t0": 2.854,
+              "t1": 5.707,
+              "params": {
+                "to": "path_right"
+              }
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "मिया:",
+          "t0": 0.571,
+          "t1": 2.283,
+          "speaker": "mia"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "footstep",
+          "t": 3.424
+        }
+      ],
+      "transition_out": {
+        "type": "wipe",
+        "duration": 0.6
+      }
+    },
+    {
+      "id": "s04",
+      "duration_sec": 9,
+      "background": {
+        "template": "forest",
+        "params": {
+          "time_of_day": "day",
+          "mood": "neutral"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "pan",
+            "from": [
+              0.2,
+              0.5
+            ],
+            "to": [
+              0.8,
+              0.5
+            ],
+            "t0": 0,
+            "t1": 9
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "bolt",
+          "position": "center",
+          "actions": [
+            {
+              "name": "idle",
+              "t0": 0,
+              "t1": 2.25
+            },
+            {
+              "name": "enter_from",
+              "t0": 2.31,
+              "t1": 3.81
+            },
+            {
+              "name": "talk",
+              "t0": 2.812,
+              "t1": 5.625,
+              "params": {
+                "text": "बीप। बारिश का पता चला। छाता खुल गया।"
+              }
+            },
+            {
+              "name": "think",
+              "t0": 3.86,
+              "t1": 6.26
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "बोल्ट:",
+          "t0": 2.812,
+          "t1": 5.625,
+          "speaker": "bolt"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "buzz",
+          "t": 2.25
+        }
+      ],
+      "transition_out": {
+        "type": "crossfade",
+        "duration": 0.6
+      }
+    },
+    {
+      "id": "s05",
+      "duration_sec": 5.71,
+      "background": {
+        "template": "street",
+        "params": {
+          "weather": "rain",
+          "district": "downtown"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "dolly",
+            "from": 0,
+            "to": 0.1,
+            "t0": 0,
+            "t1": 5.71
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "mia",
+          "position": "center",
+          "actions": [
+            {
+              "name": "jump",
+              "t0": 0.571,
+              "t1": 1.713
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "मिया:",
+          "t0": 0.571,
+          "t1": 1.713,
+          "speaker": "mia"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "jump",
+          "t": 0.571
+        }
+      ]
+    },
+    {
+      "id": "s06",
+      "duration_sec": 5.71,
+      "background": {
+        "template": "street",
+        "params": {
+          "weather": "rain",
+          "district": "downtown"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "dolly",
+            "from": 0,
+            "to": 0.1,
+            "t0": 0,
+            "t1": 5.71
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "pip",
+          "position": "left",
+          "actions": [
+            {
+              "name": "enter_from",
+              "t0": 0.15,
+              "t1": 1.65
+            },
+            {
+              "name": "talk",
+              "t0": 0.571,
+              "t1": 2.284,
+              "params": {
+                "text": "मिया, क्या तुमने मेरा छाता देखा?"
+              }
+            },
+            {
+              "name": "point",
+              "t0": 1.7,
+              "t1": 3.2,
+              "params": {
+                "direction": "up",
+                "jabs": 2
+              }
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "पिप:",
+          "t0": 0.571,
+          "t1": 2.284,
+          "speaker": "pip"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "gasp",
+          "t": 2.284
+        }
+      ]
+    },
+    {
+      "id": "s07",
+      "duration_sec": 5.71,
+      "background": {
+        "template": "forest",
+        "params": {
+          "time_of_day": "day",
+          "mood": "neutral"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "pan",
+            "from": [
+              0.5,
+              0.5
+            ],
+            "to": [
+              0.5,
+              0.6
+            ],
+            "t0": 0,
+            "t1": 5.71
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "bolt",
+          "position": "center",
+          "actions": [
+            {
+              "name": "enter_from",
+              "t0": 0.15,
+              "t1": 1.65,
+              "params": {
+                "style": "slide"
+              }
+            },
+            {
+              "name": "talk",
+              "t0": 0.571,
+              "t1": 2.284,
+              "params": {
+                "text": "मैंने तुम्हारा छाता देखा!"
+              }
+            },
+            {
+              "name": "think",
+              "t0": 1.7,
+              "t1": 4.1
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "बोल्ट:",
+          "t0": 0.571,
+          "t1": 2.284,
+          "speaker": "bolt"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "buzz",
+          "t": 2.284
+        }
+      ]
+    },
+    {
+      "id": "s08",
+      "duration_sec": 5.71,
+      "background": {
+        "template": "street",
+        "params": {
+          "weather": "rain",
+          "district": "downtown"
+        }
+      },
+      "camera": {
+        "moves": [
+          {
+            "type": "dolly",
+            "from": 0,
+            "to": 0.1,
+            "t0": 0,
+            "t1": 5.71
+          }
+        ]
+      },
+      "layers": [
+        {
+          "character": "mia",
+          "position": "center",
+          "actions": [
+            {
+              "name": "idle",
+              "t0": 0,
+              "t1": 2.284
+            },
+            {
+              "name": "enter_from",
+              "t0": 2.35,
+              "t1": 3.85
+            },
+            {
+              "name": "talk",
+              "t0": 2.855,
+              "t1": 4.568,
+              "params": {
+                "text": "चलो, उसे लाते हैं!"
+              }
+            },
+            {
+              "name": "think",
+              "t0": 3.9,
+              "t1": 5.56
+            }
+          ]
+        }
+      ],
+      "captions": [
+        {
+          "text": "मिया:",
+          "t0": 2.855,
+          "t1": 4.568,
+          "speaker": "mia"
+        }
+      ],
+      "sfx": [
+        {
+          "name": "footstep",
+          "t": 2.284
+        }
+      ]
+    }
+  ],
+  "audio": {
+    "music": "procedural",
+    "voiceover": "tts"
+  }
+}

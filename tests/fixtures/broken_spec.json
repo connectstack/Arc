@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "meta": {"title": "Broken demo", "style": "oil_painting", "fps": 30, "resolution": [1080, 1920],
+           "seed": 1, "target_duration_sec": 50, "aspect": "9:16"},
+  "characters": [
+    {"id": "ana", "archetype": "dragon", "palette": {"shirt": "red"}, "props": ["jetpack"]}
+  ],
+  "scenes": [
+    {"id": "intro", "duration_sec": 8,
+     "background": {"template": "spaceship", "params": {"time_of_day": "dusk"}},
+     "camera": {"moves": [{"type": "orbit", "from": 0, "to": 1, "t0": 0, "t1": 2, "ease": "wobbly"}]},
+     "layers": [{"character": "ana", "position": "throne", "scale": 1.0,
+                 "actions": [{"name": "moonwalk", "t0": 1, "t1": 4, "params": {"speed": 2}},
+                             {"name": "wave", "t0": 5, "t1": 12}]}],
+     "captions": [{"text": "Hello from the moon", "t0": 0.5, "t1": 3, "style": "neon"}],
+     "sfx": [{"name": "kaboom", "t": 1.0}],
+     "transition_out": {"type": "star_wipe", "duration": 0.6}},
+    {"id": "outro", "duratoin_sec": 6,
+     "background": {"template": "room"},
+     "layers": [{"character": "bob", "position": [0.5, 0.8]}]}
+  ],
+  "audio": {"music": "missing_song.mp3", "voiceover": "file"}
+}

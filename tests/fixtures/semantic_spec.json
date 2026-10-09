@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "meta": {"title": "Semantic demo", "style": "flat_vector", "fps": 30, "resolution": [1080, 1920],
+           "seed": 1, "target_duration_sec": 50, "aspect": "9:16"},
+  "characters": [{"id": "ana", "archetype": "everyman", "palette": {"shirt": "red", "tie": "#fff"}}],
+  "scenes": [
+    {"id": "a", "duration_sec": 10,
+     "background": {"template": "room"},
+     "layers": [{"character": "bob", "position": "throne",
+                 "actions": [{"name": "walk", "t0": 4, "t1": 2},
+                             {"name": "walk", "t0": 1, "t1": 12, "params": {"spedd": 2}}]}],
+     "captions": [{"text": "this caption has far too many words to ever be read in a single second", "t0": 0, "t1": 1}],
+     "transition_out": {"type": "crossfade", "duration": 1.5}},
+    {"id": "a", "duration_sec": 12, "background": {"template": "street"}}
+  ]
+}

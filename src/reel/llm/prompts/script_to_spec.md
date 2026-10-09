@@ -28,7 +28,8 @@ Your reply is machine-validated: JSON syntax first, then the JSON schema, then a
 Words in CAPITALS are names from the CATALOG; fields in [brackets] are optional.
 {
   "version": "1.0",
-  "meta": {"title": str, "style": "{{style}}", "fps": 30, "resolution": [1080,1920], "seed": 0, "target_duration_sec": {{target_duration}}, "aspect": "9:16"},
+  "meta": {"title": str, "style": "{{style}}", "fps": 30, "resolution": [1080,1920], "seed": 0, "target_duration_sec": {{target_duration}}, "aspect": "9:16",
+           ["library_gaps": [{"kind": "character"|"place"|"object", "name": str, "scenes": [scene ids], ["character": id,] "stand_in": CATALOG name or null}]]},
   "characters": [{"id": str, "archetype": ARCHETYPE, ["palette": {ROLE: "#rrggbb"}, "name": str,]
 {{#has prop}}
                   ["props": [PROP],]
@@ -42,6 +43,10 @@ Words in CAPITALS are names from the CATALOG; fields in [brackets] are optional.
 {{/has}}
     "layers": [{"character": id, "position": [x,y] or SLOT, ["scale": 1, "depth": "background"|"mid"|"foreground", "facing": "auto"|"left"|"right",]
                 "actions": [{"name": ACTION, "t0": s, "t1": s, ["params": {...}]}]}],
+{{#has object}}
+    ["objects": [{"asset": OBJECT, "position": [x,y] or SLOT, ["scale": 1, "layer": "behind"|"front", "t0": s, "t1": s, "palette": {ROLE: "#rrggbb"},
+                  "motions": [{"type": MOTION, "t0": s, "t1": s, ["to": [x,y] or SLOT, "from": n, "amount": n, "count": n]}]]}],]
+{{/has}}
     "captions": [{"text": str, "t0": s, "t1": s, "style": CAPTION_STYLE, ["speaker": id]}],
 {{#has sfx}}
     ["sfx": [{"name": SFX, "t": s, ["volume": 0..2]}],]
@@ -57,6 +62,10 @@ Words in CAPITALS are names from the CATALOG; fields in [brackets] are optional.
 - SCENES: {{min_scenes}}-{{max_scenes}} scenes of {{min_scene}}-{{max_scene}} s each. Scene ids ("s01", "s02", ...) and character ids (lowercase, like "mia") are all unique.
 - TIME WINDOWS stay inside their scene: 0 <= t0 < t1 <= duration_sec for actions, captions and camera moves, and 0 <= t <= duration_sec for sfx. Give every action at least the "min" length listed for it in the catalog.
 - PLACEMENT: feet y between {{feet_y_min}} and {{feet_y_max}} (the bottom quarter of the frame belongs to the captions); x between {{x_min}} and {{x_max}} unless the character enters, leaves or stands on a listed slot. Prefer slot names to raw numbers: use a background's own SLOT (listed with its x) when the scene happens at that spot (the desk, the lamp post), and otherwise one of the universal slots, which work on every background: {{universal_slots}} (off_left and off_right are outside the frame). Write [x,y] only when no slot fits. Spread characters out (two characters: left and right) and never stack two on the same spot.
+{{#has object}}
+- OBJECTS: scenes[].objects[] puts library things on the set: what the script names (a tree, a car, a cake) or the scene clearly needs. Use 0-4 per scene. "position" is where the thing STANDS (its bottom centre), placed like a character's feet (y {{feet_y_min}}-{{feet_y_max}}) with its x clear of the characters; things that float or fly (a balloon, the sun) may sit higher. Size it against the people with "scale": the catalog gives each object's size as a share of a person's height, so a thing of size 0.5 at scale 1 is half as tall as a person. "layer": "behind" (default) draws it behind the characters, "front" in front of them. A thing that travels, jumps or fades gets "motions", one time window each, inside the scene; "t0"/"t1" are when it is on screen (default: the whole scene). "palette" recolours it ("a blue car": {"body": "#2a6fdb"}) using only the roles the catalog lists for it.
+{{/has}}
+- LIBRARY: use ONLY names from the CATALOG. When the script needs a character, a place or an object the catalog does not have (a dragon, a castle, a rickshaw), do NOT invent a name: use the closest catalog entry (or leave the object out) and report the missing thing in meta.library_gaps, one entry each: "kind", "name" (what the script calls it, lower case), "scenes" (the scene ids), "character" (the id of the stand-in character, characters only) and "stand_in" (the catalog name you used instead, or null). Report only things the catalog lacks, never things you found. Each CATALOG line may end with "words": other names for that entry (also in Hindi); use the entry when the script says any of them.
 - CAST: define every character once in "characters", with an archetype from the catalog and its own colours (set shirt, pants or accent; roles: {{palette_roles}}; hex only). At most {{max_on_screen}} characters are on screen in any scene.
 {{#has action enter_from}}
 - ENTRANCES: a layer's position is where its character stands at the START of the scene. A character who arrives during the story begins with enter_from: they start off screen and arrive at the layer's position. After a moving action (marked * in the catalog) the character stays where it ended, and two moving actions on one layer must not overlap.

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useApi } from './context'
 
 /** Server data as queries. The catalog never changes while the server runs; the rest is cheap to refresh. */
@@ -40,4 +40,17 @@ export function useRenders() {
 export function useCacheStats() {
   const api = useApi()
   return useQuery({ queryKey: ['cache'], queryFn: () => api.cache() })
+}
+
+/** The asset library (characters, objects and places, built in and the workspace's own). */
+export function useAssets() {
+  const api = useApi()
+  return useQuery({ queryKey: ['assets'], queryFn: () => api.listAssets(), staleTime: 30_000 })
+}
+
+/** After the library changed (an asset added, edited or removed) everything that lists it must read it again: the
+ *  catalog the editor offers and the planners use, the asset list, and thumbnails (their URLs carry the art's version). */
+export function useRefreshLibrary() {
+  const qc = useQueryClient()
+  return () => Promise.all([qc.invalidateQueries({ queryKey: ['assets'] }), qc.invalidateQueries({ queryKey: ['catalog'] })])
 }

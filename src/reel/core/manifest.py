@@ -11,7 +11,11 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from reel.core.archetypes import RigDims
 from reel.core.catalog import CATALOG, Catalog
+
+#: a standing person's height in design px: library things are sized against it
+PERSON_HEIGHT = RigDims().height
 
 
 def model_params(model: type[BaseModel] | None) -> list[dict[str, Any]]:
@@ -52,7 +56,7 @@ def describe_entry(kind: str, name: str, obj: Any, meta: dict[str, Any]) -> dict
     pm = getattr(obj, "params_model", None)
     if pm is not None or kind in ("action", "background", "transition"):
         d["params"] = model_params(pm)
-    for attr in ("category", "moves_root", "tags", "min_duration", "default_duration"):
+    for attr in ("category", "moves_root", "tags", "min_duration", "default_duration", "height"):
         v = getattr(obj, attr, None)
         if v is not None and v != ():
             d[attr] = list(v) if isinstance(v, tuple) else v
@@ -62,30 +66,76 @@ def describe_entry(kind: str, name: str, obj: Any, meta: dict[str, Any]) -> dict
             d["slots"] = sorted(slots({}))
     if kind == "camera_move":
         d["from_to"] = getattr(obj, "from_to", "")
+    if kind == "object":
+        d["anchor"] = list(getattr(obj, "anchor", (0.5, 1.0)))
+    asset = obj if kind == "object" else (getattr(obj, "features", None) or {}).get("asset")
+    if asset is not None and hasattr(
+        asset, "roles"
+    ):  # a library asset: what a script may recolour, how big it is
+        if asset.roles:
+            d["roles"] = list(asset.roles)
+        d["size"] = round(asset.height / PERSON_HEIGHT, 2)
+        d["aspect"] = asset.aspect
     return d
 
 
-def describe(kind: str, catalog: Catalog | None = None) -> list[dict[str, Any]]:
+def _asset_origin(cat: Catalog, kind: str, name: str) -> str | None:
+    """``builtin`` / ``user`` when this registry entry comes from the asset library, else ``None`` (the engine's own)."""
+    if name not in cat.assets:
+        return None
+    a = cat.assets.get(name)
+    mine = {"object": "object", "archetype": "character", "background": "place"}.get(kind)
+    return a.origin if mine == a.kind else None
+
+
+def _user_asset(cat: Catalog, kind: str, name: str) -> bool:
+    """Is this registry entry one the user added from their own asset folders (not the engine's or the built-in library)?"""
+    return _asset_origin(cat, kind, name) == "user"
+
+
+def describe(
+    kind: str, catalog: Catalog | None = None, *, builtin_only: bool = False
+) -> list[dict[str, Any]]:
+    """The entries of one registry as data.  ``builtin_only`` leaves out the user's own assets (for files kept in the repo)."""
     cat = catalog or CATALOG
     reg = cat.registry(kind)
-    return [describe_entry(reg.kind, e.name, e.obj, dict(e.meta)) for e in reg.entries()]
+    rows: list[dict[str, Any]] = []
+    for e in reg.entries():
+        if builtin_only and _user_asset(cat, kind, e.name):
+            continue
+        row = describe_entry(reg.kind, e.name, e.obj, dict(e.meta))
+        origin = _asset_origin(cat, kind, e.name)
+        if origin:
+            row["library"] = (
+                origin  # a character, place or object of the asset library (not the engine's own)
+            )
+        rows.append(row)
+    return rows
 
 
-def build_manifest(catalog: Catalog | None = None) -> dict[str, Any]:
-    """The catalog the LLM (or a human) reads to know what can be put in a spec."""
+def build_manifest(catalog: Catalog | None = None, *, builtin_only: bool = False) -> dict[str, Any]:
+    """The catalog the LLM (or a human) reads to know what can be put in a spec.
+
+    ``builtin_only`` is for the files kept in the repository: they must not change with whatever asset folders a machine has.
+    """
     cat = catalog or CATALOG
+
+    def d(kind: str) -> list[dict[str, Any]]:
+        return describe(kind, cat, builtin_only=builtin_only)
+
     return {
         "version": 1,
-        "styles": describe("style", cat),
-        "backgrounds": describe("background", cat),
-        "actions": describe("action", cat),
-        "transitions": describe("transition", cat),
-        "camera_moves": describe("camera_move", cat),
-        "caption_styles": describe("caption_style", cat),
-        "archetypes": describe("archetype", cat),
-        "props": describe("prop", cat),
-        "sfx": describe("sfx", cat),
-        "easings": [e["name"] for e in describe("easing", cat)],
+        "styles": d("style"),
+        "backgrounds": d("background"),
+        "actions": d("action"),
+        "transitions": d("transition"),
+        "camera_moves": d("camera_move"),
+        "caption_styles": d("caption_style"),
+        "archetypes": d("archetype"),
+        "props": d("prop"),
+        "objects": d("object"),
+        "sfx": d("sfx"),
+        "easings": [e["name"] for e in d("easing")],
     }
 
 

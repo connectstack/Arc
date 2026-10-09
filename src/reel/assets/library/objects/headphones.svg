@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-106 0 212 172">
+  <path d="M-90 112 C-90 44 -52 0 0 0 C52 0 90 44 90 112 L70 112 C70 58 42 20 0 20 C-42 20 -70 58 -70 112 Z" fill="#2f3646"/>
+  <path d="M-42 21 C-26 17 26 17 42 21 L37 37 C20 30 -20 30 -37 37 Z" fill="#5a6582" data-lod="1"/>
+  <rect x="-60" y="104" width="15" height="60" rx="7.5" fill="#232836"/>
+  <rect x="-106" y="96" width="54" height="76" rx="26" fill="#e63946" data-role="body"/>
+  <circle cx="-79" cy="134" r="17" fill="#b02a36" data-role="body_dark" data-lod="1"/>
+  <circle cx="-79" cy="134" r="9" fill="#ff7b7b" data-role="body_light" data-lod="1"/>
+  <path d="M-93 112 Q-85 104 -73 105" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" data-lod="1" data-shadow="false"/>
+  <rect x="45" y="104" width="15" height="60" rx="7.5" fill="#232836"/>
+  <rect x="52" y="96" width="54" height="76" rx="26" fill="#e63946" data-role="body"/>
+  <circle cx="79" cy="134" r="17" fill="#b02a36" data-role="body_dark" data-lod="1"/>
+  <circle cx="79" cy="134" r="9" fill="#ff7b7b" data-role="body_light" data-lod="1"/>
+  <path d="M65 112 Q73 104 85 105" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" data-lod="1" data-shadow="false"/>
+</svg>

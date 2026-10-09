@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useApi } from '@/api/context'
 import { useCatalog } from '@/api/hooks'
-import type { Catalog, CatalogEntry, Character, FxSpec, Layer, PaletteRole, ReelSpec, Scene } from '@/api/types'
+import type { Catalog, CatalogEntry, Character, FxSpec, Layer, ReelSpec, Scene } from '@/api/types'
 import { Banner, Button, Chip, ColorField, Field, Input, IconButton, NumberField, Segmented, SelectBox, SliderField, SwitchRow, Textarea, Toggle } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { curvePath } from '@/lib/easing'
@@ -12,32 +12,11 @@ import { characterName, entry, pathLabel, type Selection } from '@/lib/spec'
 import { MIN_CLIP, ms } from '@/lib/timeline'
 import { useProject } from '@/store/project'
 import { addCameraMove, deleteSelection, duplicateSelection, renameCharacterId } from '../ops'
-import { Row, Section } from './common'
+import { Row, Section, useLive } from './common'
+import { MotionInspector, ObjectInspector, SceneObjectsSection } from './ObjectInspector'
 import { ParamForm } from './ParamForm'
 
 // ------------------------------------------------------------------------------- shared bits
-function useLive() {
-  const edit = useProject((s) => s.edit)
-  const begin = useProject((s) => s.beginGesture)
-  const end = useProject((s) => s.endGesture)
-  const active = useRef(false)
-  return {
-    live: (fn: (d: ReelSpec) => void) => {
-      if (!active.current) {
-        begin()
-        active.current = true
-      }
-      edit(fn, { live: true })
-    },
-    commit: () => {
-      if (active.current) {
-        end()
-        active.current = false
-      }
-    },
-  }
-}
-
 function TimeFields({ t0, t1, onChange, min = MIN_CLIP, max }: { t0: number; t1: number; onChange: (t0: number, t1: number) => void; min?: number; max: number }) {
   return (
     <Row>
@@ -64,7 +43,7 @@ function Thumb({ src, alt, selected, label, onClick }: { src: string; alt: strin
 function PanelHeader({ spec, sel, extra }: { spec: ReelSpec; sel: Selection; extra?: ReactNode }) {
   const edit = useProject((s) => s.edit)
   const select = useProject((s) => s.select)
-  const canDup = ['action', 'caption', 'camera', 'sfx', 'layer', 'scene'].includes(sel.kind)
+  const canDup = ['action', 'caption', 'camera', 'sfx', 'layer', 'object', 'motion', 'scene'].includes(sel.kind)
   const canDelete = sel.kind !== 'reel'
   const title = sel.kind === 'reel' ? 'Reel' : pathLabel(spec, pathOf(sel))
   return (
@@ -92,6 +71,10 @@ function pathOf(sel: Selection): string {
       return `scenes[${sel.scene}]`
     case 'layer':
       return `scenes[${sel.scene}].layers[${sel.layer}]`
+    case 'object':
+      return `scenes[${sel.scene}].objects[${sel.object}]`
+    case 'motion':
+      return `scenes[${sel.scene}].objects[${sel.object}].motions[${sel.motion}]`
     case 'action':
       return `scenes[${sel.scene}].layers[${sel.layer}].actions[${sel.action}]`
     case 'caption':
@@ -266,6 +249,7 @@ function SceneInspector({ spec, si }: { spec: ReelSpec; si: number }) {
           </button>
         ))}
       </Section>
+      <SceneObjectsSection spec={spec} si={si} />
       <Section title="Transition into the next scene" defaultOpen={false}>
         <TransitionFields spec={spec} si={si} catalog={catalog} />
       </Section>
@@ -303,7 +287,8 @@ function CharacterInspector({ spec, id }: { spec: ReelSpec; id: string }) {
   const ch = spec.characters.find((c) => c.id === id)
   if (!ch) return null
   const arch = entry(catalog?.archetypes, ch.archetype)
-  const roles = (catalog?.palette_roles ?? []) as PaletteRole[]
+  const picture = !!arch?.library // a picture from the asset library paints with its own colours: only the parts its drawing marks can change
+  const roles: string[] = picture ? (arch?.roles ?? []) : (catalog?.palette_roles ?? [])
   const set = (fn: (c: Character) => void) =>
     edit((d) => {
       const c = d.characters.find((x) => x.id === id)
@@ -327,32 +312,56 @@ function CharacterInspector({ spec, id }: { spec: ReelSpec; id: string }) {
       <Section title="Body">
         <div className="grid grid-cols-3 gap-2">
           {(catalog?.archetypes ?? []).map((a) => (
-            <Thumb key={a.name} src={api.libraryThumbUrl('archetype', a.name, 'day', spec.meta.style)} alt={`${a.name} archetype`} label={a.name} selected={ch.archetype === a.name} onClick={() => set((c) => void (c.archetype = a.name))} />
+            <Thumb
+              key={a.name}
+              src={api.libraryThumbUrl('archetype', a.name, 'day', spec.meta.style)}
+              alt={`${a.name} archetype`}
+              label={a.name.replace(/_/g, ' ')}
+              selected={ch.archetype === a.name}
+              onClick={() =>
+                set((c) => {
+                  c.archetype = a.name
+                  if (a.library) {
+                    // a picture keeps only the parts its drawing marks, and holds no props: drop what no longer applies
+                    for (const role of Object.keys(c.palette)) if (!(a.roles ?? []).includes(role)) delete (c.palette as Record<string, string>)[role]
+                    c.props = []
+                  }
+                })
+              }
+            />
           ))}
         </div>
         {arch && <p className="text-[11.5px] leading-snug text-faint">{arch.summary}</p>}
       </Section>
       <Section title="Colours">
-        <div className="flex flex-col gap-2.5">
-          {roles.map((r) => (
-            <div key={r} className="grid grid-cols-[72px_1fr] items-center gap-2">
-              <span className="text-[12px] text-muted">{titleCase(r)}</span>
-              <ColorField label={r} value={ch.palette[r]} fallback={arch?.palette?.[r] ?? '#888888'} onChange={(v) => set((c) => void (v === undefined ? delete c.palette[r] : (c.palette[r] = v)))} />
-            </div>
-          ))}
-        </div>
+        {picture && !roles.length ? (
+          <p className="text-[12px] leading-snug text-muted">This picture keeps its own colours: its drawing marks no parts that can change.</p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {roles.map((r) => (
+              <div key={r} className="grid grid-cols-[72px_1fr] items-center gap-2">
+                <span className="text-[12px] text-muted">{titleCase(r)}</span>
+                <ColorField label={r} value={ch.palette[r]} fallback={arch?.palette?.[r] ?? '#888888'} onChange={(v) => set((c) => void (v === undefined ? delete c.palette[r] : (c.palette[r] = v)))} />
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
-      <Section title="Props">
-        <div className="flex flex-wrap gap-1.5">
-          {(catalog?.props ?? []).map((p) => {
-            const on = ch.props.includes(p.name)
-            return (
-              <button key={p.name} aria-pressed={on} title={p.summary} onClick={() => set((c) => void (c.props = on ? c.props.filter((x) => x !== p.name) : [...c.props, p.name]))} className={cn('rounded-chip border px-2 py-1 text-[12px] transition-colors', on ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted hover:text-fg')}>
-                {p.name}
-              </button>
-            )
-          })}
-        </div>
+      <Section title="Props" defaultOpen={!picture}>
+        {picture ? (
+          <p className="text-[12px] leading-snug text-muted">A picture does not hold props: they are only drawn on the engine's own bodies.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {(catalog?.props ?? []).map((p) => {
+              const on = ch.props.includes(p.name)
+              return (
+                <button key={p.name} aria-pressed={on} title={p.summary} onClick={() => set((c) => void (c.props = on ? c.props.filter((x) => x !== p.name) : [...c.props, p.name]))} className={cn('rounded-chip border px-2 py-1 text-[12px] transition-colors', on ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted hover:text-fg')}>
+                  {p.name}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </Section>
       <Section title="Where they appear" defaultOpen={false}>
         {spec.scenes.map((sc, si) =>
@@ -693,6 +702,12 @@ export function Inspector() {
       break
     case 'action':
       body = <ActionInspector spec={spec} sel={sel} />
+      break
+    case 'object':
+      body = <ObjectInspector spec={spec} sel={sel} />
+      break
+    case 'motion':
+      body = <MotionInspector spec={spec} sel={sel} />
       break
     case 'caption':
       body = <CaptionInspector spec={spec} sel={sel} />

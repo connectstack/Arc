@@ -530,7 +530,9 @@ class TestPrompt:
         for compact in (False, True):
             cat = tiny_catalog()
             prompt = build_system_prompt("ink", 50, cat, compact=compact)
-            foreign = (reference_tokens(prompt) & universe) - registry_names(cat) - {"title"}
+            foreign = (
+                (reference_tokens(prompt) & universe) - registry_names(cat) - {"title", "camera"}
+            )
             assert not foreign, f"compact={compact}: {sorted(foreign)}"
             for mine in ("dojo", "bow", "chop", "fadex", "plain"):
                 assert mine in prompt
@@ -538,7 +540,11 @@ class TestPrompt:
     def test_mini_catalog_prompt_only_knows_the_mini_names(self, mini_catalog: Catalog) -> None:
         universe = registry_names(CATALOG) | registry_names(mini_catalog)
         prompt = build_system_prompt("flat_vector", 50, mini_catalog)
-        foreign = (reference_tokens(prompt) & universe) - registry_names(mini_catalog) - {"title"}
+        foreign = (
+            (reference_tokens(prompt) & universe)
+            - registry_names(mini_catalog)
+            - {"title", "camera"}
+        )
         assert not foreign, sorted(foreign)
         assert "room" in prompt and "street" in prompt and "sofa" in prompt
         assert "enter_from" not in prompt and "abstract" not in prompt

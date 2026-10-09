@@ -1,0 +1,6 @@
+{
+  "summary": "An Indian school classroom: blackboard, wooden desks, a window, a clock and a door",
+  "tags": ["class room", "school", "class", "school room", "कक्षा", "स्कूल", "पाठशाला", "क्लासरूम", "क्लास", "kaksha", "pathshala"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.7, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "board": [0.38, 0.8], "teacher_desk": [0.72, 0.8], "bench": [0.2, 0.82], "door": [0.88, 0.8]}}
+}

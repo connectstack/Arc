@@ -1,22 +1,29 @@
 import { Move, Play, Plus, Search } from 'lucide-react'
-import { useMemo, useState, type DragEvent, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useApi } from '@/api/context'
-import { useCatalog } from '@/api/hooks'
-import type { Catalog, CatalogEntry } from '@/api/types'
-import { Chip, Input, Segmented } from '@/components/ui'
+import { useAssets, useCatalog } from '@/api/hooks'
+import type { AssetInfo, Catalog, CatalogEntry } from '@/api/types'
+import { Button, Chip, EmptyState, Input, Segmented } from '@/components/ui'
+import { AddAssetDialog, type AddAssetInitial } from '@/features/assets/AddAssetDialog'
+import { AssetDetail } from '@/features/assets/AssetDetail'
+import { KIND_INFO } from '@/features/assets/assetFields'
 import { cn } from '@/lib/cn'
 import { curvePath } from '@/lib/easing'
 import { titleCase } from '@/lib/format'
 import { sceneAt, sceneSlots } from '@/lib/timeline'
 import { useProject } from '@/store/project'
-import { addAction, addCameraMove, addSfx } from '../studio/ops'
+import { addAction, addCameraMove, addObject, addSfx } from '../studio/ops'
+import { EngineBackgroundCard, EngineCharacterCard, KIND_ICON, LibraryCard, LibraryPlaceCard, ObjectRow } from './AssetCards'
+import { Draggable } from './Draggable'
+import { SECTION_KIND, fromMatches, isAssetSection, itemMatches, libraryItems, matchesQuery, type AssetSection, type From, type LibraryItem } from './libraryItems'
 
-type Kind = 'actions' | 'camera' | 'sounds' | 'backgrounds' | 'characters' | 'props' | 'captions' | 'transitions' | 'easings'
+export type LibrarySection = 'actions' | 'camera' | 'sounds' | 'backgrounds' | 'characters' | 'objects' | 'props' | 'captions' | 'transitions' | 'easings'
 
-const KINDS: { value: Kind; label: string }[] = [
+const SECTIONS: { value: LibrarySection; label: string }[] = [
   { value: 'actions', label: 'Actions' },
   { value: 'backgrounds', label: 'Backgrounds' },
   { value: 'characters', label: 'Characters' },
+  { value: 'objects', label: 'Objects' },
   { value: 'props', label: 'Props' },
   { value: 'sounds', label: 'Sounds' },
   { value: 'camera', label: 'Camera' },
@@ -25,21 +32,23 @@ const KINDS: { value: Kind; label: string }[] = [
   { value: 'easings', label: 'Easings' },
 ]
 
-function Draggable({ item, children, className, enabled = true }: { item: { kind: string; name: string }; children: ReactNode; className?: string; enabled?: boolean }) {
-  if (!enabled) return <div className={className}>{children}</div>
-  return (
-    <div draggable onDragStart={(e: DragEvent) => (e.dataTransfer.setData('application/x-reel-item', JSON.stringify(item)), (e.dataTransfer.effectAllowed = 'copy'))} className={cn('cursor-grab active:cursor-grabbing', className)}>
-      {children}
-    </div>
-  )
-}
+/** The studio's left panel is narrow: only what can be added to the scene is offered there. */
+const COMPACT: LibrarySection[] = ['actions', 'objects', 'sounds', 'camera']
 
-/** Add a library item at the playhead (for the selected character, or the first one in the scene). */
+const FROM_OPTIONS: { value: From; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'builtin', label: 'Built in' },
+  { value: 'user', label: 'Yours' },
+]
+
+type AddKind = 'action' | 'camera' | 'sfx' | 'object'
+
+/** Add a library item at the playhead (for the selected character, or the first one in the scene; an object goes in the playhead's scene). */
 function useAddToScene() {
   const edit = useProject((s) => s.edit)
   const select = useProject((s) => s.select)
   const catalog = useCatalog().data
-  return (kind: 'action' | 'camera' | 'sfx', name: string) => {
+  return (kind: AddKind, name: string) => {
     const st = useProject.getState()
     edit((d) => {
       const t = st.playhead
@@ -55,6 +64,7 @@ function useAddToScene() {
         }
         if (who) sel = addAction(d, catalog, who, name, t)
       } else if (kind === 'camera') sel = addCameraMove(d, name, t)
+      else if (kind === 'object') sel = addObject(d, catalog, name, t)
       else sel = addSfx(d, name, t)
       if (sel) select(sel)
     })
@@ -97,36 +107,93 @@ function ActionRow({ a, onAdd }: { a: CatalogEntry; onAdd: (() => void) | null }
   )
 }
 
-/** `browse` shows the catalogue on its own (no project open): nothing can be added or dragged. */
-export function LibraryBrowser({ compact = false, browse = false, styleName }: { compact?: boolean; browse?: boolean; styleName?: string }) {
+export interface LibraryBrowserProps {
+  compact?: boolean
+  /** shows the catalogue on its own (no project open): nothing can be added to a scene or dragged */
+  browse?: boolean
+  styleName?: string
+  /** told which section is shown (the page offers "Add asset" for the kind being looked at) */
+  onSectionChange?: (section: LibrarySection) => void
+  /** "Add asset" from inside the browser (an empty "Yours" list, the studio's Objects list). Without it the browser opens the dialog itself. */
+  onAddAsset?: (initial?: AddAssetInitial) => void
+  /** Go to a section (and show everything in it, with no search): each new `key` is a request, so the same section can be asked for twice */
+  reveal?: { section: LibrarySection; key: number }
+}
+
+export function LibraryBrowser({ compact = false, browse = false, styleName, onSectionChange, onAddAsset, reveal }: LibraryBrowserProps) {
   const api = useApi()
   const catalog = useCatalog().data
-  const [kind, setKind] = useState<Kind>('actions')
+  const library = useAssets().data
+  const [section, setSection] = useState<LibrarySection>('actions')
   const [q, setQ] = useState('')
+  const [from, setFrom] = useState<From>('all')
+  const [detail, setDetail] = useState<AssetInfo | null>(null)
+  const [own, setOwn] = useState<AddAssetInitial | null>(null)
   const add = useAddToScene()
   const projectStyle = useProject((s) => s.spec?.meta.style ?? 'flat_vector')
   const style = styleName ?? projectStyle
-  const needle = q.trim().toLowerCase()
-  const match = (e: CatalogEntry | { name: string; summary?: string }) => !needle || `${e.name} ${e.summary ?? ''}`.toLowerCase().includes(needle)
-  const kinds = compact ? KINDS.filter((k) => ['actions', 'sounds', 'camera'].includes(k.value)) : KINDS
+  const sections = compact ? SECTIONS.filter((s) => COMPACT.includes(s.value)) : SECTIONS
+  const showFrom = !compact && isAssetSection(section)
 
-  const body = useMemo(() => {
-    if (!catalog) return null
-    return renderKind(kind, catalog, { api, match, add: browse ? null : add, style, compact })
+  const choose = (next: LibrarySection) => {
+    setSection(next)
+    onSectionChange?.(next)
+  }
+  // something was just added: show it where it belongs, and not behind a search or a filter
+  const revealKey = reveal?.key
+  useEffect(() => {
+    if (!reveal) return
+    setSection(reveal.section)
+    setFrom('all')
+    setQ('')
+    onSectionChange?.(reveal.section)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, catalog, needle, style, compact, browse])
+  }, [revealKey])
+  const addAsset = (initial?: AddAssetInitial) => (onAddAsset ? onAddAsset(initial) : setOwn(initial ?? {}))
+  const match = (e: { name: string; summary?: string; tags?: string[] }) => matchesQuery(e, q)
+
+  const body = !catalog ? null : isAssetSection(section) ? (
+    <AssetSection
+      section={section}
+      catalog={catalog}
+      assets={library?.assets}
+      folder={library?.folder}
+      q={q}
+      from={from}
+      style={style}
+      compact={compact}
+      onOpen={setDetail}
+      onAddAsset={addAsset}
+      onAddToScene={browse ? null : (name) => add('object', name)}
+    />
+  ) : (
+    renderKind(section, catalog, { api, match, add: browse ? null : add, compact })
+  )
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className={cn('flex flex-col gap-2.5 border-b border-line p-3', !compact && 'px-0 pt-0')}>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-faint" aria-hidden />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${kind}…`} aria-label="Search the library" className="pl-8" />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="relative min-w-[180px] flex-1">
+            <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-faint" aria-hidden />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${section}…`} aria-label="Search the library" className="pl-8" />
+          </div>
+          {showFrom && (
+            <div className="flex items-center gap-2">
+              <span className="eyebrow" aria-hidden>
+                From
+              </span>
+              <Segmented<From> label="From" value={from} onChange={setFrom} options={FROM_OPTIONS} />
+            </div>
+          )}
         </div>
-        {compact ? <Segmented label="Library section" size="sm" value={kind} onChange={setKind} options={kinds} className="self-start" /> : (
+        {compact ? (
+          // four sections in the narrow left panel: a little less padding in each, so they fit down to a panel of about 230 px
+          <Segmented label="Library section" size="sm" value={section} onChange={choose} options={sections} className="max-w-full self-start [&>button]:px-1.5" />
+        ) : (
           <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Library sections">
-            {kinds.map((k) => (
-              <button key={k.value} role="tab" aria-selected={kind === k.value} onClick={() => setKind(k.value)} className={cn('rounded-full border px-3 py-1 text-[12px] font-medium transition-colors', kind === k.value ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted hover:text-fg')}>
+            {sections.map((k) => (
+              <button key={k.value} role="tab" aria-selected={section === k.value} onClick={() => choose(k.value)} className={cn('rounded-full border px-3 py-1 text-[12px] font-medium transition-colors', section === k.value ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted hover:text-fg')}>
                 {k.label}
               </button>
             ))}
@@ -134,19 +201,125 @@ export function LibraryBrowser({ compact = false, browse = false, styleName }: {
         )}
       </div>
       <div className={cn('min-h-0 flex-1 overflow-y-auto', compact ? 'p-2' : 'pt-4')}>{body}</div>
+
+      {detail && (
+        <AssetDetail
+          asset={detail}
+          open
+          onOpenChange={(o) => !o && setDetail(null)}
+          onUpdated={setDetail}
+          onDeleted={() => setDetail(null)}
+          onOverride={(a) => {
+            setDetail(null)
+            addAsset({ name: a.name, kind: a.kind, summary: a.summary, tags: a.tags, hint: `Your picture will be used instead of the built-in “${a.name}” in every reel.` })
+          }}
+        />
+      )}
+      {!onAddAsset && own && <AddAssetDialog open onOpenChange={(o) => !o && setOwn(null)} initial={own} />}
     </div>
   )
 }
 
+interface SectionProps {
+  section: AssetSection
+  catalog: Catalog
+  assets: AssetInfo[] | undefined
+  folder: string | undefined
+  q: string
+  from: From
+  style: string
+  compact: boolean
+  onOpen: (asset: AssetInfo) => void
+  onAddAsset: (initial?: AddAssetInitial) => void
+  /** adds the object to the scene at the playhead (the studio's left panel); null when no project is open */
+  onAddToScene: ((name: string) => void) | null
+}
+
+/** Characters, objects or places: the engine's own and the asset library's, filtered by where they come from and by the search. */
+function AssetSection({ section, catalog, assets, folder, q, from, style, compact, onOpen, onAddAsset, onAddToScene }: SectionProps) {
+  const kind = SECTION_KIND[section]
+  const info = KIND_INFO[kind]
+  const Icon = KIND_ICON[kind]
+  const all = libraryItems(catalog, section, assets)
+  const mine = all.filter((i) => i.origin === 'user').length
+  const items = all.filter((i) => fromMatches(from, i.origin) && itemMatches(i, q))
+  const addMine = () => onAddAsset({ kind })
+
+  if (all.length === 0 || (from === 'user' && mine === 0)) {
+    const none = all.length === 0
+    return (
+      <EmptyState
+        art={<Icon className="size-9 text-accent" strokeWidth={1.4} aria-hidden />}
+        title={none ? `The library has no ${info.plural} yet` : `You have not added any ${info.plural} yet`}
+        action={
+          <Button variant="primary" onClick={addMine}>
+            <Plus className="size-4" aria-hidden /> Add asset
+          </Button>
+        }
+      >
+        {compact ? 'Choose a picture and it is ready to use in a scene.' : 'Drop a picture on this page, or press Add asset.'} SVG, PNG, JPG and WebP all work, and a picture with a plain background gets it removed automatically.
+        {folder && !compact ? (
+          <>
+            {' '}
+            Your assets are saved in <code className="break-all font-mono text-[12px] text-fg">{folder}</code>.
+          </>
+        ) : null}
+      </EmptyState>
+    )
+  }
+  if (items.length === 0) return <p className="px-2 py-8 text-center text-muted">Nothing matches.</p>
+
+  const count = (
+    <div className="sr-only" role="status">
+      {items.length} {items.length === 1 ? info.label.toLowerCase() : info.plural} shown
+    </div>
+  )
+
+  if (compact) {
+    return (
+      <>
+        <div className="grid gap-0.5">
+          {items.map((i) => (
+            <ObjectRow key={i.entry.name} item={i} style={style} onAdd={onAddToScene ? () => onAddToScene(i.entry.name) : null} />
+          ))}
+        </div>
+        <button type="button" onClick={addMine} className="mt-2 flex w-full items-center gap-2 rounded-ctl border-t border-line px-2 pb-1 pt-2.5 text-left text-accent hover:underline">
+          <Plus className="size-3.5" aria-hidden /> Add your own…
+        </button>
+        {count}
+      </>
+    )
+  }
+
+  const grid = section === 'backgrounds' ? 'grid-cols-[repeat(auto-fill,minmax(280px,1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(180px,1fr))]'
+  return (
+    <>
+      <div className={cn('grid gap-4', grid)}>
+        {items.map((i) => (
+          <Entry key={i.entry.name} item={i} section={section} style={style} onOpen={onOpen} />
+        ))}
+      </div>
+      {count}
+    </>
+  )
+}
+
+/** The engine's own characters and sets keep the renderer's thumbnails; everything from the asset library has its own card. */
+function Entry({ item, section, style, onOpen }: { item: LibraryItem; section: AssetSection; style: string; onOpen: (a: AssetInfo) => void }) {
+  if (item.origin === 'engine' && section === 'backgrounds') return <EngineBackgroundCard entry={item.entry} style={style} />
+  if (item.origin === 'engine' && section === 'characters') return <EngineCharacterCard entry={item.entry} style={style} />
+  return section === 'backgrounds' ? <LibraryPlaceCard item={item} style={style} onOpen={onOpen} /> : <LibraryCard item={item} style={style} onOpen={onOpen} />
+}
+
 interface Ctx {
   api: ReturnType<typeof useApi>
-  match: (e: { name: string; summary?: string }) => boolean
+  match: (e: { name: string; summary?: string; tags?: string[] }) => boolean
   add: ReturnType<typeof useAddToScene> | null
-  style: string
   compact: boolean
 }
 
-function renderKind(kind: Kind, catalog: Catalog, { api, match, add, style, compact }: Ctx): ReactNode {
+/** The sections that are the engine's alone: actions, camera moves, sounds, props, transitions, caption styles and easings. */
+function renderKind(kind: Exclude<LibrarySection, AssetSection>, catalog: Catalog, { api, match, add, compact }: Ctx): ReactNode {
   const grid = compact ? 'grid-cols-2' : 'grid-cols-[repeat(auto-fill,minmax(210px,1fr))]'
   const empty = <p className="px-2 py-8 text-center text-muted">Nothing matches.</p>
   switch (kind) {
@@ -210,48 +383,6 @@ function renderKind(kind: Kind, catalog: Catalog, { api, match, add, style, comp
         empty
       )
     }
-    case 'backgrounds':
-      return (
-        <div className={cn('grid gap-4', 'grid-cols-[repeat(auto-fill,minmax(280px,1fr))]')}>
-          {catalog.backgrounds.filter(match).map((b) => (
-            <article key={b.name} className="overflow-hidden rounded-card border border-line bg-panel">
-              <div className="grid grid-cols-3 gap-px bg-line">
-                {['day', 'dusk', 'night'].map((t) => (
-                  <img key={t} src={api.libraryThumbUrl('background', b.name, t, style)} alt={`${b.name} at ${t}`} loading="lazy" className="aspect-[9/14] w-full object-cover" />
-                ))}
-              </div>
-              <div className="p-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">{b.name}</h3>
-                  <span className="text-[11px] text-faint">{Object.keys(b.slots ?? {}).filter((s) => !s.startsWith('off_')).length} places</span>
-                </div>
-                <p className="mt-1 text-[12px] leading-snug text-muted">{b.summary}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      )
-    case 'characters':
-      return (
-        <div className={cn('grid gap-4', 'grid-cols-[repeat(auto-fill,minmax(180px,1fr))]')}>
-          {catalog.archetypes.filter(match).map((a) => (
-            <article key={a.name} className="overflow-hidden rounded-card border border-line bg-panel">
-              <img src={api.libraryThumbUrl('archetype', a.name, 'day', style)} alt={`${a.name} archetype`} loading="lazy" className="aspect-[9/12] w-full object-cover" />
-              <div className="p-3">
-                <h3 className="font-semibold capitalize">{a.name}</h3>
-                <p className="mt-1 text-[12px] leading-snug text-muted">{a.summary}</p>
-                <div className="mt-2 flex gap-1">
-                  {Object.entries(a.palette ?? {})
-                    .slice(0, 6)
-                    .map(([role, c]) => (
-                      <span key={role} title={`${role} ${c}`} className="size-4 rounded-full border border-black/10" style={{ background: c }} />
-                    ))}
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )
     case 'props':
       return (
         <div className={cn('grid gap-2', grid)}>

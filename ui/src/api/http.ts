@@ -77,6 +77,44 @@ export function createHttpApi(): Api {
     libraryThumbUrl: (kind, name, timeOfDay, style) =>
       `/api/library/thumb/${kind}/${encodeURIComponent(name)}${qs({ time_of_day: timeOfDay, style })}`,
 
+    listAssets: () => json('/api/assets'),
+    createAssetDraft: (file, opts = {}) =>
+      json(`/api/assets/draft${qs({ filename: opts.filename ?? (file instanceof File ? file.name : 'asset'), kind: opts.kind })}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: file,
+      }),
+    assetDraftThumbUrl: (id, look) =>
+      `/api/assets/draft/${encodeURIComponent(id)}/thumb${qs({
+        style: look.style,
+        time_of_day: look.timeOfDay,
+        true_scale: look.trueScale ? 'true' : undefined,
+        kind: look.kind,
+        height: look.height,
+        anchor_x: look.anchor?.[0],
+        anchor_y: look.anchor?.[1],
+        facing: look.facing,
+        cutout: look.cutout === null || look.cutout === undefined ? undefined : String(look.cutout),
+      })}`,
+    commitAssetDraft: (id, fields, replace = false) => post(`/api/assets/draft/${encodeURIComponent(id)}/commit`, { ...fields, replace }),
+    discardAssetDraft: async (id) => {
+      await request(`/api/assets/draft/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    },
+    updateAsset: (name, changes) =>
+      json(`/api/assets/${encodeURIComponent(name)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(changes),
+      }),
+    deleteAsset: async (name) => {
+      await request(`/api/assets/${encodeURIComponent(name)}`, { method: 'DELETE' })
+    },
+    assetThumbUrl: (a, style, timeOfDay, trueScale) =>
+      `/api/assets/${encodeURIComponent(a.name)}/thumb${qs({ style, time_of_day: timeOfDay, true_scale: trueScale ? 'true' : undefined, v: a.version })}`,
+    assetArtUrl: (name) => `/api/assets/${encodeURIComponent(name)}/art`,
+    scriptAssets: (script) => post('/api/script/assets', { script }),
+    fillGaps: (spec, only) => post('/api/spec/fill-gaps', { spec, ...(only ? { only } : {}) }),
+
     ttsEngines: () => json('/api/tts/engines'),
     ttsVoices: (engine) => json(`/api/tts/voices${qs({ engine })}`),
     ttsSample: async ({ engine, voice, text, confirmBilling }) =>

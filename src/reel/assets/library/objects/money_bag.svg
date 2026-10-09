@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 230">
+  <path d="M72 62C54 84 0 112 0 160C0 204 40 230 95 230C150 230 190 204 190 160C190 112 136 84 118 62Z" fill="#d9a35a" data-role="body"/>
+  <path d="M118 62C136 84 190 112 190 160C190 204 150 230 95 230C140 222 168 196 168 160C168 120 138 86 112 62Z" fill="#b57a35" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M58 96C34 120 16 144 15 172C15 188 20 200 30 210C24 188 30 150 66 108Z" fill="#efc88a" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <path d="M74 66C58 50 42 32 36 10C50 14 60 20 72 26C78 10 86 2 95 0C104 2 112 10 118 26C130 20 140 14 154 10C148 32 132 50 116 66Z" fill="#d9a35a" data-role="body"/>
+  <path d="M74 66C58 50 48 40 42 26C54 34 66 40 76 40C84 44 106 44 114 40C124 40 136 34 148 26C142 40 132 52 116 66Z" fill="#b57a35" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="58" y="58" width="74" height="20" rx="10" fill="#7d4a2a" data-role="accent"/>
+  <path d="M104 74C112 86 114 98 106 112C100 100 98 88 96 76Z" fill="#7d4a2a" data-role="accent" data-lod="1"/>
+  <path d="M118 74C128 84 136 96 134 110C126 100 118 90 110 78Z" fill="#7d4a2a" data-role="accent" data-lod="1"/>
+  <path d="M71.1 116.8H98.4A20.6 20.6 0 0 1 98.4 158H71.1L106.1 199.2M71.1 137.4H119" fill="none" stroke="#fff3d4" stroke-width="13.5" stroke-linecap="round" stroke-linejoin="round" data-lod="0"/>
+</svg>

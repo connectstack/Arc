@@ -112,6 +112,20 @@ class PaperCutout(StylePack):
         seed = _h(b.centerX(), b.centerY(), ctx.tick)
         return skia.DiscretePathEffect.Make(seg, dev, seed)
 
+    @staticmethod
+    def _wobbled(path: skia.Path, eff: skia.PathEffect | None) -> skia.Path:
+        """The path with the paper wobble applied.  The effect drops the path's fill rule, which would fill the holes of an
+        even-odd shape (a ring, a window frame): so the rule is put back on the result."""
+        if eff is None:
+            return path
+        probe = skia.Paint()
+        probe.setPathEffect(eff)
+        out = skia.Path()
+        if not probe.getFillPath(path, out):
+            return path
+        out.setFillType(path.getFillType())
+        return out
+
     def _tone(self, c: str, shape: Shape, path: skia.Path) -> str:
         b = path.getBounds()
         k = (_h(b.centerX(), b.centerY(), 3) / 65535.0 - 0.5) * 0.07
@@ -136,18 +150,17 @@ class PaperCutout(StylePack):
             Color=skcolor(ctx.scheme.shadow, min(0.55, 0.30 + 0.025 * shape.elev) * shape.alpha),
         )
         p.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, sigma))
-        eff = self._jitter(shape, path, ctx)
-        if eff is not None:
-            p.setPathEffect(eff)
+        shape_path = self._wobbled(path, self._jitter(shape, path, ctx))
         canvas.save()
         canvas.translate(dx, dy)
-        canvas.drawPath(path, p)
+        canvas.drawPath(shape_path, p)
         canvas.restore()
 
     def paint_body(
         self, canvas: skia.Canvas, shape: Shape, path: skia.Path, ctx: StyleContext
     ) -> None:
         eff = self._jitter(shape, path, ctx)
+        wobbled = self._wobbled(path, eff)
         if shape.fill is not None and not isinstance(shape.geom, Line):
             base = self._tone(self.color(shape.fill, shape, ctx), shape, path)
             b = path.getBounds()
@@ -161,9 +174,7 @@ class PaperCutout(StylePack):
                 edge.setStyle(skia.Paint.kStroke_Style)
                 edge.setStrokeWidth(5.0)
                 edge.setStrokeJoin(skia.Paint.kRound_Join)
-                if eff is not None:
-                    edge.setPathEffect(eff)
-                canvas.drawPath(path, edge)
+                canvas.drawPath(wobbled, edge)
             fill = skia.Paint(AntiAlias=True, Color=skcolor(base, shape.alpha))
             if shape.gradient is not None:
                 fill = self.fill_paint(shape, path, ctx)
@@ -179,9 +190,7 @@ class PaperCutout(StylePack):
                         ],
                     )
                 )
-            if eff is not None:
-                fill.setPathEffect(eff)
-            canvas.drawPath(path, fill)
+            canvas.drawPath(wobbled, fill)
         if shape.stroke and shape.sw > 0:
             sp = self.stroke_paint(shape, ctx)
             if eff is not None and isinstance(shape.geom, Line):
@@ -223,6 +232,29 @@ class PaperCutout(StylePack):
         paint = skia.Paint(AntiAlias=True, Shader=self._texture_shader(shape, path, ctx))
         paint.setBlendMode(skia.BlendMode.kSoftLight)
         paint.setAlphaf((0.55 if shape.material == "paper" else 0.38) * shape.alpha)
+        canvas.save()
+        canvas.clipPath(path, doAntiAlias=True)
+        canvas.drawPaint(paint)
+        canvas.restore()
+
+    def paint_image(
+        self, canvas: skia.Canvas, shape: Shape, path: skia.Path, ctx: StyleContext
+    ) -> None:
+        """A picture is cut out of paper too: the white core of the paper along its edge, then the picture, then the grain."""
+        backdrop = shape.tag == "backdrop"
+        if not backdrop and shape.alpha > 0.5:
+            edge = skia.Paint(AntiAlias=True, Color=skcolor("#fbf6ea", shape.alpha))
+            edge.setStyle(skia.Paint.kStroke_Style)
+            edge.setStrokeWidth(9.0)
+            edge.setStrokeJoin(skia.Paint.kRound_Join)
+            eff = self._jitter(shape, path, ctx)
+            if eff is not None:
+                edge.setPathEffect(eff)
+            canvas.drawPath(path, edge)
+        self.draw_picture(canvas, shape, self.image_paint(shape, ctx, saturation=0.94))
+        paint = skia.Paint(AntiAlias=True, Shader=self._texture_shader(shape, path, ctx))
+        paint.setBlendMode(skia.BlendMode.kSoftLight)
+        paint.setAlphaf((0.30 if backdrop else 0.34) * shape.alpha)
         canvas.save()
         canvas.clipPath(path, doAntiAlias=True)
         canvas.drawPaint(paint)

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 0 488 1150">
+  <path d="M236 132 V44 M214 66 H258 M222 88 H250" fill="none" stroke="#3f4f66" stroke-width="5" stroke-linecap="round" data-lod="1"/>
+  <path d="M352 112 V134 M432 112 V134" fill="none" stroke="#3f4f66" stroke-width="10" stroke-linecap="round" data-lod="0"/>
+  <rect x="338" y="40" width="108" height="74" rx="22" fill="#3f4f66"/>
+  <path d="M334 54 L392 2 L450 54 Q392 40 334 54 Z" fill="#23262e" data-lod="0"/>
+  <rect x="352" y="52" width="14" height="52" rx="7" fill="#ffffff" opacity="0.2" data-lod="1"/>
+  <rect data-role="body" x="62" y="78" width="108" height="58" rx="3" fill="#f2b58f" data-lod="0"/>
+  <rect data-role="body_dark" x="54" y="68" width="124" height="16" rx="4" fill="#d98f6a" data-lod="0"/>
+  <rect x="96" y="98" width="34" height="38" fill="#23262e" opacity="0.55" data-lod="1"/>
+  <rect data-role="body" x="20" y="132" width="420" height="1018" fill="#f2b58f"/>
+  <rect data-role="body_dark" x="440" y="132" width="44" height="1018" fill="#d98f6a"/>
+  <rect data-role="body_dark" x="8" y="124" width="488" height="30" rx="6" fill="#d98f6a"/>
+  <rect data-role="body_dark" x="20" y="1006" width="420" height="144" fill="#d98f6a"/>
+  <path d="M48 226 h64 M148 226 h64 M248 226 h64 M348 226 h64 M48 330 h64 M148 330 h64 M348 330 h64 M148 434 h64 M248 434 h64 M348 434 h64 M48 538 h64 M148 538 h64 M248 538 h64 M48 642 h64 M248 642 h64 M348 642 h64 M48 746 h64 M148 746 h64 M348 746 h64 M148 850 h64 M248 850 h64 M348 850 h64 M48 954 h64 M148 954 h64 M248 954 h64" fill="none" stroke="#7cc4e8" stroke-width="72" data-lod="1"/>
+  <path d="M48 434 h64 M348 538 h64 M248 330 h64 M348 954 h64 M248 746 h64 M148 642 h64 M48 850 h64" fill="none" stroke="#ffe07a" stroke-width="72" data-lod="1" data-material="emissive"/>
+  <path d="M48 190 h64 v72 h-64Z M148 190 h64 v72 h-64Z M248 190 h64 v72 h-64Z M348 190 h64 v72 h-64Z M48 294 h64 v72 h-64Z M148 294 h64 v72 h-64Z M248 294 h64 v72 h-64Z M348 294 h64 v72 h-64Z M48 398 h64 v72 h-64Z M148 398 h64 v72 h-64Z M248 398 h64 v72 h-64Z M348 398 h64 v72 h-64Z M48 502 h64 v72 h-64Z M148 502 h64 v72 h-64Z M248 502 h64 v72 h-64Z M348 502 h64 v72 h-64Z M48 606 h64 v72 h-64Z M148 606 h64 v72 h-64Z M248 606 h64 v72 h-64Z M348 606 h64 v72 h-64Z M48 710 h64 v72 h-64Z M148 710 h64 v72 h-64Z M248 710 h64 v72 h-64Z M348 710 h64 v72 h-64Z M48 814 h64 v72 h-64Z M148 814 h64 v72 h-64Z M248 814 h64 v72 h-64Z M348 814 h64 v72 h-64Z M48 918 h64 v72 h-64Z M148 918 h64 v72 h-64Z M248 918 h64 v72 h-64Z M348 918 h64 v72 h-64Z" fill="none" stroke="#7cc4e8" stroke-width="3" stroke-linecap="round" data-lod="0"/>
+  <path d="M44 266 h72 M144 266 h72 M244 266 h72 M344 266 h72 M44 370 h72 M144 370 h72 M244 370 h72 M344 370 h72 M44 474 h72 M144 474 h72 M244 474 h72 M344 474 h72 M44 578 h72 M144 578 h72 M244 578 h72 M344 578 h72 M44 682 h72 M144 682 h72 M244 682 h72 M344 682 h72 M44 786 h72 M144 786 h72 M244 786 h72 M344 786 h72 M44 890 h72 M144 890 h72 M244 890 h72 M344 890 h72 M44 994 h72 M144 994 h72 M244 994 h72 M344 994 h72" fill="none" stroke="#ffffff" stroke-width="7" opacity="0.5" data-lod="1"/>
+  <path d="M260 384 h42 M60 592 h42 M360 696 h42 M160 904 h42 M360 904 h42" fill="none" stroke="#ffffff" stroke-width="22" opacity="0.9" data-lod="1"/>
+  <path d="M462 190 v72 M462 294 v72 M462 398 v72 M462 502 v72 M462 606 v72 M462 710 v72 M462 814 v72 M462 918 v72" fill="none" stroke="#7cc4e8" stroke-width="20" opacity="0.7" data-lod="1"/>
+  <rect x="44" y="1040" width="60" height="78" rx="3" fill="#7cc4e8" data-lod="0"/>
+  <rect x="356" y="1040" width="60" height="78" rx="3" fill="#7cc4e8" data-lod="0"/>
+  <rect x="130" y="1030" width="200" height="104" rx="4" fill="#7cc4e8" data-lod="0"/>
+  <path d="M230 1030 V1134" fill="none" stroke="#23262e" stroke-width="8" stroke-linecap="round" opacity="0.3" data-lod="1"/>
+  <rect data-role="accent" x="112" y="1002" width="236" height="28" rx="6" fill="#2f9e9a" data-lod="0"/>
+  <rect data-role="accent_dark" x="112" y="1022" width="236" height="8" fill="#217a77" data-lod="1"/>
+  <rect data-role="body" x="104" y="1134" width="252" height="16" rx="3" fill="#f2b58f"/>
+</svg>

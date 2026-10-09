@@ -81,7 +81,8 @@ resolution, background spec, camera state, every character's baked pose row, tim
 
 Everything extensible lives in a `Registry` (`reel.core.registry`) held by one `Catalog`:
 `actions`, `backgrounds`, `styles`, `transitions`, `easings`, `camera_moves`, `sfx`, `archetypes`,
-`props`, `caption_styles`. Decorators register into the global `CATALOG`; plugins (a module, a `.py`
+`props`, `caption_styles`, plus `objects` and `assets` for the [asset library](assets.md) (a library character registers as a picture archetype, a place as a
+background, an object in `objects`). Decorators register into the global `CATALOG`; plugins (a module, a `.py`
 file or a folder; `--plugin PATH` or `REEL_PLUGINS`) are imported the same way. The linter reports exactly
 which names a spec uses that are not registered, and `reel manifest` dumps the catalog the LLM prompt reads.
 
@@ -100,6 +101,8 @@ src/reel/
   templates/   base (BuildContext, @register_background) · palette · abstract · room · street · forest
                rooftop · stage · whiteboard  (+ manifest.json: the catalog the LLM prompt reads)
   audio/       sfx · music · tts · align · mix · pipeline          (see audio.md)
-  llm/         base (SpecGenerator, Manual) · client (Ollama/OpenAI/Anthropic) · prompt · generator · heuristic   (see llm.md)
+  assets/      model · svg + raster (importers) · art · library (discovery, registration) · sprite · objects · places · preview
+               match (words -> assets) · coverage (what a script needs) · gaps · layout (room for wide pictures) · lexicon.json · library/ (the built-in art)   (see assets.md)
+  llm/         base (SpecGenerator, Manual) · client (Ollama/OpenAI/Anthropic) · prompt · generator · heuristic · library_plan   (see llm.md)
   cli/         main (typer) · build · pipeline (the shared render flow) · report · scaffold
 ```

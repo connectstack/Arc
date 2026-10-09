@@ -23,6 +23,7 @@ import difflib
 import itertools
 import json
 import re
+import shlex
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -241,6 +242,16 @@ def iter_refs(data: Any, *, style_override: str | None = None) -> Iterator[Ref]:
                     yield Ref(
                         "action", a["name"], jp("scenes", si, "layers", li, "actions", ai, "name")
                     )
+        for oi, ob in enumerate(_as_list(s.get("objects"))):
+            o = _as_dict(ob)
+            if isinstance(o.get("asset"), str):
+                yield Ref("object", o["asset"], jp("scenes", si, "objects", oi, "asset"))
+            for mi, mo in enumerate(_as_list(o.get("motions"))):
+                m2 = _as_dict(mo)
+                if isinstance(m2.get("ease"), str):
+                    yield Ref(
+                        "easing", m2["ease"], jp("scenes", si, "objects", oi, "motions", mi, "ease")
+                    )
         for ki, cp in enumerate(_as_list(s.get("captions"))):
             c2 = _as_dict(cp)
             if isinstance(c2.get("style"), str):
@@ -257,7 +268,8 @@ def iter_refs(data: Any, *, style_override: str | None = None) -> Iterator[Ref]:
 _REMEDIATION = {
     "action": "scaffold it with `reel new-action {name}` and implement it (docs/adding-an-action.md), "
     "or run with --lenient to fall back to `idle`",
-    "background": "add a template module in src/reel/templates/ with @register_background "
+    "background": "add the place to your asset library (drop an SVG or picture in assets/places/, or run "
+    "`reel assets add FILE --kind place`; docs/assets.md), or write a template module with @register_background "
     "(docs/adding-a-background.md)",
     "style": "add a folder in src/reel/styles/ with a StylePack and register it "
     "(docs/adding-a-style.md)",
@@ -265,8 +277,11 @@ _REMEDIATION = {
     "easing": "register it with @register_easing in core/easing.py",
     "camera_move": "register it with @register_camera_move in core/camera.py",
     "sfx": "add a synth with @register_sfx in audio/sfx.py or drop assets/sfx/{name}.wav",
-    "archetype": "register an Archetype in core/archetypes.py",
+    "archetype": "add the character to your asset library (`reel assets add FILE --kind character`; docs/assets.md), "
+    "or register an Archetype in core/archetypes.py",
     "prop": "register a PropDef in core/archetypes.py",
+    "object": "add it to your asset library (drop an SVG or PNG in assets/objects/, or run "
+    "`reel assets add FILE`; docs/assets.md) or run with --lenient to leave it out",
     "caption_style": "register it with @register_caption_style in core/captions.py",
 }
 
@@ -431,6 +446,7 @@ def lint_data(
     _text_pass(data, rep)
     _registry_pass(data, cat, opts, rep)
     _params_pass(data, cat, rep)
+    _gaps_pass(data, cat, rep)
 
     spec: ReelSpec | None = None
     try:
@@ -509,6 +525,48 @@ def _registry_pass(data: dict[str, Any], cat: Catalog, opts: LintOptions, rep: L
         )
 
 
+# -- pass 3b: what the asset library lacked when the spec was written ------------------------
+def _gaps_pass(data: dict[str, Any], cat: Catalog, rep: LintReport) -> None:
+    """``meta.library_gaps``: say what the library still lacks, and what it has now (the swap is ``reel assets fill``)."""
+    from reel.assets.gaps import resolve_gap
+    from reel.assets.model import slug
+
+    for gi, g in enumerate(_as_list(_as_dict(data.get("meta")).get("library_gaps"))):
+        gap = _as_dict(g)
+        kind, name = gap.get("kind"), gap.get("name")
+        if kind not in ("character", "object", "place") or not isinstance(name, str):
+            continue
+        path = jp("meta", "library_gaps", gi)
+        have = resolve_gap(gap, cat)
+        shown = gap.get("stand_in")
+        if have is not None:
+            rep.issues.append(
+                LintIssue(
+                    Severity.INFO,
+                    "LIBRARY_GAP_FILLED",
+                    path,
+                    f"the library has {kind} {have.name!r} now (the script asked for {name!r})",
+                    "make the spec use it: `reel assets fill SPEC.json`, or Fill library gaps in Reel Studio",
+                    kind=kind,
+                    name=have.name,
+                )
+            )
+        else:
+            rep.issues.append(
+                LintIssue(
+                    Severity.INFO,
+                    "LIBRARY_GAP",
+                    path,
+                    f"the script wants {'a' if kind != 'object' else 'an'} {kind} {name!r} that the asset library does not have"
+                    + (f"; {shown!r} stands in for it" if shown else "; it was left out"),
+                    f"add it: `reel assets add FILE --kind {kind} --name {slug(name)} --tags {shlex.quote(name.lower())}`, "
+                    "or Library > Add asset in Reel Studio (docs/assets.md)",
+                    kind=kind,
+                    name=name,
+                )
+            )
+
+
 # -- pass 4: params -------------------------------------------------------------------------
 def _params_pass(data: dict[str, Any], cat: Catalog, rep: LintReport) -> None:
     for si, sc in enumerate(_as_list(data.get("scenes"))):
@@ -585,7 +643,7 @@ def _semantic_pass(spec: ReelSpec, cat: Catalog, opts: LintOptions, rep: LintRep
                 )
             )
         seen.setdefault(ch.id, ci)
-        _check_palette(ch, ci, rep)
+        _check_palette(ch, ci, rep, cat)
     char_ids = set(seen)
     seen = {}
     for si, sc in enumerate(spec.scenes):
@@ -716,16 +774,70 @@ def _semantic_pass(spec: ReelSpec, cat: Catalog, opts: LintOptions, rep: LintRep
     _audio_checks(spec, opts, rep)
 
 
-def _check_palette(ch: CharacterSpec, ci: int, rep: LintReport) -> None:
+def _sprite_roles(ch: CharacterSpec, cat: Catalog) -> list[str] | None:
+    """The colour roles of a character made from library art (None for a body): what its drawing marks as recolourable."""
+    if ch.archetype not in cat.archetypes:
+        return None
+    asset = (getattr(cat.archetypes.get(ch.archetype), "features", None) or {}).get("asset")
+    if asset is None:
+        return None
+    from reel.assets.art import ArtError, load_art
+
+    try:
+        return sorted(load_art(asset).roles)
+    except ArtError:
+        return []
+
+
+def _picture_notes(spec: ReelSpec, ly: Any, path: str, cat: Catalog, rep: LintReport) -> None:
+    """What a character made from library art (one picture, not a jointed body) cannot do among what its layer asks."""
+    ch = next((c for c in spec.characters if c.id == ly.character), None)
+    if ch is None or ch.archetype not in cat.archetypes:
+        return
+    arch = cat.archetypes.get(ch.archetype)
+    if getattr(arch, "category", "") != "sprite":
+        return
+    from reel.assets.sprite import sprite_notes
+
+    for note in sprite_notes(arch, [], {a.name for a in ly.actions}):
+        rep.issues.append(LintIssue(Severity.INFO, "PICTURE_LIMIT", path, f"{ch.id}: {note}"))
+
+
+def _object_roles(asset: str, cat: Catalog) -> tuple[str, ...] | None:
+    """The recolourable parts of a library object (``None`` when it is not a known object: another check says so)."""
+    if asset not in cat.objects:
+        return None
+    return tuple(getattr(cat.objects.get(asset), "roles", ()) or ())
+
+
+def _check_palette(ch: CharacterSpec, ci: int, rep: LintReport, cat: Catalog) -> None:
+    if ch.props and _sprite_roles(ch, cat) is not None:
+        rep.issues.append(
+            LintIssue(
+                Severity.INFO,
+                "PICTURE_LIMIT",
+                jp("characters", ci, "props"),
+                f"{ch.id}: props are not drawn on a picture character",
+            )
+        )
+    sprite = _sprite_roles(ch, cat)
+    known = PALETTE_ROLES if sprite is None else tuple(sprite)
     for role, color in ch.palette.items():
         path = jp("characters", ci, "palette", role)
-        if role not in PALETTE_ROLES:
+        if role not in known:
             rep.issues.append(
                 LintIssue(
                     Severity.WARNING,
                     "PALETTE_ROLE",
                     path,
-                    f"unknown palette role {role!r}; known roles: {', '.join(PALETTE_ROLES)}",
+                    f"unknown palette role {role!r}; "
+                    + (
+                        f"the recolourable parts of {ch.archetype!r} are: {', '.join(known)}"
+                        if sprite
+                        else "this picture has no recolourable parts"
+                        if sprite is not None
+                        else f"known roles: {', '.join(PALETTE_ROLES)}"
+                    ),
                 )
             )
         if not _HEX.match(color):
@@ -784,6 +896,107 @@ def _scene_checks(
                 )
             )
 
+    # objects from the asset library
+    from reel.assets.objects import motion_problems
+
+    if len(sc.objects) > 14:
+        add(
+            LintIssue(
+                W,
+                "OBJECT_CLUTTER",
+                jp("scenes", si, "objects"),
+                f"scene {sc.id!r} has {len(sc.objects)} objects; more than 14 makes the picture busy and slow to draw",
+            )
+        )
+    for oi, ob in enumerate(sc.objects):
+        op = jp("scenes", si, "objects", oi)
+        if isinstance(ob.position, str) and ob.position not in slots:
+            add(
+                LintIssue(
+                    E,
+                    "POSITION_SLOT",
+                    jp(op, "position"),
+                    f"position slot {ob.position!r} does not exist in background {sc.background.template!r}",
+                    "available: " + ", ".join(sorted(slots)),
+                )
+            )
+        elif isinstance(ob.position, list) and not (
+            -1.0 <= ob.position[0] <= 2.0 and -0.2 <= ob.position[1] <= 1.4
+        ):
+            add(
+                LintIssue(
+                    W,
+                    "POSITION_RANGE",
+                    jp(op, "position"),
+                    f"position {ob.position} is far outside the frame (x in [0,1], y in [0,1])",
+                )
+            )
+        if ob.t1 is not None and ob.t1 <= ob.t0:
+            add(
+                LintIssue(
+                    E, "TIME_RANGE", op, f"object t1 ({ob.t1:g}) must be after t0 ({ob.t0:g})"
+                )
+            )
+        elif ob.t0 >= dur - 1e-6:
+            add(
+                LintIssue(
+                    W,
+                    "TIME_OVERFLOW",
+                    op,
+                    f"object appears at {ob.t0:g}s, at/after the scene end ({dur:g}s); it is never seen",
+                )
+            )
+        if ob.palette:
+            parts = _object_roles(ob.asset, cat)
+            for role, color in ob.palette.items():
+                pp = jp(op, "palette", role)
+                if parts is not None and role not in parts:
+                    add(
+                        LintIssue(
+                            W,
+                            "PALETTE_ROLE",
+                            pp,
+                            f"unknown palette role {role!r}; "
+                            + (
+                                f"the recolourable parts of {ob.asset!r} are: {', '.join(parts)}"
+                                if parts
+                                else f"{ob.asset!r} has no recolourable parts"
+                            ),
+                        )
+                    )
+                if not _HEX.match(color):
+                    add(
+                        LintIssue(
+                            E,
+                            "PALETTE_COLOR",
+                            pp,
+                            f"{color!r} is not a hex colour like #e63946",
+                        )
+                    )
+        for mi, mo in enumerate(ob.motions):
+            mp = jp(op, "motions", mi)
+            for code, msg in motion_problems(mo):
+                add(LintIssue(E, code, mp, msg))
+            if isinstance(mo.to, str) and mo.type == "move" and mo.to not in slots:
+                add(
+                    LintIssue(
+                        E,
+                        "POSITION_SLOT",
+                        jp(mp, "to"),
+                        f"position slot {mo.to!r} does not exist in background {sc.background.template!r}",
+                        "available: " + ", ".join(sorted(slots)),
+                    )
+                )
+            if mo.t1 > dur + 1e-6 and mo.t1 > mo.t0:
+                add(
+                    LintIssue(
+                        W,
+                        "TIME_OVERFLOW",
+                        mp,
+                        f"motion ends at {mo.t1:g}s, after the scene ({dur:g}s); it will be cut off",
+                    )
+                )
+
     # layers
     for li, ly in enumerate(sc.layers):
         lp = jp("scenes", si, "layers", li)
@@ -799,6 +1012,7 @@ def _scene_checks(
             )
         else:
             used_chars.add(ly.character)
+            _picture_notes(spec, ly, lp, cat, rep)
         if isinstance(ly.position, str) and ly.position not in slots:
             add(
                 LintIssue(

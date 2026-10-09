@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 2 620 848">
+  <path d="M350 92 V2" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" data-lod="0"/>
+  <polygon points="352,2 412,22 352,44" fill="#f0702a" data-lod="0"/>
+  <circle cx="350" cy="92" r="8" fill="#f2b01e" data-lod="0"/>
+  <ellipse rx="17" cx="350" cy="118" fill="#f2b01e" data-lod="0" ry="21"/>
+  <ellipse data-role="body_dark" rx="30" cx="350" cy="146" fill="#cf9d5f" data-lod="0" ry="10"/>
+  <ellipse data-role="body" rx="44" cx="350" cy="160" fill="#efc58a" data-lod="0" ry="13"/>
+  <path data-role="body" d="M66 470 C62 440 76 404 100 376 L124 376 C148 404 162 440 158 470 Z" fill="#efc58a" data-lod="0"/>
+  <path data-role="body" d="M542 470 C538 440 552 404 576 376 L600 376 C624 404 638 440 634 470 Z" fill="#efc58a" data-lod="0"/>
+  <path data-role="body" d="M130 470 C126 420 138 358 178 302 L202 302 C242 358 254 420 250 470 Z" fill="#efc58a" data-lod="0"/>
+  <path data-role="body" d="M450 470 C446 420 458 358 498 302 L522 302 C562 358 574 420 570 470 Z" fill="#efc58a" data-lod="0"/>
+  <path data-role="body" d="M224 470 C220 360 242 252 320 172 L380 172 C458 252 480 360 476 470 Z" fill="#efc58a" data-lod="0"/>
+  <rect data-role="body_light" x="334" y="172" width="32" height="294" fill="#f9deb0" data-lod="1"/>
+  <path d="M280.5 230 Q350 250 419.5 230 M254.8 284 Q350 304 445.2 284 M239.2 338 Q350 358 460.8 338 M231 392 Q350 412 469 392 M228.6 444 Q350 464 471.4 444 M154.7 350 Q190 364 225.3 350 M474.7 350 Q510 364 545.3 350 M136.8 410 Q190 424 243.2 410 M456.8 410 Q510 424 563.2 410" fill="none" stroke="#23262e" stroke-width="7" stroke-linecap="round" opacity="0.2" data-lod="1"/>
+  <path d="M112 366 h0.1 M588 366 h0.1 M190 292 h0.1 M510 292 h0.1" fill="none" stroke="#f2b01e" stroke-width="13" stroke-linecap="round" data-lod="1"/>
+  <rect data-role="body" x="110" y="492" width="480" height="298" fill="#efc58a"/>
+  <rect data-role="body_dark" x="84" y="462" width="532" height="32" rx="6" fill="#cf9d5f" data-lod="0"/>
+  <rect data-role="accent" x="100" y="494" width="500" height="18" fill="#f0702a" data-lod="1"/>
+  <path data-role="body_dark" d="M132 720 V648 A22 22 0 0 1 176 648 V720 Z" fill="#cf9d5f" data-lod="1"/>
+  <ellipse rx="7" cx="154" cy="700" fill="#ffd54a" data-lod="1" data-material="emissive" ry="11"/>
+  <path data-role="body_dark" d="M524 720 V648 A22 22 0 0 1 568 648 V720 Z" fill="#cf9d5f" data-lod="1"/>
+  <ellipse rx="7" cx="546" cy="700" fill="#ffd54a" data-lod="1" data-material="emissive" ry="11"/>
+  <rect data-role="body_light" x="214" y="540" width="26" height="250" fill="#f9deb0" data-lod="0"/>
+  <rect data-role="body_dark" x="206" y="526" width="42" height="20" rx="3" fill="#cf9d5f" data-lod="1"/>
+  <rect data-role="body_dark" x="206" y="770" width="42" height="20" rx="3" fill="#cf9d5f" data-lod="1"/>
+  <rect data-role="body_light" x="460" y="540" width="26" height="250" fill="#f9deb0" data-lod="0"/>
+  <rect data-role="body_dark" x="452" y="526" width="42" height="20" rx="3" fill="#cf9d5f" data-lod="1"/>
+  <rect data-role="body_dark" x="452" y="770" width="42" height="20" rx="3" fill="#cf9d5f" data-lod="1"/>
+  <path data-role="accent" d="M274 790 V640 C274 590 312 556 350 536 C388 556 426 590 426 640 V790 Z" fill="#f0702a" data-lod="0"/>
+  <path d="M290 790 V642 C290 604 320 574 350 558 C380 574 410 604 410 642 V790 Z" fill="#4b2330" data-lod="0"/>
+  <path d="M350 566 V608" fill="none" stroke="#f2b01e" stroke-width="4" stroke-linecap="round" data-lod="0"/>
+  <path d="M334 654 C334 628 340 612 350 612 C360 612 366 628 366 654 L376 664 H324 Z" fill="#f2b01e" data-lod="0"/>
+  <circle cx="350" cy="670" r="6" fill="#23262e" opacity="0.7" data-lod="0"/>
+  <rect data-role="body_dark" x="66" y="790" width="568" height="30" rx="3" fill="#cf9d5f" data-lod="0"/>
+  <rect data-role="body" x="40" y="820" width="620" height="30" rx="3" fill="#efc58a" data-lod="0"/>
+  <rect data-role="body_light" x="270" y="790" width="160" height="20" fill="#f9deb0" data-lod="0"/>
+  <rect data-role="body_light" x="250" y="810" width="200" height="20" fill="#f9deb0" data-lod="0"/>
+  <rect data-role="body_light" x="230" y="830" width="240" height="20" fill="#f9deb0" data-lod="0"/>
+</svg>

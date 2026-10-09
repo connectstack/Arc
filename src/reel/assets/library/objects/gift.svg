@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 2 204 222">
+  <rect x="14" y="100" width="184" height="124" rx="6" fill="#b92f48" data-role="body_dark"/>
+  <rect x="19" y="104" width="134" height="114" rx="4" fill="#e8445f" data-role="body" data-lod="1" data-shadow="false"/>
+  <rect x="4" y="60" width="204" height="44" rx="9" fill="#b92f48" data-role="body_dark"/>
+  <rect x="9" y="64" width="160" height="34" rx="6" fill="#f56b84" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <rect x="88" y="60" width="36" height="164" fill="#e0a21a" data-role="accent_dark"/>
+  <rect x="91" y="64" width="24" height="154" fill="#ffcf40" data-role="accent" data-lod="1" data-shadow="false"/>
+  <path d="M106 62C90 30 50 2 34 20C22 36 56 62 106 66Z" fill="#ffcf40" data-role="accent"/>
+  <path d="M98 60C86 40 62 22 48 26C46 38 68 56 98 62Z" fill="#e0a21a" data-role="accent_dark" data-lod="1" data-shadow="false"/>
+  <path d="M106 62C122 30 162 2 178 20C190 36 156 62 106 66Z" fill="#ffcf40" data-role="accent"/>
+  <path d="M114 60C126 40 150 22 164 26C166 38 144 56 114 62Z" fill="#e0a21a" data-role="accent_dark" data-lod="1" data-shadow="false"/>
+  <rect x="92" y="46" width="28" height="26" rx="10" fill="#ffcf40" data-role="accent"/>
+  <rect x="97" y="51" width="10" height="8" rx="3" fill="#fff0b0" data-lod="1" data-shadow="false" opacity="0.8"/>
+</svg>

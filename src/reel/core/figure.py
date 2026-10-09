@@ -221,6 +221,12 @@ def build_figure(
     t: float = 0.0,
 ) -> FigureBuild:
     """All shapes of one posed character, in back-to-front order, plus its ground shadow."""
+    if (
+        arch.category == "sprite"
+    ):  # a character made from library art: the whole picture is posed, not a body
+        from reel.assets.sprite import build_sprite
+
+        return build_sprite(fig, arch, palette, props, t)
     from reel.core import props as prop_lib  # local import: props needs SB from this module
 
     d = fig.dims

@@ -138,6 +138,7 @@ def post_render(body: RenderBody, request: Request) -> dict[str, str]:
         "out_path": str(out),
         "base_dir": str(c.workspace.projects_dir),
         "plugins": list(c.plugins),
+        "assets": c.assets.dirs() if c.assets else [],
     }
     job = c.jobs.submit("render", f"Render ({body.preset})", payload)
     return {"job_id": job.id, "render_id": rid}

@@ -568,6 +568,68 @@
       "title": "LayerSpec",
       "type": "object"
     },
+    "LibraryGapSpec": {
+      "additionalProperties": false,
+      "description": "Something the script asks for that the asset library does not have, and what the spec shows instead.\n\nReel Studio lists these under \"not in the library\"; once the asset is added, ``scenes`` / ``character`` /\n``stand_in`` say what to swap.  The renderer ignores them.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "character",
+            "object",
+            "place"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "what the script calls it: dragon, castle, rickshaw",
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "scenes": {
+          "description": "ids of the scenes that want it",
+          "items": {
+            "type": "string"
+          },
+          "title": "Scenes",
+          "type": "array"
+        },
+        "character": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "characters only: the id of the character standing in for it",
+          "title": "Character"
+        },
+        "stand_in": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "the library name shown instead, or null when it was left out",
+          "title": "Stand In"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "LibraryGapSpec",
+      "type": "object"
+    },
     "MetaSpec": {
       "additionalProperties": false,
       "properties": {
@@ -641,6 +703,14 @@
           ],
           "default": null,
           "description": "caption safe-area margins"
+        },
+        "library_gaps": {
+          "description": "characters, places and objects the script needs that the asset library lacks",
+          "items": {
+            "$ref": "#/$defs/LibraryGapSpec"
+          },
+          "title": "Library Gaps",
+          "type": "array"
         }
       },
       "required": [
@@ -648,6 +718,226 @@
         "style"
       ],
       "title": "MetaSpec",
+      "type": "object"
+    },
+    "ObjectMotionSpec": {
+      "additionalProperties": false,
+      "description": "One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``shake``.\n\n``to`` is where a move goes ([x, y] or a slot) and the final value of a fade or grow; ``from`` is where a fade or\ngrow starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).",
+      "properties": {
+        "type": {
+          "description": "move | hop | float | spin | pulse | fade | grow | shake",
+          "title": "Type",
+          "type": "string"
+        },
+        "t0": {
+          "minimum": 0,
+          "title": "T0",
+          "type": "number"
+        },
+        "t1": {
+          "minimum": 0,
+          "title": "T1",
+          "type": "number"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "fade and grow: the start value",
+          "title": "From"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "move: [x, y] or a slot; fade and grow: the end value",
+          "title": "To"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "size of the effect (see the motion)",
+          "title": "Amount"
+        },
+        "count": {
+          "anyOf": [
+            {
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "hop and pulse: how many times",
+          "title": "Count"
+        },
+        "ease": {
+          "default": "ease_in_out",
+          "description": "easing curve name",
+          "title": "Ease",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "t0",
+        "t1"
+      ],
+      "title": "ObjectMotionSpec",
+      "type": "object"
+    },
+    "ObjectSpec": {
+      "additionalProperties": false,
+      "description": "A thing from the asset library placed in a scene (a car, a tree, a cake).",
+      "properties": {
+        "asset": {
+          "description": "Library object, e.g. car | tree | cake",
+          "title": "Asset",
+          "type": "string"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "[x,y] of the point it stands on, in screen fractions, or a slot of the background",
+          "title": "Position"
+        },
+        "scale": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 6,
+          "title": "Scale",
+          "type": "number"
+        },
+        "depth": {
+          "default": "mid",
+          "enum": [
+            "background",
+            "mid",
+            "foreground"
+          ],
+          "title": "Depth",
+          "type": "string"
+        },
+        "layer": {
+          "default": "behind",
+          "description": "at depth 'mid': drawn behind the characters, or in front of them",
+          "enum": [
+            "behind",
+            "front"
+          ],
+          "title": "Layer",
+          "type": "string"
+        },
+        "facing": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "left",
+            "right"
+          ],
+          "title": "Facing",
+          "type": "string"
+        },
+        "rotation": {
+          "default": 0.0,
+          "description": "degrees, clockwise",
+          "maximum": 360,
+          "minimum": -360,
+          "title": "Rotation",
+          "type": "number"
+        },
+        "alpha": {
+          "default": 1.0,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Alpha",
+          "type": "number"
+        },
+        "t0": {
+          "default": 0.0,
+          "description": "visible from this time",
+          "minimum": 0,
+          "title": "T0",
+          "type": "number"
+        },
+        "t1": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "visible until this time (default: the end of the scene)",
+          "title": "T1"
+        },
+        "motions": {
+          "items": {
+            "$ref": "#/$defs/ObjectMotionSpec"
+          },
+          "title": "Motions",
+          "type": "array"
+        },
+        "palette": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "colour overrides for the recolourable parts, hex",
+          "title": "Palette",
+          "type": "object"
+        }
+      },
+      "required": [
+        "asset"
+      ],
+      "title": "ObjectSpec",
       "type": "object"
     },
     "SafeArea": {
@@ -711,6 +1001,14 @@
             "$ref": "#/$defs/LayerSpec"
           },
           "title": "Layers",
+          "type": "array"
+        },
+        "objects": {
+          "description": "things from the asset library placed in the scene",
+          "items": {
+            "$ref": "#/$defs/ObjectSpec"
+          },
+          "title": "Objects",
           "type": "array"
         },
         "captions": {

@@ -1,0 +1,6 @@
+{
+  "summary": "A golden desert: sand dunes, cacti, a rocky outcrop and a huge low sun",
+  "tags": ["dunes", "sand dunes", "sahara", "thar", "arid", "रेगिस्तान", "मरुस्थल", "रेत", "थार", "registan", "marusthal", "ret"],
+  "height": 1920,
+  "place": {"ground_y": 0.82, "horizon": 0.57, "perspective": 1.0, "slots": {"left": [0.27, 0.82], "center": [0.5, 0.84], "right": [0.73, 0.82], "cactus": [0.72, 0.82], "rock": [0.2, 0.82], "dune": [0.45, 0.82]}}
+}

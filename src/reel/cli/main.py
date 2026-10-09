@@ -27,6 +27,10 @@ app = typer.Typer(
 console = Console()
 err = Console(stderr=True)
 
+from reel.cli.assets import assets_app  # noqa: E402  (the `reel assets ...` group)
+
+app.add_typer(assets_app, name="assets")
+
 PluginOpt = Annotated[
     list[str] | None,
     typer.Option(
@@ -36,9 +40,26 @@ PluginOpt = Annotated[
 ]
 
 
+AssetsOpt = Annotated[
+    list[str] | None,
+    typer.Option(
+        "--assets",
+        help="An extra folder of characters, objects and places (repeatable; also REEL_ASSETS=a:b, "
+        "and an `assets/` folder next to the spec is always read)",
+    ),
+]
+
+
 def _plugins(plugins: list[str] | None) -> None:
     if plugins:
         CATALOG.load_plugins(plugins)
+
+
+def _assets(dirs: list[str] | None, near: Path | None = None) -> tuple[str, ...]:
+    """Load a command's asset folders into the catalog; returns them (to hand to render workers)."""
+    from reel.cli.assets import load_assets
+
+    return tuple(load_assets(dirs, near=near))
 
 
 def _version(value: bool) -> None:
@@ -69,12 +90,14 @@ def lint(
         bool, typer.Option("--no-duration-check", help="skip the 45-60s budget")
     ] = False,
     plugin: PluginOpt = None,
+    assets: AssetsOpt = None,
 ) -> None:
     """Validate a spec: schema, registry references, params, timing and the 45-60s budget."""
     from reel.cli.report import print_report
     from reel.core.lint import LintOptions, lint_file
 
     _plugins(plugin)
+    _assets(assets, near=spec)
     report = lint_file(
         spec, options=LintOptions(check_duration=not no_duration_check, style_override=style)
     )
@@ -97,11 +120,13 @@ def list_(
     as_json: Annotated[bool, typer.Option("--json", help="machine-readable")] = False,
     verbose: Annotated[bool, typer.Option("--verbose", "-v", help="show params")] = False,
     plugin: PluginOpt = None,
+    assets: AssetsOpt = None,
 ) -> None:
     """List what is registered."""
     from reel.core.manifest import describe
 
     _plugins(plugin)
+    _assets(assets)
     kind = PLURALS.get(what, what)
     if kind not in KINDS:
         err.print(
@@ -165,10 +190,10 @@ def schema(
             err.print(f"[red]stale:[/] {p}  (run: reel schema -o {p.relative_to(p.parents[1])})")
             ok = False
         mp = manifest_path()
-        mwant = json.dumps(build_manifest(), indent=2) + "\n"
+        mwant = json.dumps(build_manifest(builtin_only=True), indent=2) + "\n"
         if not mp.exists() or mp.read_text() != mwant:
             err.print(
-                f"[red]stale:[/] {mp}  (run: reel manifest -o src/reel/templates/manifest.json)"
+                f"[red]stale:[/] {mp}  (run: reel manifest --builtin-only -o src/reel/templates/manifest.json)"
             )
             ok = False
         from reel.llm.prompt import render_prompt_preview
@@ -199,13 +224,20 @@ def schema(
 @app.command()
 def manifest(
     out: Annotated[Path | None, typer.Option("--out", "-o")] = None,
+    builtin_only: Annotated[
+        bool,
+        typer.Option(
+            "--builtin-only",
+            help="leave out your own asset folders (what the committed file holds)",
+        ),
+    ] = False,
     plugin: PluginOpt = None,
 ) -> None:
     """Print the template catalog (everything a spec may reference) as JSON — what the LLM reads."""
     from reel.core.manifest import build_manifest
 
     _plugins(plugin)
-    text = json.dumps(build_manifest(), indent=2) + "\n"
+    text = json.dumps(build_manifest(builtin_only=builtin_only), indent=2) + "\n"
     if out:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text)
@@ -293,15 +325,18 @@ def render(
         ),
     ] = None,
     plugin: PluginOpt = None,
+    assets: AssetsOpt = None,
 ) -> None:
     """Render a spec to MP4 (deterministic; unchanged parts come from the cache)."""
     from reel.cli.pipeline import RenderRequest, run_render
 
     _plugins(plugin)
+    asset_dirs = _assets(assets, near=spec)
     req = RenderRequest(
         spec_path=spec, style=style, out=out, preview=preview, scale=scale, time_range=_range_option(time_range),
         frames_dir=frames_dir, lenient=lenient, no_cache=no_cache, cache_dir=cache_dir, workers=workers, seed=seed,
         crf=crf, maxrate=maxrate, no_duration_check=no_duration_check, no_audio=no_audio, tts=tts, plugins=tuple(plugin or ()),
+        assets=asset_dirs,
     )  # fmt: skip
     code = run_render(req, console, err)
     if code:
@@ -401,6 +436,7 @@ def build(
         ),
     ] = None,
     plugin: PluginOpt = None,
+    assets: AssetsOpt = None,
 ) -> None:
     """Plain-text script -> spec -> video, in one go (LLM or offline planner).
 
@@ -411,10 +447,13 @@ def build(
     from reel.cli.pipeline import RenderRequest
 
     _plugins(plugin)
+    asset_dirs = _assets(
+        assets, near=Path(script) if script != "-" and Path(script).is_file() else None
+    )
     render_req = RenderRequest(
         spec_path=Path(), style=None, preview=preview, scale=scale, time_range=_range_option(time_range),
         lenient=lenient, no_cache=no_cache, cache_dir=cache_dir, workers=workers, crf=crf,
-        maxrate=maxrate, no_audio=no_audio, tts=tts, plugins=tuple(plugin or ()),
+        maxrate=maxrate, no_audio=no_audio, tts=tts, plugins=tuple(plugin or ()), assets=asset_dirs,
     )  # fmt: skip
     req = BuildRequest(
         script=script, style=style, out=out, llm=llm, no_llm=no_llm, spec_out=spec_out,
@@ -451,6 +490,7 @@ def prompt(
         Path | None, typer.Option("--out", "-o", help="write here instead of stdout")
     ] = None,
     plugin: PluginOpt = None,
+    assets: AssetsOpt = None,
 ) -> None:
     """Print the exact script -> JSON prompt (system + user message) for the live catalog.
 
@@ -459,6 +499,7 @@ def prompt(
     from reel.llm.prompt import render_prompt_preview
 
     _plugins(plugin)
+    _assets(assets)
     text = render_prompt_preview(
         style, duration, script=script.read_text(encoding="utf-8") if script else None,
         include_schema=schema, compact=compact,
@@ -542,12 +583,14 @@ def storyboard(
     scale: Annotated[float, typer.Option(help="thumbnail scale (0.25 = 270x480)")] = 0.25,
     frames: Annotated[int, typer.Option("--frames", help="key frames per scene")] = 3,
     plugin: PluginOpt = None,
+    assets: AssetsOpt = None,
 ) -> None:
     """Write a self-contained HTML storyboard (timeline, key frames per scene, lint) to review a spec fast."""
     from reel.core.spec import ReelSpec
     from reel.core.storyboard import build_storyboard
 
     _plugins(plugin)
+    _assets(assets, near=spec)
     path = build_storyboard(
         ReelSpec.from_file(spec),
         out or Path("out") / f"{spec.stem}_storyboard.html",
@@ -651,7 +694,7 @@ def doctor(
     if tts:
         ok &= _tts_ping(tts)
     console.print(
-        f"actions {len(CATALOG.actions)}  styles {len(CATALOG.styles)}  backgrounds {len(CATALOG.backgrounds)}  transitions {len(CATALOG.transitions)}"
+        f"actions {len(CATALOG.actions)}  styles {len(CATALOG.styles)}  backgrounds {len(CATALOG.backgrounds)}  transitions {len(CATALOG.transitions)}  assets {len(CATALOG.assets)}"
     )
     raise typer.Exit(0 if ok else 1)
 
@@ -798,6 +841,7 @@ def serve(
         Path | None, typer.Option("--cache-dir", help="frame / chunk / speech cache folder")
     ] = None,
     plugin: PluginOpt = None,
+    assets: AssetsOpt = None,
 ) -> None:
     """Start Reel Studio: the web app for writing, editing, voicing and exporting reels (local only)."""
     import os
@@ -844,12 +888,15 @@ def serve(
         token=token,
         allow_remote=allow_remote,
     )
-    app_ = create_app(config, plugins=tuple(plugin or ()))
+    app_ = create_app(config, plugins=tuple(plugin or ()), asset_dirs=tuple(assets or ()))
     url = f"http://{host if host != '0.0.0.0' else '127.0.0.1'}:{chosen}/" + (
         f"?token={token}" if token else ""
     )
     console.print(f"[bold]Reel Studio[/]  {escape(url)}")
     console.print(f"  workspace  {escape(str(config.workspace.resolve()))}")
+    console.print(
+        f"  assets     {escape(str(config.workspace.resolve() / 'assets'))}  [dim](your characters, objects and places)[/]"
+    )
     if config.static_dir is None:
         console.print(
             "  [yellow]the web app is not built yet:[/] run `make ui-build` (the API is available already)"

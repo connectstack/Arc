@@ -116,6 +116,7 @@ def post_prepare(body: SpecBody, request: Request) -> dict[str, str]:
             "base_dir": str(c.workspace.projects_dir),
             "wav_path": str(c.workspace.audio_path(jid)),
             "plugins": list(c.plugins),
+            "assets": c.assets.dirs() if c.assets else [],
         },
     )
     return {"job_id": job.id}

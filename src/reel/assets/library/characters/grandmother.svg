@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80.6 123.5 173.1 512">
+  <ellipse cx="7.2" cy="156.5" rx="28.8" ry="27" fill="#8c94a1" data-role="hair_dark" data-lod="0"/>
+  <ellipse cx="7.2" cy="156.5" rx="19.8" ry="18" fill="#d3d6db" data-role="hair" data-lod="1"/>
+  <path d="M7.2 614.2 Q7.2 609.7 11.7 609.7 L27.9 609.7 Q36 609.7 40 615.2 L40 615.2 Q44.1 620.6 42.3 625 L42.3 625 Q40.5 629.5 32.4 629.5 L10.8 629.5 Q7.2 629.5 7.2 625.9 Z" fill="#6a4a36" data-role="shoes" data-lod="0"/>
+  <path d="M-7.2 614.2 Q-7.2 609.7 -11.7 609.7 L-27.9 609.7 Q-36 609.7 -40 615.2 L-40 615.2 Q-44.1 620.6 -42.3 625 L-42.3 625 Q-40.5 629.5 -32.4 629.5 L-10.8 629.5 Q-7.2 629.5 -7.2 625.9 Z" fill="#6a4a36" data-role="shoes" data-lod="0"/>
+  <path d="M-47.2 404.7 Q-46.8 399.3 -41.4 399.3 L41.4 399.3 Q46.8 399.3 47.2 404.7 L53.4 487.4 Q54 494.6 54.1 501.8 L55.6 586.3 Q55.8 593.5 48.6 593.5 L-48.6 593.5 Q-55.8 593.5 -55.6 586.3 L-54.1 501.8 Q-54 494.6 -53.4 487.4 Z" fill="#a8394b" data-role="accent" data-lod="0"/>
+  <path d="M-11 402.9 Q-10.8 399.3 -7.2 399.3 L7.2 399.3 Q10.8 399.3 11 402.9 L23.1 584.5 Q23.4 588.1 19.8 588.1 L-19.8 588.1 Q-23.4 588.1 -23.1 584.5 Z" fill="#8e2d3d" data-role="accent_dark" data-lod="1"/>
+  <path d="M-3.6 404.7 L-8.1 582.7 M5.4 404.7 L10.8 582.7" fill="none" stroke="#a8394b" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="accent" data-lod="1"/>
+  <rect x="-55.8" y="579.1" width="111.5" height="14.4" rx="2.7" fill="#e6b84a" data-lod="1"/>
+  <path d="M-32.1 305.4 Q-27 300.4 -19.8 300.4 L19.8 300.4 Q27 300.4 32.1 305.4 L34.2 307.6 Q41.4 314.7 45 330 L45.7 333.1 Q48.6 345.3 47.8 357.9 L45.3 399.3 Q45 404.7 39.6 404.7 L-39.6 404.7 Q-45 404.7 -45.3 399.3 L-47.8 357.9 Q-48.6 345.3 -45.7 333.1 L-45 330 Q-41.4 314.7 -34.2 307.6 Z" fill="#f1e3c8" data-role="shirt" data-lod="0"/>
+  <path d="M-45.7 330.5 Q-48.6 321.9 -41.2 316.7 L-29.2 308.1 Q-23.4 304 -19.4 309.9 L28.4 380.7 Q32.4 386.7 36.5 392.6 L49.8 411.4 Q54 417.3 49.4 422.8 L40.6 433.3 Q36 438.8 31.3 433.4 L8.3 406.5 Q3.6 401.1 -1 395.5 L-35 354.5 Q-39.6 348.9 -41.8 342.1 Z" fill="#a8394b" data-role="accent" data-lod="0"/>
+  <path d="M58.2 315.7 L65.4 366.3 C66.7 373.7 61.9 380.7 54.5 382 C47.2 383.3 40.2 378.4 38.9 371.1 L28.1 321 C26.6 312.7 32.2 304.8 40.5 303.3 C48.8 301.8 56.7 307.3 58.2 315.7 Z" fill="#f1e3c8" data-role="shirt" data-lod="0"/>
+  <path d="M62.9 363.8 L66.5 407.2 C67.1 412.1 63.6 416.6 58.7 417.2 C53.7 417.8 49.2 414.3 48.6 409.4 L41.5 366.4 C40.7 360.5 44.9 355.1 50.8 354.4 C56.7 353.7 62.1 357.9 62.9 363.8 Z" fill="#d8a97f" data-role="skin" data-lod="0"/>
+  <path d="M-28.1 321 L-38.9 371.1 C-40.2 378.4 -47.2 383.3 -54.5 382 C-61.9 380.7 -66.7 373.7 -65.4 366.3 L-58.2 315.7 C-56.7 307.3 -48.8 301.8 -40.5 303.3 C-32.2 304.8 -26.6 312.7 -28.1 321 Z" fill="#f1e3c8" data-role="shirt" data-lod="0"/>
+  <path d="M-41.5 366.4 L-48.6 409.4 C-49.2 414.3 -53.7 417.8 -58.7 417.2 C-63.6 416.6 -67.1 412.1 -66.5 407.2 L-62.9 363.8 C-62.1 357.9 -56.7 353.7 -50.8 354.4 C-44.9 355.1 -40.7 360.5 -41.5 366.4 Z" fill="#d8a97f" data-role="skin" data-lod="0"/>
+  <circle cx="58.5" cy="420.9" r="16.2" fill="#d8a97f" data-role="skin" data-lod="0"/>
+  <circle cx="-58.5" cy="420.9" r="16.2" fill="#d8a97f" data-role="skin" data-lod="0"/>
+  <ellipse cx="7.2" cy="244.6" rx="70.1" ry="75.5" fill="#d8a97f" data-role="skin" data-lod="0"/>
+  <ellipse cx="-61.5" cy="246.1" rx="10.5" ry="15.1" fill="#d8a97f" data-role="skin" data-lod="0"/>
+  <ellipse cx="75.9" cy="246.1" rx="10.5" ry="15.1" fill="#d8a97f" data-role="skin" data-lod="0"/>
+  <path d="M-60.4 230.3 Q-64.8 228.1 -62.4 220.4 L-62 218.8 Q-59.6 211.1 -55.6 204 L-54.8 202.8 Q-50.8 195.8 -45.4 189.8 L-44.6 188.9 Q-39.2 183 -32.5 178.4 L-31.8 177.9 Q-25.1 173.3 -17.5 170.4 L-16.9 170.2 Q-9.4 167.3 -1.3 166.3 L-0.8 166.3 Q7.2 165.3 15.2 166.3 L15.7 166.3 Q23.8 167.3 31.3 170.2 L31.9 170.4 Q39.5 173.3 46.2 177.9 L46.9 178.4 Q53.5 183 59 188.9 L59.8 189.8 Q65.2 195.8 69.2 202.8 L69.9 204 Q73.9 211.1 76.3 218.8 L76.8 220.4 Q79.2 228.1 74.8 230.3 L74.8 230.3 Q70.3 232.5 65.4 226.1 L55.6 213.3 Q50.7 206.8 43.1 204.1 L28.8 199 Q21.2 196.3 14.2 198.5 L14.2 198.5 Q7.2 200.8 0.2 198.5 L0.2 198.5 Q-6.8 196.3 -14.5 199 L-28.7 204.1 Q-36.3 206.8 -41.2 213.3 L-51 226.1 Q-55.9 232.5 -60.4 230.3 Z" fill="#d3d6db" data-role="hair" data-lod="0"/>
+  <ellipse cx="-14.6" cy="238.6" rx="11.9" ry="18.9" fill="#ffffff" data-lod="0" data-tag="eye"/>
+  <line x1="-14.6" y1="238.7" x2="-14.6" y2="240.2" stroke="#23262e" stroke-width="13.7" stroke-linecap="round" data-lod="0" data-tag="pupil"/>
+  <ellipse cx="28.9" cy="238.6" rx="11.9" ry="18.9" fill="#ffffff" data-lod="0" data-tag="eye"/>
+  <line x1="28.9" y1="238.7" x2="28.9" y2="240.2" stroke="#23262e" stroke-width="13.7" stroke-linecap="round" data-lod="0" data-tag="pupil"/>
+  <path d="M-0.8 210.7 Q-14.6 208.9 -28.3 214.3 M15.2 210.7 Q28.9 208.9 42.7 214.3" fill="none" stroke="#8c94a1" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="hair_dark" data-lod="0" data-tag="brow"/>
+  <ellipse cx="7.2" cy="255.9" rx="4.6" ry="6.4" fill="#d59c69" data-role="skin_dark" data-lod="1" data-tag="nose"/>
+  <path d="M-7.5 279.4 Q7.2 295.5 21.9 279.4" fill="none" stroke="#8f4a42" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" data-lod="0" data-tag="mouth"/>
+  <path d="M-19.8 196 Q7.2 190.6 34.2 196" fill="none" stroke="#d59c69" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="skin_dark" data-lod="1"/>
+  <path d="M-52.2 239.2 L-61.2 233.8 M-52.2 250 L-61.2 250 M66.5 239.2 L75.5 233.8 M66.5 250 L75.5 250" fill="none" stroke="#d59c69" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="skin_dark" data-lod="1"/>
+  <circle cx="31.5" cy="238.3" r="22" fill="none" stroke="#4a3a34" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" data-lod="0" data-tag="glasses"/>
+  <circle cx="-17.1" cy="238.3" r="22" fill="none" stroke="#4a3a34" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" data-lod="0" data-tag="glasses"/>
+  <path d="M4.5 232 L9.9 232 M53.1 233.8 L75.5 235.6 M-38.7 233.8 L-61.2 235.6" fill="none" stroke="#4a3a34" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" data-lod="0"/>
+</svg>

@@ -51,3 +51,87 @@ describe('normalizeSpec / stripDefaults', () => {
     expect(o.scenes[0]).toMatchObject({ background: { params: { mood: 'warm' } }, transition_out: { type: 'wipe', duration: 0.6 } })
   })
 })
+
+describe('objects from the asset library', () => {
+  const withObjects = {
+    meta: { title: 'T', style: 'flat_vector', library_gaps: [] },
+    characters: [{ id: 'a', archetype: 'kid' }],
+    scenes: [
+      {
+        id: 's1',
+        duration_sec: 6,
+        background: { template: 'street' },
+        objects: [
+          { asset: 'tree' },
+          {
+            asset: 'car',
+            position: 'right',
+            scale: 0.8,
+            depth: 'foreground',
+            layer: 'front',
+            facing: 'left',
+            rotation: -12,
+            alpha: 0.9,
+            t0: 1,
+            t1: 5,
+            palette: { body: '#2a6fdb' },
+            motions: [{ type: 'move', t0: 1, t1: 3, to: [1.2, 0.8] }, { type: 'hop', t0: 3, t1: 4, count: 3, amount: 0.5, ease: 'bounce' }, { type: 'fade', t0: 0, t1: 1, from: 0.2, to: 1 }],
+          },
+        ],
+      },
+    ],
+  }
+
+  it('fills in everything an object and its motions leave out', () => {
+    const [tree, car] = normalizeSpec(withObjects).scenes[0].objects
+    expect(tree).toEqual({ asset: 'tree', position: [0.5, 0.8], scale: 1, depth: 'mid', layer: 'behind', facing: 'auto', rotation: 0, alpha: 1, t0: 0, t1: null, motions: [], palette: {} })
+    expect(car).toMatchObject({ position: 'right', scale: 0.8, depth: 'foreground', layer: 'front', facing: 'left', rotation: -12, alpha: 0.9, t0: 1, t1: 5, palette: { body: '#2a6fdb' } })
+    expect(car.motions[0]).toEqual({ type: 'move', t0: 1, t1: 3, to: [1.2, 0.8], ease: 'ease_in_out' })
+    expect(car.motions[1]).toMatchObject({ count: 3, amount: 0.5, ease: 'bounce' })
+  })
+
+  it('gives a scene with no objects an empty list, and survives objects that are rubbish', () => {
+    expect(normalizeSpec({ scenes: [{ id: 'x', duration_sec: 3 }] }).scenes[0].objects).toEqual([])
+    const odd = normalizeSpec({ scenes: [{ id: 'x', duration_sec: 3, objects: [null, 7, 'car', { asset: 5, position: [1], depth: 'sideways', t1: 'soon', motions: 'many', palette: [] }] }] }).scenes[0].objects
+    expect(odd).toHaveLength(4)
+    expect(odd[3]).toMatchObject({ asset: '', position: [0.5, 0.8], depth: 'mid', t1: null, motions: [], palette: {} })
+  })
+
+  it('writes back only what differs from the defaults', () => {
+    const out = stripDefaults(normalizeSpec(withObjects)) as { meta: Record<string, unknown>; scenes: { objects: Record<string, unknown>[] }[] }
+    const [tree, car] = out.scenes[0].objects
+    expect(tree).toEqual({ asset: 'tree' })
+    expect(car).toEqual({
+      asset: 'car',
+      position: 'right',
+      scale: 0.8,
+      depth: 'foreground',
+      layer: 'front',
+      facing: 'left',
+      rotation: -12,
+      alpha: 0.9,
+      t0: 1,
+      t1: 5,
+      palette: { body: '#2a6fdb' },
+      motions: [{ type: 'move', t0: 1, t1: 3, to: [1.2, 0.8] }, { type: 'hop', t0: 3, t1: 4, count: 3, amount: 0.5, ease: 'bounce' }, { type: 'fade', t0: 0, t1: 1, from: 0.2, to: 1 }],
+    })
+    expect('library_gaps' in out.meta).toBe(false) // nothing missing from the library: nothing to remember
+    expect('objects' in (stripDefaults(normalizeSpec({ meta: { title: 't', style: 's' }, scenes: [{ id: 'a', duration_sec: 3 }] })) as { scenes: object[] }).scenes[0]).toBe(false)
+  })
+
+  it('is lossless for objects too: strip then normalize gives back the same model', () => {
+    const once = normalizeSpec(withObjects)
+    expect(normalizeSpec(stripDefaults(once))).toEqual(once)
+    // a spec that remembers what the library lacked keeps it
+    const gaps = normalizeSpec({ ...withObjects, meta: { title: 'T', style: 'flat_vector', library_gaps: [{ kind: 'object', name: 'rickshaw', scenes: ['s1'] }] } })
+    expect(normalizeSpec(stripDefaults(gaps)).meta.library_gaps).toEqual([{ kind: 'object', name: 'rickshaw', scenes: ['s1'] }])
+  })
+
+  it('keeps an object that stays until the end (no t1) apart from one that is cut at a time', () => {
+    const stays = normalizeSpec({ scenes: [{ id: 'x', duration_sec: 3, objects: [{ asset: 'car' }, { asset: 'car', t1: 2 }] }] }).scenes[0].objects
+    expect(stays.map((o) => o.t1)).toEqual([null, 2])
+    const back = (stripDefaults(normalizeSpec({ scenes: [{ id: 'x', duration_sec: 3, objects: [{ asset: 'car' }, { asset: 'car', t1: 2 }] }] })) as { scenes: { objects: Record<string, unknown>[] }[] }).scenes[0].objects
+    expect(back).toEqual([{ asset: 'car' }, { asset: 'car', t1: 2 }])
+  })
+})
+

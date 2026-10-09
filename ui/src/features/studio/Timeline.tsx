@@ -1,4 +1,4 @@
-import { ArrowRightToLine, AudioLines, Blend, BookOpen, Camera, Film, Minus, Music, Plus, Scissors, Search, Sparkles, Type, Volume2, Zap } from 'lucide-react'
+import { ArrowRightToLine, AudioLines, Blend, BookOpen, Boxes, Camera, ChevronDown, ChevronRight, Film, Minus, Music, Plus, Scissors, Search, Sparkles, Type, Volume2, Zap } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type PointerEvent as RPointer, type ReactNode } from 'react'
 import { useApi } from '@/api/context'
 import { useCatalog } from '@/api/hooks'
@@ -6,7 +6,7 @@ import type { AudioResult, Catalog, ReelSpec } from '@/api/types'
 import { Button, ContextMenu, Input, Menu, Popover, Tip, type MenuEntry } from '@/components/ui'
 import { bgColor, rgba } from '@/lib/colors'
 import { cn } from '@/lib/cn'
-import { characterColor, characterName, sameSelection, type Selection } from '@/lib/spec'
+import { characterColor, characterName, objectColor, sameSelection, type Selection } from '@/lib/spec'
 import { budgetState, clamp, fitToDuration, ms, packRows, sceneSlots, snap, totalDuration, type Slot } from '@/lib/timeline'
 import { useAudio } from '@/store/audio'
 import { MOD } from '@/lib/hotkeys'
@@ -18,10 +18,40 @@ import { beginClipDrag } from './timeline/drag'
 import { CLIP_H, GUTTER as GUTTER_WIDE, GUTTER_PHONE, MAX_ZOOM, MIN_ZOOM, PAD_RIGHT, ROW_PAD, RULER_H, rulerSteps, tickLabel } from './timeline/geometry'
 import { copySelection, deleteSelected, duplicateSelected, ensureSelected, nudgeSelected, pasteAtPlayhead } from './clipboardActions'
 import { baseOf, selectedClips, shiftClips } from './clips'
-import { addAction, addCameraMove, addCaption, addSfx, addScene, clipOf, setClipTimes, splitAtPlayhead } from './ops'
+import { MOTIONS, motionDef, motionDetail, sortMotions } from './motions'
+import { ObjectPickerPopover } from './ObjectPicker'
+import { objectName, objectSpan, staysToEnd } from './objects'
+import { addAction, addCameraMove, addCaption, addMotion, addObject, addSfx, addScene, clipOf, setClipTimes, setObjectSpan, splitAtPlayhead } from './ops'
 
 /** The id a clip has in the lanes (`a-scene-layer-index` ...). */
-const keyOf = (s: Selection): string => (s.kind === 'action' ? `a-${s.scene}-${s.layer}-${s.action}` : s.kind === 'caption' ? `c-${s.scene}-${s.caption}` : s.kind === 'camera' ? `m-${s.scene}-${s.move}` : s.kind === 'sfx' ? `s-${s.scene}-${s.sfx}` : '')
+const keyOf = (s: Selection): string =>
+  s.kind === 'action'
+    ? `a-${s.scene}-${s.layer}-${s.action}`
+    : s.kind === 'caption'
+      ? `c-${s.scene}-${s.caption}`
+      : s.kind === 'camera'
+        ? `m-${s.scene}-${s.move}`
+        : s.kind === 'sfx'
+          ? `s-${s.scene}-${s.sfx}`
+          : s.kind === 'object'
+            ? `ob-${s.scene}-${s.object}`
+            : s.kind === 'motion'
+              ? `mo-${s.scene}-${s.object}-${s.motion}`
+              : ''
+
+/** The times a clip covers (for announcing a move): its own, or the stretch an object is on screen. */
+function timesOf(spec: ReelSpec, sel: Selection): [number, number] | null {
+  if (sel.kind === 'object') {
+    const sc = spec.scenes[sel.scene]
+    const o = sc?.objects?.[sel.object]
+    return sc && o ? objectSpan(sc, o) : null
+  }
+  const c = clipOf(spec, sel)
+  return c ? [c.t0, c.t1] : null
+}
+
+/** The lanes a library object can be dropped on: its own (the scene under the pointer gets it). */
+const DROPS_OBJECTS: LaneModel['kind'][] = ['scenes', 'objects', 'object']
 
 // ------------------------------------------------------------------------------- model
 interface ClipItem {
@@ -37,20 +67,28 @@ interface ClipItem {
   color: string
   row: number
   overlap?: boolean
-  kind: 'action' | 'caption' | 'camera' | 'sfx'
+  /** an object that stays until the end of its scene */
+  open?: boolean
+  kind: 'action' | 'caption' | 'camera' | 'sfx' | 'object' | 'motion'
 }
 
 interface LaneModel {
   key: string
-  kind: 'scenes' | 'camera' | 'char' | 'captions' | 'sfx' | 'audio'
+  kind: 'scenes' | 'camera' | 'char' | 'objects' | 'object' | 'captions' | 'sfx' | 'audio'
   label: string
   charId?: string
   color?: string
+  /** an object's lane: which object of which scene, and the stretch of the timeline its scene covers */
+  object?: { scene: number; index: number; from: number; to: number }
+  /** the scene an object's lane belongs to, as a short tag ("scene 2") */
+  sub?: string
+  /** the objects group: how many objects there are */
+  count?: number
   items: ClipItem[]
   rows: number
 }
 
-function buildLanes(spec: ReelSpec, catalog: Catalog | undefined, slots: Slot[]): LaneModel[] {
+function buildLanes(spec: ReelSpec, catalog: Catalog | undefined, slots: Slot[], collapsed = false): LaneModel[] {
   const char = new Map<string, ClipItem[]>()
   for (const c of spec.characters) char.set(c.id, [])
   const camera: ClipItem[] = []
@@ -86,10 +124,49 @@ function buildLanes(spec: ReelSpec, catalog: Catalog | undefined, slots: Slot[])
     items.forEach((it, i) => (it.row = rows[i]))
     return { key, kind, label, items, rows: Math.max(1, ...rows.map((r) => r + 1)), ...extra }
   }
+  // one lane per object: the bar of when it is on screen on top, and under it its motions (side by side, or stacked where they overlap)
+  const objectLanes: LaneModel[] = []
+  spec.scenes.forEach((sc, si) => {
+    const base = slots[si].start
+    ;(sc.objects ?? []).forEach((o, oi) => {
+      const color = objectColor(catalog, o)
+      const [t0, t1] = objectSpan(sc, o)
+      const name = objectName(o.asset)
+      const span: ClipItem = { key: `ob-${si}-${oi}`, sel: { kind: 'object', scene: si, object: oi }, scene: si, t0, t1, g0: base + t0, g1: base + t1, label: name, color, row: 0, kind: 'object', open: staysToEnd(o) }
+      const motions: ClipItem[] = o.motions.map((m, mi) => ({
+        key: `mo-${si}-${oi}-${mi}`,
+        sel: { kind: 'motion', scene: si, object: oi, motion: mi },
+        scene: si,
+        t0: m.t0,
+        t1: m.t1,
+        g0: base + m.t0,
+        g1: base + m.t1,
+        label: motionDef(m.type)?.label ?? m.type,
+        sub: motionDetail(m) || undefined,
+        color,
+        row: 0,
+        kind: 'motion',
+      }))
+      const rows = packRows(motions.map((i) => ({ t0: i.g0, t1: Math.max(i.g1, i.g0 + 0.4) })))
+      motions.forEach((it, i) => (it.row = 1 + rows[i]))
+      objectLanes.push({
+        key: `obj-${si}-${oi}`,
+        kind: 'object',
+        label: name,
+        color,
+        sub: `scene ${si + 1}`,
+        object: { scene: si, index: oi, from: base, to: base + sc.duration_sec },
+        items: [span, ...motions],
+        rows: 1 + (motions.length ? Math.max(...rows) + 1 : 0),
+      })
+    })
+  })
   return [
     { key: 'scenes', kind: 'scenes', label: 'Scenes', items: [], rows: 1 },
     lane('camera', 'camera', 'Camera', camera),
     ...[...char.entries()].map(([id, items]) => lane(`char-${id}`, 'char', characterName(spec, id), items, { charId: id, color: characterColor(spec, catalog, id) })),
+    { key: 'objects', kind: 'objects', label: 'Objects', items: [], rows: 1, count: objectLanes.length },
+    ...(collapsed ? [] : objectLanes),
     lane('captions', 'captions', 'Captions', captions),
     lane('sfx', 'sfx', 'Sound effects', sfx),
     { key: 'audio', kind: 'audio', label: 'Audio', items: [], rows: 1 },
@@ -143,8 +220,8 @@ const ClipView = memo(function ClipView({
         isPoint ? '-translate-x-1/2 gap-1 rounded-chip px-1.5' : 'rounded-[6px]',
         selected ? 'z-10 ring-2 ring-accent' : 'ring-1 ring-black/10 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-accent',
       )}
-      style={{ ...style, background: rgba(it.color, selected ? 0.5 : 0.3) }}
-      title={label}
+      style={{ ...style, background: rgba(it.color, selected ? 0.5 : it.kind === 'object' ? 0.18 : 0.3) }}
+      title={it.kind === 'object' && it.open ? `${label}; it stays until the end of the scene` : label}
     >
       {!isPoint && <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: it.color }} />}
       {it.overlap && <span className="stripes pointer-events-none absolute inset-0 opacity-60" />}
@@ -154,11 +231,12 @@ const ClipView = memo(function ClipView({
           <span className="max-w-[110px] truncate text-fg">{it.label}</span>
         </>
       ) : (
-        <span className="relative min-w-0 truncate pl-2.5 pr-1 text-fg">
+        <span className={cn('relative min-w-0 truncate pl-2.5 pr-1 text-fg', it.kind === 'object' && 'font-semibold')}>
           {it.label}
           {it.sub && width > 120 && <span className="ml-1.5 text-muted">{it.sub}</span>}
         </span>
       )}
+      {it.kind === 'object' && it.open && width > 150 && <span className="relative ml-auto shrink-0 pl-1 pr-2 text-[10.5px] font-normal text-muted">to the end</span>}
       {!isPoint && (
         <>
           <span onPointerDown={(e) => onDrag(e, 'start', it)} className="absolute inset-y-0 left-0 z-10 w-1.5 cursor-ew-resize" aria-hidden />
@@ -281,6 +359,7 @@ export function Timeline() {
   const setStudio = useStudio((s) => s.set)
   const playing = useStudio((s) => s.playing)
   const loop = useStudio((s) => s.loop)
+  const objectsHidden = useStudio((s) => !!s.collapsed.objects)
   const audio = useAudio((s) => s.result)
   const scroller = useRef<HTMLDivElement>(null)
   const gutter = useNarrow() ? GUTTER_PHONE : GUTTER_WIDE
@@ -288,7 +367,7 @@ export function Timeline() {
   const [viewW, setViewW] = useState(900)
 
   const slots = useMemo(() => sceneSlots(spec), [spec])
-  const lanes = useMemo(() => buildLanes(spec, catalog, slots), [spec, catalog, slots])
+  const lanes = useMemo(() => buildLanes(spec, catalog, slots, objectsHidden), [spec, catalog, slots, objectsHidden])
   const total = slots.length ? slots[slots.length - 1].end : 0
   const contentW = Math.max(viewW - gutter, total * zoom + PAD_RIGHT)
 
@@ -341,6 +420,10 @@ export function Timeline() {
       sc?.captions.forEach((c, ci) => !skip.has(`c-${sceneIdx}-${ci}`) && pts.push(base + c.t0, base + c.t1))
       sc?.camera.moves.forEach((m, mi) => !skip.has(`m-${sceneIdx}-${mi}`) && pts.push(base + m.t0, base + m.t1))
       sc?.sfx.forEach((x, xi) => !skip.has(`s-${sceneIdx}-${xi}`) && pts.push(base + x.t))
+      sc?.objects?.forEach((o, oi) => {
+        if (!skip.has(`ob-${sceneIdx}-${oi}`)) pts.push(base + o.t0, ...(o.t1 === null || o.t1 === undefined ? [] : [base + o.t1]))
+        o.motions.forEach((m, mi) => !skip.has(`mo-${sceneIdx}-${oi}-${mi}`) && pts.push(base + m.t0, base + m.t1))
+      })
       return pts
     },
     [],
@@ -351,15 +434,19 @@ export function Timeline() {
       const st = useProject.getState()
       const cur = st.spec as ReelSpec
       const sl = sceneSlots(cur)[it.scene]
-      // dragging one clip of a selection moves them all by the same step
+      const duration = cur.scenes[it.scene].duration_sec
+      // dragging one clip of a selection moves them all by the same step (an object's bar is always moved on its own)
       const sels = selectedClips(st.selection, st.extra)
-      const together = mode === 'move' && sels.length > 1 && sels.some((x) => sameSelection(x, it.sel))
+      const asObject = it.sel.kind === 'object'
+      const together = !asObject && mode === 'move' && sels.length > 1 && sels.some((x) => sameSelection(x, it.sel))
       const group = together ? baseOf(cur, sels) : null
       const skip = new Set(together ? sels.map(keyOf) : [it.key])
-      beginClipDrag(e, mode, {
+      // a bar that stays until the end of the scene keeps doing so: dragging its body moves the moment it appears, not the whole bar
+      const how = asObject && mode === 'move' && it.open ? 'start' : mode
+      beginClipDrag(e, how, {
         t0: it.t0,
         t1: it.t1,
-        sceneDuration: cur.scenes[it.scene].duration_sec,
+        sceneDuration: duration,
         sceneStart: sl.start,
         zoom: useStudio.getState().zoom,
         point: it.kind === 'sfx',
@@ -371,10 +458,27 @@ export function Timeline() {
               else if (it.sel.kind === 'sfx') {
                 const x = d.scenes[it.sel.scene]?.sfx[it.sel.sfx]
                 if (x) x.t = t0
+              } else if (it.sel.kind === 'object') {
+                // reaching the end of the scene makes it "until the end" again
+                setObjectSpan(d, it.sel.scene, it.sel.object, t0, t1 >= duration - 1e-6 ? null : t1)
               } else setClipTimes(d, it.sel, t0, t1)
             },
             { live: true },
           ),
+        // motions are applied in list order: one dragged past another takes its place in the list (inside the same undo step)
+        onCommit: () => {
+          if (it.sel.kind !== 'motion') return
+          const m = it.sel
+          let now = m.motion
+          edit(
+            (d) => {
+              const o = d.scenes[m.scene]?.objects[m.object]
+              if (o) now = sortMotions(o, m.motion)
+            },
+            { live: true },
+          )
+          if (now !== m.motion) useProject.getState().select({ ...m, motion: now })
+        },
         onTap: () => {
           // a click on a clip that belongs to a selection narrows the selection to it
           if (sels.length > 1) st.select(it.sel)
@@ -404,8 +508,8 @@ export function Timeline() {
         const dt = e.altKey ? 1 / fps : e.shiftKey ? 1 : 0.1
         if (!together) st.select(it.sel)
         nudgeSelected(dir * dt)
-        const c = clipOf(useProject.getState().spec as ReelSpec, it.sel)
-        say(together ? `Moved ${many.length} clips` : c ? `Moved ${it.label} to ${c.t0.toFixed(2)}–${c.t1.toFixed(2)} s` : `Moved ${it.label}`)
+        const c = timesOf(useProject.getState().spec as ReelSpec, it.sel)
+        say(together ? `Moved ${many.length} clips` : c ? `Moved ${it.label} to ${c[0].toFixed(2)}–${c[1].toFixed(2)} s` : `Moved ${it.label}`)
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault()
         if (!together) st.select(it.sel)
@@ -425,15 +529,17 @@ export function Timeline() {
     (it: ClipItem) => {
       const st = useProject.getState
       const lane = it.sel.kind === 'action' ? st().spec?.scenes[it.sel.scene]?.layers[it.sel.layer]?.character : undefined
+      // pasted motions go to the object of the clip that was clicked
+      const target = it.sel.kind === 'object' || it.sel.kind === 'motion' ? { scene: it.sel.scene, object: it.sel.object } : undefined
       const sels = selectedClips(st().selection, st().extra)
       const many = sels.length > 1 && sels.some((x) => sameSelection(x, it.sel))
       return [
         { label: many ? `Copy ${sels.length} clips` : 'Copy', shortcut: `${MOD}C`, onSelect: () => (ensureSelected(it.sel), void copySelection()) },
         { label: many ? `Cut ${sels.length} clips` : 'Cut', shortcut: `${MOD}X`, onSelect: () => (ensureSelected(it.sel), void copySelection(true)) },
-        { label: lane ? `Paste onto ${characterName(st().spec as ReelSpec, lane)} at the playhead` : 'Paste at the playhead', shortcut: `${MOD}V`, disabled: !useClipboard.getState().board, onSelect: () => void pasteAtPlayhead(lane) },
+        { label: lane ? `Paste onto ${characterName(st().spec as ReelSpec, lane)} at the playhead` : 'Paste at the playhead', shortcut: `${MOD}V`, disabled: !useClipboard.getState().board, onSelect: () => void pasteAtPlayhead(lane, target) },
         { separator: true },
         { label: many ? `Duplicate ${sels.length} clips` : 'Duplicate', shortcut: `${MOD}D`, onSelect: () => (ensureSelected(it.sel), duplicateSelected()) },
-        { label: 'Split at playhead', shortcut: 'S', disabled: it.kind === 'sfx' || it.kind === 'camera', onSelect: () => st().edit((d) => st().select(splitAtPlayhead(d, it.sel, st().playhead))) },
+        { label: 'Split at playhead', shortcut: 'S', disabled: it.kind === 'sfx' || it.kind === 'camera' || it.kind === 'object' || it.kind === 'motion', onSelect: () => st().edit((d) => st().select(splitAtPlayhead(d, it.sel, st().playhead))) },
         { separator: true },
         { label: many ? `Delete ${sels.length} clips` : 'Delete', danger: true, onSelect: () => (ensureSelected(it.sel), deleteSelected()) },
       ]
@@ -452,15 +558,22 @@ export function Timeline() {
     const raw = e.dataTransfer.getData('application/x-reel-item')
     if (!raw) return
     e.preventDefault()
-    const item = JSON.parse(raw) as { kind: string; name: string }
+    let item: { kind: string; name: string }
+    try {
+      item = JSON.parse(raw) as { kind: string; name: string }
+    } catch {
+      return // not something the library dragged
+    }
     const t = timeAt(e.clientX, e.currentTarget)
     if (lane.kind === 'char' && item.kind === 'action' && lane.charId) addAt((d) => addAction(d, catalog, lane.charId as string, item.name, t))
     else if (lane.kind === 'camera' && item.kind === 'camera') addAt((d) => addCameraMove(d, item.name, t))
     else if (lane.kind === 'sfx' && item.kind === 'sfx') addAt((d) => addSfx(d, item.name, t))
+    // a library object goes into the scene it was dropped on
+    else if (DROPS_OBJECTS.includes(lane.kind) && item.kind === 'object') addAt((d) => addObject(d, catalog, item.name, t))
   }
   const acceptsDrop = (e: DragEvent, lane: LaneModel) => {
     const types = [...e.dataTransfer.types]
-    if (types.includes('application/x-reel-item') && ['char', 'camera', 'sfx'].includes(lane.kind)) e.preventDefault()
+    if (types.includes('application/x-reel-item') && ['char', 'camera', 'sfx', ...DROPS_OBJECTS].includes(lane.kind)) e.preventDefault()
   }
 
   // ---------------------------------------------------------------- rulers and tick marks
@@ -622,6 +735,7 @@ export function Timeline() {
                       )
                     })}
                   {lane.kind === 'audio' && <AudioLane spec={spec} zoom={zoom} audio={audio} />}
+                  {lane.object && <div className="pointer-events-none absolute inset-y-0.5 rounded-[6px] bg-hover/60" style={{ left: lane.object.from * zoom, width: (lane.object.to - lane.object.from) * zoom }} aria-hidden />}
                   {lane.items.map((it) => (
                     <ClipView
                       key={it.key}
@@ -640,6 +754,7 @@ export function Timeline() {
                     />
                   ))}
                   {lane.kind === 'char' && lane.items.length === 0 && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11.5px] text-faint">No actions yet: add one with +, or drop it from the Library</span>}
+                  {lane.kind === 'objects' && lane.count === 0 && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11.5px] text-faint">No objects yet: add one with +, or drop it from the Library</span>}
                 </div>
               </div>
             )
@@ -671,15 +786,41 @@ function LaneLabel({ lane, spec, catalog, addAt }: { lane: LaneModel; spec: Reel
   const select = useProject((s) => s.select)
   const edit = useProject((s) => s.edit)
   const playhead = useProject((s) => s.playhead)
-  const icon = { scenes: <Film className="size-3.5" />, camera: <Camera className="size-3.5" />, captions: <Type className="size-3.5" />, sfx: <Zap className="size-3.5" />, audio: <AudioLines className="size-3.5" />, char: null }[lane.kind]
-  const label = (
-    <span className="flex min-w-0 flex-1 items-center gap-2">
-      {lane.kind === 'char' ? <span className="size-2.5 shrink-0 rounded-full" style={{ background: lane.color }} aria-hidden /> : <span className="text-muted">{icon}</span>}
-      <button className="min-w-0 truncate text-left text-[12px] font-medium" onClick={() => lane.charId && select({ kind: 'character', id: lane.charId })} title={lane.label}>
-        {lane.label}
-      </button>
-    </span>
-  )
+  const hidden = useStudio((s) => !!s.collapsed.objects)
+  const setStudio = useStudio((s) => s.set)
+  const icon = { scenes: <Film className="size-3.5" />, camera: <Camera className="size-3.5" />, captions: <Type className="size-3.5" />, sfx: <Zap className="size-3.5" />, audio: <AudioLines className="size-3.5" />, objects: <Boxes className="size-3.5" />, char: null, object: null }[lane.kind]
+  const label =
+    lane.kind === 'objects' ? (
+      <span className="flex min-w-0 flex-1 items-center gap-1.5">
+        <button
+          type="button"
+          aria-expanded={!hidden}
+          title={hidden ? 'Show the lanes of the objects' : 'Hide the lanes of the objects'}
+          onClick={() => setStudio({ collapsed: { ...useStudio.getState().collapsed, objects: !hidden } })}
+          className="flex min-w-0 items-center gap-1.5 text-left text-[12px] font-medium"
+        >
+          {hidden ? <ChevronRight className="size-3.5 shrink-0 text-muted" aria-hidden /> : <ChevronDown className="size-3.5 shrink-0 text-muted" aria-hidden />}
+          <span className="shrink-0 text-muted">{icon}</span>
+          <span className="truncate">Objects</span>
+        </button>
+        {!!lane.count && <span className="shrink-0 text-[11px] text-faint tabular">{lane.count}</span>}
+      </span>
+    ) : lane.kind === 'object' && lane.object ? (
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="size-2.5 shrink-0 rounded-full" style={{ background: lane.color }} aria-hidden />
+        <button className="min-w-0 text-left" onClick={() => lane.object && select({ kind: 'object', scene: lane.object.scene, object: lane.object.index })} title={`${lane.label}, ${lane.sub}`}>
+          <span className="block truncate text-[12px] font-medium leading-4">{lane.label}</span>
+          <span className="block truncate text-[10.5px] leading-3.5 text-faint">{lane.sub}</span>
+        </button>
+      </span>
+    ) : (
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        {lane.kind === 'char' ? <span className="size-2.5 shrink-0 rounded-full" style={{ background: lane.color }} aria-hidden /> : <span className="text-muted">{icon}</span>}
+        <button className="min-w-0 truncate text-left text-[12px] font-medium" onClick={() => lane.charId && select({ kind: 'character', id: lane.charId })} title={lane.label}>
+          {lane.label}
+        </button>
+      </span>
+    )
   const plus = (title: string) => (
     <Button variant="ghost" size="icon-sm" aria-label={title} title={title} className="size-6">
       <Plus className="size-3.5" />
@@ -697,25 +838,35 @@ function LaneLabel({ lane, spec, catalog, addAt }: { lane: LaneModel; spec: Reel
   else if (lane.kind === 'camera')
     adder = <Menu align="start" trigger={plus('Add a camera move at the playhead')} entries={[{ heading: 'At the playhead' }, ...(catalog?.camera_moves ?? []).map((m) => ({ label: m.name.replace('_', ' '), onSelect: () => addAt((d) => addCameraMove(d, m.name, playhead)) }))]} />
   else if (lane.kind === 'captions') adder = <span onClick={() => addAt((d) => addCaption(d, playhead))}>{plus('Add a caption at the playhead')}</span>
-  else if (lane.kind === 'sfx') adder = <Popover trigger={plus('Add a sound effect at the playhead')} className="p-2.5"><SfxPicker catalog={catalog} onPick={(name) => addAt((d) => addSfx(d, name, playhead))} /></Popover>
-  else if (lane.kind === 'char' && lane.charId) {
+  else if (lane.kind === 'sfx') adder = <Popover trigger={plus('Add a sound effect at the playhead')} className="p-2.5" label="Choose a sound effect"><SfxPicker catalog={catalog} onPick={(name) => addAt((d) => addSfx(d, name, playhead))} /></Popover>
+  else if (lane.kind === 'objects') adder = <ObjectPickerPopover trigger={plus('Add an object at the playhead')} onPick={(name) => addAt((d) => addObject(d, catalog, name, playhead))} />
+  else if (lane.kind === 'object' && lane.object) {
+    const at = lane.object
+    adder = (
+      <Menu
+        align="start"
+        trigger={plus(`Add a motion for ${lane.label} at the playhead`)}
+        entries={[{ heading: 'At the playhead' }, ...MOTIONS.map((m) => ({ label: m.label, onSelect: () => addAt((d) => addMotion(d, catalog, at.scene, at.index, m.type, playhead)) }))]}
+      />
+    )
+  } else if (lane.kind === 'char' && lane.charId) {
     const id = lane.charId
     adder = (
-      <Popover trigger={plus(`Add an action for ${lane.label} at the playhead`)} className="p-2.5">
+      <Popover trigger={plus(`Add an action for ${lane.label} at the playhead`)} className="p-2.5" label="Choose an action">
         <ActionPicker catalog={catalog} onPick={(name) => addAt((d) => addAction(d, catalog, id, name, playhead))} />
       </Popover>
     )
   }
-  // right-click a lane's name to paste onto it (a character's lane takes actions; the others take what belongs to them)
+  // right-click a lane's name to paste onto it (a character's lane takes actions, an object's lane its motions; the others take what belongs to them)
   const pasteEntries: MenuEntry[] =
     lane.kind === 'scenes' || lane.kind === 'audio'
       ? []
       : [
           {
-            label: lane.kind === 'char' ? `Paste onto ${lane.label} at the playhead` : 'Paste at the playhead',
+            label: lane.kind === 'char' || lane.kind === 'object' ? `Paste onto ${lane.label} at the playhead` : 'Paste at the playhead',
             shortcut: `${MOD}V`,
             disabled: !board,
-            onSelect: () => void pasteAtPlayhead(lane.charId),
+            onSelect: () => void pasteAtPlayhead(lane.charId, lane.object ? { scene: lane.object.scene, object: lane.object.index } : undefined),
           },
         ]
   return (

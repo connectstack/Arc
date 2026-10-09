@@ -79,3 +79,15 @@ class FlatVector(StylePack):
         canvas.restore()
         if shape.stroke and shape.sw > 0:
             canvas.drawPath(path, self.stroke_paint(shape, ctx))
+
+    def paint_image(
+        self, canvas: skia.Canvas, shape: Shape, path: skia.Path, ctx: StyleContext
+    ) -> None:
+        """A picture gets the flat style's clean dark edge (a backdrop does not)."""
+        if shape.tag != "backdrop" and shape.alpha > 0.3:
+            edge = skia.Paint(AntiAlias=True, Color=skcolor("#1b1b2a", 0.85 * shape.alpha))
+            edge.setStyle(skia.Paint.kStroke_Style)
+            edge.setStrokeWidth(7.0)
+            edge.setStrokeJoin(skia.Paint.kRound_Join)
+            canvas.drawPath(path, edge)
+        self.draw_picture(canvas, shape, self.image_paint(shape, ctx))

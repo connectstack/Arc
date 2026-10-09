@@ -67,8 +67,10 @@ def preview_id_for(
     style: str | None,
     timings: WordTimings | None = None,
 ) -> str:
+    from reel.assets.library import library_fingerprint
+
     raw = json.dumps(
-        [spec, round(scale, 4), style, sorted((timings or {}).items())],
+        [spec, round(scale, 4), style, sorted((timings or {}).items()), library_fingerprint()],
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
@@ -228,10 +230,17 @@ class Thumbs:
         return encode_webp(r.frame(n), quality=78)
 
     def _key(self, *parts: object) -> str:
+        from reel.assets.library import library_fingerprint
         from reel.core import fonts
 
         raw = "|".join(
-            str(p) for p in (*parts, engine_fingerprint(()), fonts.inventory_fingerprint())
+            str(p)
+            for p in (
+                *parts,
+                engine_fingerprint(()),
+                fonts.inventory_fingerprint(),
+                library_fingerprint(),
+            )
         )
         return hashlib.sha256(raw.encode()).hexdigest()[:24]
 
@@ -251,3 +260,13 @@ class Thumbs:
         key = self._key("library", kind, name, time_of_day, style)
         spec = library_spec(kind, name, time_of_day, style)
         return self._cached(key, lambda: self._render(spec, 1.6))
+
+    def asset(
+        self, asset: Any, style: str, time_of_day: str = "day", true_scale: bool = False
+    ) -> bytes:
+        """A library asset drawn as a scene would show it (the key holds the art's own hash: new art, new picture)."""
+        from reel.assets.preview import preview_spec
+
+        key = self._key("asset", asset.name, asset.content_hash, style, time_of_day, true_scale)
+        spec = preview_spec(asset, style, time_of_day=time_of_day, true_scale=true_scale)
+        return self._cached(key, lambda: self._render(spec, 0.5))

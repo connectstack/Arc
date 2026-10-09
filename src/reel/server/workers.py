@@ -51,11 +51,15 @@ def estimate_seconds(style: str, scale: float, uncached_chunks: int) -> float:
 
 
 def _load_plugins(payload: dict[str, Any]) -> None:
+    """Load what the server loaded (plugins, the asset folders): a job runs in its own process and starts without them."""
+    from reel.core.catalog import CATALOG
+
     plugins = payload.get("plugins") or []
     if plugins:
-        from reel.core.catalog import CATALOG
-
         CATALOG.load_plugins(list(plugins))
+    assets = payload.get("assets") or []
+    if assets:
+        CATALOG.load_assets(list(assets))
 
 
 def _frame_range(
@@ -149,6 +153,7 @@ def render_job(payload: dict[str, Any], emit: Emit) -> None:
         preset=cfg["x264"],
         frame_range=frame_range,
         plugins=tuple(payload.get("plugins") or ()),
+        assets=tuple(payload.get("assets") or ()),
         seed=payload.get("seed"),
         audio=not payload.get("no_audio"),
         maxrate=cfg["maxrate"],

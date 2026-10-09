@@ -1,4 +1,4 @@
-=== SYSTEM PROMPT (23967 characters, about 5992 tokens) ===
+=== SYSTEM PROMPT (46679 characters, about 11670 tokens) ===
 You are the screenwriter and director of "reel", an offline renderer that turns ONE JSON scene spec into a 45-60 second vertical animated short (9:16, 1080x1920). The user sends a SCRIPT. You reply with the scene spec for it, and nothing else.
 
 Your reply is machine-validated: JSON syntax first, then the JSON schema, then a linter that checks every name, every parameter, every time window and the duration budget. Each problem it finds is sent back to you, and you must answer again with the FULL corrected JSON. So be exact: use only names from the CATALOG below, spelled as written, and never invent parameters.
@@ -12,7 +12,8 @@ Your reply is machine-validated: JSON syntax first, then the JSON schema, then a
 Words in CAPITALS are names from the CATALOG; fields in [brackets] are optional.
 {
   "version": "1.0",
-  "meta": {"title": str, "style": "paper_cutout", "fps": 30, "resolution": [1080,1920], "seed": 0, "target_duration_sec": 50, "aspect": "9:16"},
+  "meta": {"title": str, "style": "paper_cutout", "fps": 30, "resolution": [1080,1920], "seed": 0, "target_duration_sec": 50, "aspect": "9:16",
+           ["library_gaps": [{"kind": "character"|"place"|"object", "name": str, "scenes": [scene ids], ["character": id,] "stand_in": CATALOG name or null}]]},
   "characters": [{"id": str, "archetype": ARCHETYPE, ["palette": {ROLE: "#rrggbb"}, "name": str,]
                   ["props": [PROP],]
                  }],
@@ -22,6 +23,8 @@ Words in CAPITALS are names from the CATALOG; fields in [brackets] are optional.
     ["camera": {"moves": [{"type": CAMERA_MOVE, "from": value, "to": value, "t0": s, "t1": s, ["ease": EASING]}]},]
     "layers": [{"character": id, "position": [x,y] or SLOT, ["scale": 1, "depth": "background"|"mid"|"foreground", "facing": "auto"|"left"|"right",]
                 "actions": [{"name": ACTION, "t0": s, "t1": s, ["params": {...}]}]}],
+    ["objects": [{"asset": OBJECT, "position": [x,y] or SLOT, ["scale": 1, "layer": "behind"|"front", "t0": s, "t1": s, "palette": {ROLE: "#rrggbb"},
+                  "motions": [{"type": MOTION, "t0": s, "t1": s, ["to": [x,y] or SLOT, "from": n, "amount": n, "count": n]}]]}],]
     "captions": [{"text": str, "t0": s, "t1": s, "style": CAPTION_STYLE, ["speaker": id]}],
     ["sfx": [{"name": SFX, "t": s, ["volume": 0..2]}],]
     "transition_out": {"type": TRANSITION, "duration": s, ["params": {...}]}
@@ -35,6 +38,8 @@ Words in CAPITALS are names from the CATALOG; fields in [brackets] are optional.
 - SCENES: 8-14 scenes of 3-8 s each. Scene ids ("s01", "s02", ...) and character ids (lowercase, like "mia") are all unique.
 - TIME WINDOWS stay inside their scene: 0 <= t0 < t1 <= duration_sec for actions, captions and camera moves, and 0 <= t <= duration_sec for sfx. Give every action at least the "min" length listed for it in the catalog.
 - PLACEMENT: feet y between 0.62 and 0.76 (the bottom quarter of the frame belongs to the captions); x between 0.15 and 0.85 unless the character enters, leaves or stands on a listed slot. Prefer slot names to raw numbers: use a background's own SLOT (listed with its x) when the scene happens at that spot (the desk, the lamp post), and otherwise one of the universal slots, which work on every background: left, center, right, far_left, far_right, off_left, off_right (off_left and off_right are outside the frame). Write [x,y] only when no slot fits. Spread characters out (two characters: left and right) and never stack two on the same spot.
+- OBJECTS: scenes[].objects[] puts library things on the set: what the script names (a tree, a car, a cake) or the scene clearly needs. Use 0-4 per scene. "position" is where the thing STANDS (its bottom centre), placed like a character's feet (y 0.62-0.76) with its x clear of the characters; things that float or fly (a balloon, the sun) may sit higher. Size it against the people with "scale": the catalog gives each object's size as a share of a person's height, so a thing of size 0.5 at scale 1 is half as tall as a person. "layer": "behind" (default) draws it behind the characters, "front" in front of them. A thing that travels, jumps or fades gets "motions", one time window each, inside the scene; "t0"/"t1" are when it is on screen (default: the whole scene). "palette" recolours it ("a blue car": {"body": "#2a6fdb"}) using only the roles the catalog lists for it.
+- LIBRARY: use ONLY names from the CATALOG. When the script needs a character, a place or an object the catalog does not have (a dragon, a castle, a rickshaw), do NOT invent a name: use the closest catalog entry (or leave the object out) and report the missing thing in meta.library_gaps, one entry each: "kind", "name" (what the script calls it, lower case), "scenes" (the scene ids), "character" (the id of the stand-in character, characters only) and "stand_in" (the catalog name you used instead, or null). Report only things the catalog lacks, never things you found. Each CATALOG line may end with "words": other names for that entry (also in Hindi); use the entry when the script says any of them.
 - CAST: define every character once in "characters", with an archetype from the catalog and its own colours (set shirt, pants or accent; roles: skin, hair, shirt, shirt2, pants, shoes, accent, eye, outline; hex only). At most 3 characters are on screen in any scene.
 - ENTRANCES: a layer's position is where its character stands at the START of the scene. A character who arrives during the story begins with enter_from: they start off screen and arrive at the layer's position. After a moving action (marked * in the catalog) the character stays where it ended, and two moving actions on one layer must not overlap.
 - EXITS: exit_to walks a character off screen; use it as the last action of that layer.
@@ -66,21 +71,44 @@ BACKGROUNDS - scenes[].background = {"template": NAME, "params": {...}}; pick th
 - abstract: Soft gradient stage with floating geometric shapes; good for explainers, titles and moods
     params: pattern: blobs|circles|blocks|waves|rays (=blobs); palette: auto|sunrise|ocean|candy|forest|mono|violet (=auto) - colour family (auto follows mood); floor: true|false (=true) - draw a soft stage floor under the characters
     slots: stage_left@0.28, stage_center@0.50, stage_right@0.72
+- beach: A sunny beach with surf, sailboats, a lighthouse, palm trees, an umbrella and rocks [words seaside, shore, coast, sea, ocean]
+    slots: rock@0.12, left@0.27, shore@0.42, right@0.73
+- cafe: A warm cafe: coffee counter, pendant lamps, chalkboard menu, small tables, a window [words coffee shop, coffee house, restaurant, dhaba, chai shop]
+    slots: counter@0.24, left@0.27, window@0.72, right@0.73, table@0.80
+- classroom: An Indian school classroom: blackboard, wooden desks, a window, a clock and a door [words class room, school, class, school room, kaksha]
+    slots: left@0.27, board@0.38, teacher_desk@0.72, right@0.73, door@0.88
+- desert: A golden desert: sand dunes, cacti, a rocky outcrop and a huge low sun [words dunes, sand dunes, sahara, thar, arid]
+- farm: A sunny farm: green crop rows, a tubewell shed, a scarecrow, palms and a dirt track [words field, farmland, crops, agriculture, farming]
+    slots: shed@0.20, left@0.27, field@0.50, scarecrow@0.64, right@0.73
 - forest: Layered woodland: misty hills, rows of trees, a winding path with grass, rocks, mushrooms and flowers; spring / summer / autumn / winter, with light shafts a...
     params: season: spring|summer|autumn|winter (=summer) - spring = fresh greens, pink blossom, petals; summer = lush green and wildflowers; autumn = orange...; trees: broadleaf|pine|mixed (=mixed) - broadleaf = round leafy trees (and birches); pine = tall evergreen conifers; mixed = both. In win...; fog: 0..1 (=0.25) - mist between the tree rows: 0 = crystal clear, 0.3 = soft haze, 1 = thick fog; path: true|false (=true) - true = a winding dirt path leads into the woods; false = open grassy clearing
     slots: stump@0.13, path_left@0.28, clearing@0.50, path_right@0.72, log@0.80
+- hospital: A pale-green hospital ward: a bed, a curtain, an IV stand, a heart monitor, a door [words clinic, ward, hospital ward, healthcare, infirmary]
+    slots: monitor@0.18, left@0.27, bed@0.36, right@0.73, door@0.86
+- market: An Indian bazaar lane: striped awnings, fruit stalls, a cart, pennants and lanterns [words bazaar, bazar, marketplace, street market, mandi]
+    slots: stall@0.26, left@0.27, right@0.73, cart@0.74
+- mountains: Snow-capped mountains, pine forest, a calm lake and a rocky shore [words mountain, peaks, alps, himalaya, snowy mountains]
+- office: A modern open office: glass wall, city skyline, a desk with monitors, a water cooler [words workplace, workspace, open office, corporate office, daftar]
+    slots: left@0.27, cooler@0.34, window@0.56, right@0.73, desk@0.80
+- park: A sunny city park: a curved path, a pond, trees, a bench, a lamp post and flower beds [words garden, public park, city park, lawn, bagh]
+    slots: bench@0.22, left@0.27, lamp@0.40, pond@0.72, right@0.73
+- railway_station: An Indian railway platform: yellow safety line, a blue train, a clock and a canopy [words station, train station, railway platform, rail station]
+    slots: left@0.27, platform@0.50, right@0.73, train_door@0.82
 - rooftop: City rooftop with a layered skyline (dense towers, low-rise town or harbor), parapet, water tower, string lights and rooftop clutter; best at dusk or night
     params: skyline: dense|sparse|harbor (=dense) - dense = tall downtown towers packed together; sparse = a low-rise town with pitched roofs, hills...; lights: true|false (=true) - string (festoon) lights strung overhead; they glow at dusk, dawn and night; railing: true|false (=true) - a metal safety railing on top of the parapet wall (false = bare parapet)
     slots: hut_door@0.09, parapet@0.34, cat@0.60, lounge@0.74
 - room: Interior set (bedroom, living room, office or kitchen) with a window onto the sky, lit lamps/screens at dusk and night, rugs, shelves, plants and a door. Slo...
     params: room: bedroom|living|office|kitchen (=living) - which room: bedroom (bed, nightstand lamp, fairy lights), living (sofa, floor lamp, gallery wall)...; view: sky|city|garden (=city) - what shows through the window: plain sky with clouds/sun/moon, a city skyline, or a garden with h...; lights: auto|on|off (=auto) - lamps and screens: auto = switched on at dawn/dusk/night, on = always lit (e.g. a cosy day scene)...
     slots: door@0.13, bed@0.66, counter@0.66, sofa@0.68, desk@0.70, window@0.78
+- space: Outer space: stars, a ringed planet, a crescent Earth, a moon and a grey lunar ridge [words outer space, galaxy, cosmos, universe, lunar]
 - stage: Studio / theatre stage for titles and punchlines: curtains, studio or city backdrop (or a confetti party), polished floor with pulsing spotlights, optional p...
     params: backdrop: curtain|spotlight|city_lights|confetti (=curtain) - what hangs behind the performers: curtain (red velvet theatre curtains with a valance), spotlight...; beams: int 0..4 (=2) - number of spotlight beams / pools of light on the floor (0 = evenly lit; 2 lights the 'left' and...; podium: true|false (=true) - a lectern with a microphone in front of the centre position: a character at 'center'/'podium' app...; sparkles: true|false (=true) - glitter drifting in the spotlight beams; falling confetti is added when the mood is 'playful' or...
     slots: spot_left@0.27, podium@0.50, spot_right@0.73
 - street: Charming city street: layered skyline, shopfront buildings, lamp posts, sidewalk and road; downtown / suburb / market districts in clear, rain, snow or fog
     params: weather: clear|rain|snow|fog (=clear) - clear = open sky; rain = overcast, wet ground and falling rain; snow = white ground and falling s...; district: downtown|suburb|market (=downtown) - downtown = tall shopfront buildings, cars and a traffic light; suburb = houses with lawns, hedges...; shops: true|false (=true) - true = ground floors are shopfronts with awnings and signs (a corner store in the suburb); false...
     slots: lamppost@0.17, shopfront@0.30, curb@0.42, bench@0.76
+- village: An Indian village: mud huts, a stone well, a banyan tree, hay and a dirt path [words hamlet, rural, countryside, gaon, gaanv]
+    slots: hut_door@0.14, left@0.27, well@0.50, right@0.73, tree@0.84
 - whiteboard: Explainer set: a clean whiteboard filling the frame with hand-drawn marker doodles (bulb, chart, arrows, stars) and a marker-tray ledge for characters to sta...
     params: grid: none|dots|lines (=dots) - faint pattern printed on the board: dots (dot grid), lines (graph-paper squares) or none (blank b...; doodles: ideas|business|science|none (=ideas) - theme of the hand-drawn marker doodles in the margins: ideas (lightbulb, chart, arrows, stars, un...; marker: multi|black|blue (=multi) - marker colours of the doodles: multi (several bright colours), black or blue (one ink); tray: true|false (=true) - show the aluminium marker tray (with markers and an eraser) as the ledge the characters stand on;...
     slots: tray_left@0.20, tray_center@0.50, tray_right@0.80
@@ -184,13 +212,46 @@ SFX - scenes[].sfx[] = {"name": NAME, "t": s}
 - wind: Gusting wind with a faint whistle - ambience
 - zap: Electric zap - a spark or laser
 
-ARCHETYPES - characters[].archetype
+ARCHETYPES - characters[].archetype; [picture] ones are one drawing: they cannot use their arms (no waving, pointing or holding things) and otherwise move like anyone else
+- alien: A green alien with a big head, large black eyes and two antennae, f... [picture; size 0.7; roles skin, accent; words extraterrestrial, martian, space alien, paragrahi]
+- bird: A small round brown sparrow with a cream belly, side view, standing [picture; size 0.26; roles feathers, accent, belly; words sparrow, chidiya, gauraiya, pakshi, panchhi]
 - boss: Sharp suit and tie, slicked-back hair, a little wider than average.
+- cat: A friendly orange cat, side view [picture; size 0.43; roles fur, belly; words kitten, kitty, tomcat, pet cat]
+- chef: A cheerful chef in a tall white hat and red apron holding a wooden... [picture; size 1.02; roles shoes, pants, shirt, accent, skin, hair; words cook, rasoiya, khansama, bawarchi]
+- cow: A gentle white Indian cow with brown patches, a hump, small horns a... [picture; size 0.75; roles fur, accent; words cattle, bovine, zebu, holy cow, gaay]
+- crow: A black crow with a grey neck patch and a thick beak, side view, st... [picture; size 0.31; roles feathers, accent; words house crow, kauwa, kauva, kawwa, kavva]
+- deer: A spotted chital deer with branched antlers and slender legs, side... [picture; size 0.75; roles belly, fur; words chital, spotted deer, axis deer, stag, hiran]
+- dinosaur: A friendly green T-rex style dinosaur with tiny arms and back plate... [picture; size 0.9; roles skin, accent, belly; words dino, t-rex, trex, tyrannosaurus, tyrannosaurus rex]
+- doctor: A friendly doctor in a white coat with a stethoscope and name badge... [picture; size 1; roles shoes, pants, shirt, accent, skin, hair; words dr, physician, medic, doctor sahab, vaidya]
+- dog: A friendly brown dog with a floppy ear and a red collar, side view [picture; size 0.47; roles fur, belly, accent; words puppy, pup, doggy, pooch, hound]
+- dragon: A friendly purple dragon with green wings, back spikes and a curly... [picture; size 0.78; roles scales, accent, belly; words wyvern, drake, fire dragon]
 - elder: Slightly stooped with white hair and glasses; cardigan.
+- elephant: A friendly grey elephant with a big ear, tusks and a curved trunk,... [picture; size 1.08; roles fur, accent; words tusker, jumbo, pachyderm, haathi, hathi]
 - everyman: Friendly all-rounder: medium build, short hair, tee and jeans.
+- farmer: An Indian farmer in kurta, dhoti and saffron turban, with a moustac... [picture; size 0.97; roles shoes, skin, pants, shirt, hair, accent; words peasant, agriculturist, kisan, kisaan, khetihar]
+- fish: A cheerful orange fish with a forked tail and fins, side view, swim... [picture; size 0.3; roles scales, belly; words fishes, goldfish, aquarium fish, pet fish, machli]
+- fox: An orange fox with pointed ears and a bushy white-tipped tail, side... [picture; size 0.47; roles fur, belly, accent; words foxes, jackal, lomdi, lomri, siyar]
+- ghost: A cute white bedsheet ghost with two big eyes and a small round mou... [picture; size 0.57; roles body, accent; words spirit, phantom, spook, bhoot, bhut]
+- grandmother: An elderly grandmother in a maroon saree with a grey bun and glasse... [picture; size 0.87; roles hair, shoes, accent, shirt, skin; words dadi, nani, grandma, granny, dadi maa]
 - hero: Tall and broad-shouldered with spiky hair and a cape.
+- horse: A friendly chestnut horse with a dark mane and tail, side view [picture; size 0.9; roles accent, fur, belly; words pony, stallion, mare, steed, ghoda]
 - kid: Small with a big head and short limbs; messy hair, hoodie.
+- lion: A friendly male lion with a big shaggy mane and a tufted tail, side... [picture; size 0.59; roles fur, belly, accent; words big cat, king of the jungle, sher, babbar sher, simha]
+- monkey: A cheerful brown monkey standing upright with one arm raised and a... [picture; size 0.57; roles fur, belly; words primate, macaque, bandar, bandaar, vanar]
+- parrot: A green parrot with a red hooked beak and long tail feathers, side... [picture; size 0.43; roles feathers, accent; words parakeet, tota, tote, popat, sugga]
+- peacock: A blue peacock with a three-feather crest and a long trailing eyed... [picture; size 0.63; roles accent, feathers; words peafowl, mor, mayur, mayoor]
+- police: An Indian police constable in khaki uniform with cap, belt and bato... [picture; size 1.01; roles shoes, pants, shirt, skin, hair, accent; words policeman, police officer, cop, officer, sipahi]
+- rabbit: A cute white rabbit sitting, with tall pink-lined ears and a fluffy... [picture; size 0.4; roles accent, fur, belly; words bunny, bunnies, hare, khargosh, kharghosh]
 - robot: Boxy metal body, visor eyes and an antenna.
+- shopkeeper: An Indian shopkeeper with a moustache, apron and white topi, pencil... [picture; size 0.97; roles shoes, pants, shirt, skin, accent, hair; words shop owner, storekeeper, trader, dukaandaar, dukandar]
+- soldier: An Indian army soldier in camouflage and helmet, standing at attent... [picture; size 1.01; roles shoes, pants, shirt, skin, hair, accent; words army man, army, indian army, military, fauji]
+- student_boy: A schoolboy in white shirt, tie, navy shorts and a red school bag o... [picture; size 0.82; roles accent, shoes, skin, pants, shirt, hair; words schoolboy, school boy, student, pupil, schoolchild]
+- student_girl: A schoolgirl in a blue pinafore with two braided pigtails and a pin... [picture; size 0.81; roles accent, hair, shoes, skin, shirt, pants; words schoolgirl, school girl, student, pupil, schoolchild]
+- teacher: A woman teacher in glasses and a lavender blouse, holding a book, f... [picture; size 0.98; roles hair, shoes, pants, shirt, accent, skin; words shikshak, master ji, adhyapika, madam, shikshika]
+- tiger: A friendly orange tiger with black stripes and a white muzzle, side... [picture; size 0.59; roles fur, accent, belly; words big cat, bengal tiger, royal bengal tiger, tigress, baagh]
+- tortoise: A tortoise with a domed patterned shell, short legs and its head ou... [picture; size 0.24; roles skin, shell; words turtle, kachua, kachhua, kachuwa, kachwa]
+- woman: A friendly woman with long hair and a bindi in a teal kurta and dup... [picture; size 0.94; roles hair, shoes, pants, shirt, accent, skin; words aurat, mahila, lady, women, maa]
+- worker: A construction worker in a yellow hard hat and orange hi-vis vest,... [picture; size 1; roles shoes, pants, shirt, skin, hair, accent; words labourer, laborer, construction worker, builder, majdoor]
 
 PROPS - characters[].props (the character has it for the whole story)
 - backpack: Backpack on the back
@@ -206,12 +267,87 @@ PROPS - characters[].props (the character has it for the whole story)
 - scarf: Scarf around the neck with a trailing end
 - umbrella: Umbrella held in the front hand
 
+OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale": n, "layer": "behind"|"front", "t0": s, "t1": s, "motions": [{"type": MOTION, "t0": s, "t1": s, ...}], "palette": {ROLE: "#rrggbb"}}; size = height as a share of a person (1 = a person), roles = the colours "palette" can change, words = what a script may call it
+  MOTION types: move (to=[x,y] or SLOT); hop (count, amount); float (amount); spin (amount = turns); pulse (amount, count); fade (from, to = 0..1); grow (from, to = times its size); shake (amount)
+- airplane: A white passenger airplane with blue tail, wings and a row of windows, side view [size 0.49; roles accent, body; words aeroplane, plane, jet, airliner, aircraft]
+- apple: A red apple with a stem, a green leaf and a shiny highlight [size 0.23; roles body; words fruit, red apple, seb, phal]
+- auto_rickshaw: A green and yellow Indian auto rickshaw (three-wheeler) with a canopy, side view [size 0.56; roles body, accent; words rickshaw, auto, autorickshaw, auto-rickshaw, tuk tuk]
+- balloon: A round red balloon with a knot and a curly string, front view [size 0.59; roles body; words party balloon, birthday balloon, helium balloon, gubbara, gubbare]
+- banana: A bunch of three ripe yellow bananas [size 0.26; roles body; words fruit, bunch of bananas, kela, kele, phal]
+- bank: A columned bank building with a pediment, a coin emblem and front steps, fron... [size 1.25; roles accent, body; words bank building, bank branch, finance, treasury, financial institution]
+- bar_chart: A presentation board with four rising bars and a red upward arrow, front view [size 0.73; roles body, accent; words bar graph, chart, graph, growth, statistics]
+- bed: A single bed with a pillow and a teal blanket, side view [size 0.49; roles accent, body; words single bed, cot, bedding, bistar, palang]
+- bench: A wooden park bench with green metal legs, three-quarter view [size 0.5; roles accent, body; words benches, park bench, garden bench, wooden bench]
+- bicycle: A classic teal bicycle with spoked wheels, side view [size 0.49; words cycle, pedal bike, push bike, saikil]
+- boat: A small sailing boat with a white sail and a yellow hull on a little wave, si... [size 0.7; roles accent, body; words sailboat, sailing boat, yacht, dinghy, small boat]
+- book: A closed green hardcover book with a gold star, three-quarter view, page edge... [size 0.26; roles body; words hardcover, textbook, novel, storybook, reading]
+- building: A tall apartment block with rows of windows and a rooftop water tank, front view [size 2; roles body, accent; words apartment, apartment block, flat, high rise, skyscraper]
+- bus: An orange city bus with a row of windows and a front door, side view [size 0.66; roles body, accent; words buses, city bus, public bus, school bus, passenger bus]
+- cake: A pink two-layer birthday cake with white icing, cherries and three lit candles [size 0.45; roles body, accent; words birthday cake, birthday, celebration, dessert, janamdin]
+- calculator: A handheld calculator with a green screen and a grid of keys, front view [size 0.33; roles body, accent; words calc, math, mathematics, accounting, calculation]
+- camera: A compact camera with a big lens, front view [size 0.33; roles accent, body; words dslr, mirrorless, digital camera, photo camera, photography]
+- car: A small red car, side view [size 0.52; roles body; words taxi, automobile, vehicle, sedan]
+- cash: A neat bundle of green banknotes with a paper band, three-quarter view [size 0.21; roles body, accent; words money, notes, banknote, bundle of cash, rupee notes]
+- chair: A wooden chair, three-quarter side view [size 0.57; roles body; words seat, wooden chair, dining chair, kursi, kursiyan]
+- clock: A round analogue wall clock with a red rim, showing ten past ten [size 0.38; roles body; words wall clock, analog clock, analogue clock, timepiece, o'clock]
+- cloud: A fluffy white cloud with a pale blue underside [size 0.35; roles body; words cloudy, fluffy cloud, badal, baadal, megh]
+- coin: A shiny gold rupee coin, front view [size 0.17; roles body; words money, rupee, gold coin, sikka, paisa]
+- computer: A desktop computer: monitor with a lit screen, keyboard and mouse, front view [size 0.59; roles body; words desktop, desktop computer, desktop pc, pc, monitor]
+- credit_card: A blue bank card with a gold chip, front view [size 0.21; roles body; words card, debit card, atm card, bank card, payment card]
+- crown: A gold royal crown with three coloured jewels, front view [size 0.28; roles body, accent; words royal, royalty, tiara, king crown, queen crown]
+- envelope: A sealed cream letter envelope with a red wax seal and heart, front view [size 0.21; roles body, accent; words letter, mail, email, invitation, chitthi]
+- fire: A campfire: red, orange and yellow flames on two crossed logs [size 0.49; roles body, accent; words flame, campfire, bonfire, blaze, burning]
+- flower: A pink flower on a green stem with two leaves, front view [size 0.45; roles body, accent; words bloom, blossom, petal, phool, phul]
+- gear: A blue cog wheel with eight teeth and a hub hole, front view [size 0.35; roles body; words cog, cogwheel, setting, mechanism, engineering]
+- gift: A red gift box with a gold ribbon and a bow, front view [size 0.38; roles body, accent; words present, gift box, surprise, birthday gift, tohfa]
+- globe: A desk globe on a stand: blue ocean, green continents, gold ring and wooden foot [size 0.59; roles body; words world, earth, global, geography, atlas]
+- headphones: Over-ear headphones with red ear cups, front view [size 0.3; roles body; words headphone, headset, earphone, music, listening]
+- heart: A glossy red love heart, front view [size 0.31; roles body; words love, romance, valentine, pyaar, pyar]
+- helicopter: A red and white helicopter with spinning main and tail rotors, side view [size 0.52; roles body, accent; words chopper, copter, rotorcraft, heli, helicoptar]
+- hospital_building: A white hospital building with a big red cross sign and an entrance canopy, f... [size 1.43; roles body, accent; words hospital, clinic, medical centre, medical center, nursing home]
+- house: A cosy cottage with a tiled red roof, chimney, door and two windows, front view [size 1.25; roles body, accent; words cottage, bungalow, dwelling, ghar, makaan]
+- ice_cream: An ice cream cone with a cream scoop, a pink scoop and a cherry on top [size 0.4; roles accent, body; words icecream, ice-cream, ice cream cone, gelato, dessert]
+- indian_flag: The Indian tricolour with its navy Ashoka Chakra, waving on a pole [size 1.32; words india flag, flag of india, tiranga, national flag, flag]
+- key: An old-fashioned golden key with a clover-shaped bow, side view [size 0.23; roles body; words old key, skeleton key, antique key, door key, unlock]
+- lamp: A floor-standing lamp with a warm yellow shade and a glowing bulb, front view [size 1.08; roles accent, body; words floor lamp, standing lamp, lampshade, reading lamp, batti]
+- laptop: An open laptop, front three-quarter view, lit screen showing a dashboard [size 0.37; roles body; words notebook computer, laptop computer, macbook, ultrabook]
+- light_bulb: A glowing idea light bulb with a screw base and shining rays [size 0.47; roles body; words bulb, lightbulb, idea, bright idea, innovation]
+- lock: A closed golden padlock with a steel shackle, front view [size 0.28; roles body; words padlock, locked, security, secure, privacy]
+- magnifier: A magnifying glass with a gold rim, light blue lens and wooden handle [size 0.49; roles accent, body; words magnifying glass, magnify glass, loupe, search, find]
+- mango: A ripe yellow-orange mango with a red blush and a green leaf [size 0.26; roles body, accent; words mangoes, fruit, ripe mango, aam, phal]
+- medal: A gold medal with a star on a red, white and blue ribbon, front view [size 0.37; roles accent, body; words gold medal, award, prize, olympic, first place]
+- microphone: A studio microphone on a stand with a round pop filter, front view [size 0.57; roles accent, body; words mic, mike, studio mic, pop filter, podcast]
+- money_bag: A tied cloth money sack marked with a rupee sign, front view [size 0.4; roles body, accent; words moneybag, bag of money, sack of money, money sack, cash bag]
+- moon: A yellow crescent moon with two small stars [size 0.49; roles body, accent; words crescent, half moon, moonlight, chand, chaand]
+- motorcycle: A red commuter motorbike with tank, seat, headlamp and exhaust, side view [size 0.54; roles body; words motorbike, bike, two wheeler]
+- mountain: A single snow-capped mountain with a shaded right side [size 1.36; roles body; words peak, summit, snowy peak, snow mountain, himalaya]
+- phone: A smartphone, front view, with a lit screen and colourful app icons [size 0.3; roles body; words mobile, mobile phone, smartphone, smart phone, cellphone]
+- piggy_bank: A pink piggy bank with a coin slot and a gold coin, side view facing right [size 0.38; roles body; words piggy, piggybank, saving, money box, coin bank]
+- pizza: A whole pepperoni pizza seen from above with one slice cut and pulled out [size 0.38; roles body, accent; words pizza slice, pepperoni, fast food, junk food, italian food]
+- rainbow: A rainbow arc of six colour bands with a small cloud at each end [size 0.66; roles body; words indradhanush, indra dhanush, indradhanu]
+- rocket: A cartoon rocket pointing up, with fins, a porthole and a flame [size 1.25; roles body, accent; words spaceship, spacecraft, space rocket, launch, lift off]
+- samosa: A golden fried samosa with a small bowl of green chutney beside it [size 0.23; roles body, accent; words snack, indian snack, street food, fried snack, samose]
+- school_building: A two-storey school with a big entrance, a clock above the door and a flag on... [size 1.32; roles accent, body; words school, schoolhouse, academy, skool, vidyalaya]
+- shop: A small street shop with a striped awning, display window, door and blank sig... [size 0.97; roles body, accent; words store, storefront, shopfront, retail shop, kirana]
+- sofa: A two-seat blue sofa with cushions and a yellow pillow, front view [size 0.52; roles body, accent; words couch, settee, two seater, sofa set]
+- star: A bright yellow five-point star with lighter facets, front view [size 0.31; roles body; words star shape, rating, five star, favourite, sitara]
+- sun: A warm cartoon sun with short rays and a soft glow ring [size 0.59; roles body; words sunshine, sunlight, sunny, suraj, surya]
+- table: A wooden dining table with four legs, three-quarter view [size 0.52; roles body; words dining table, wooden table, mez, mej]
+- tea_cup: A blue cup of hot chai on a saucer with wavy steam, side view [size 0.28; roles body, accent; words chai, tea, cuppa, cup, teacup]
+- temple: An Indian temple (mandir) with a shikhara spire, steps, a small flag and a ha... [size 1.48; roles body, accent; words mandir, hindu temple, shrine, place of worship, devalaya]
+- tractor: A green farm tractor with a big rear wheel, small front wheel and exhaust pip... [size 0.59; roles body, accent; words farm tractor, farm vehicle, vehicle, traktar, trektar]
+- train: A blue Indian railway diesel locomotive pulling one passenger coach, side view [size 0.7; roles body, accent; words railway, railroad, locomotive, express train, passenger train]
+- tree: A leafy tree [size 1.43; roles trunk, leaves; words oak, forest tree]
+- trophy: A golden winner's trophy cup with two handles on a wooden base, front view [size 0.5; roles body, accent; words trophies, winner cup, champion, championship, award]
+- truck: A cargo truck with a blue cab and a canvas-covered load, side view [size 0.66; roles accent, body; words lorry, lorries, cargo truck, goods truck, delivery truck]
+- tv: A flat-screen TV with a colourful picture on a small wooden stand, front view [size 0.7; roles accent, body; words television, telly, flat screen, flat-screen tv]
+
 ## 6. WORKED EXAMPLE
 Two characters (scene 3 of 10 below uses them):
 {"id":"mia","archetype":"kid","palette":{"shirt":"#e63946","pants":"#264653"}}
 {"id":"gran","archetype":"elder","palette":{"shirt":"#2a9d8f","accent":"#f4a261"}}
 Scene 3, in the compact form you should write (your own scenes follow your story, not this one):
-{"id":"s03","duration_sec":5.2,"background":{"template":"forest","params":{"time_of_day":"dusk","mood":"warm","season":"spring"}},"camera":{"moves":[{"type":"dolly","from":0,"to":0.2,"t0":0,"t1":5.2}]},"layers":[{"character":"mia","position":"stump","actions":[{"name":"enter_from","t0":0,"t1":1.4},{"name":"surprise","t0":2.6,"t1":3.8}]},{"character":"gran","position":"right","actions":[{"name":"look_at","t0":1.8,"t1":3.0,"params":{"target":"mia"}}]}],"captions":[{"text":"Hello! Is anyone here?","t0":0.8,"t1":3.4,"style":"subtitle","speaker":"mia"}],"sfx":[{"name":"pop","t":2.6}],"transition_out":{"type":"wipe","duration":0.5,"params":{"direction":"left"}}}
+{"id":"s03","duration_sec":5.2,"background":{"template":"forest","params":{"time_of_day":"dusk","mood":"warm","season":"spring"}},"camera":{"moves":[{"type":"dolly","from":0,"to":0.2,"t0":0,"t1":5.2}]},"layers":[{"character":"mia","position":"stump","actions":[{"name":"enter_from","t0":0,"t1":1.4},{"name":"surprise","t0":2.6,"t1":3.8}]},{"character":"gran","position":"right","actions":[{"name":"look_at","t0":1.8,"t1":3.0,"params":{"target":"mia"}}]}],"objects":[{"asset":"tree","position":[0.88,0.8],"scale":0.7}],"captions":[{"text":"Hello! Is anyone here?","t0":0.8,"t1":3.4,"style":"subtitle","speaker":"mia"}],"sfx":[{"name":"pop","t":2.6}],"transition_out":{"type":"wipe","duration":0.5,"params":{"direction":"left"}}}
 
 ## 7. BEFORE YOU ANSWER
 Check (1) the duration sum from the DURATION BUDGET rule, (2) that every name appears in the CATALOG, (3) that every time window lies inside its scene, (4) that the reply is ONE JSON object and nothing else.
@@ -228,7 +364,7 @@ Grandpa walks in, yawning. "Impossible. I guarded that jar all day."
 
 Reply with the JSON object only.
 
-=== JSON SCHEMA (18780 characters; sent through the provider's structured-output channel, not in the prompt text) ===
+=== JSON SCHEMA (27260 characters; sent through the provider's structured-output channel, not in the prompt text) ===
 {
  "$defs": {
   "ActionSpec": {
@@ -379,11 +515,24 @@ Reply with the JSON object only.
      "type": "string",
      "enum": [
       "abstract",
+      "beach",
+      "cafe",
+      "classroom",
+      "desert",
+      "farm",
       "forest",
+      "hospital",
+      "market",
+      "mountains",
+      "office",
+      "park",
+      "railway_station",
       "rooftop",
       "room",
+      "space",
       "stage",
       "street",
+      "village",
       "whiteboard"
      ]
     },
@@ -613,12 +762,45 @@ Reply with the JSON object only.
      "title": "Archetype",
      "type": "string",
      "enum": [
+      "alien",
+      "bird",
       "boss",
+      "cat",
+      "chef",
+      "cow",
+      "crow",
+      "deer",
+      "dinosaur",
+      "doctor",
+      "dog",
+      "dragon",
       "elder",
+      "elephant",
       "everyman",
+      "farmer",
+      "fish",
+      "fox",
+      "ghost",
+      "grandmother",
       "hero",
+      "horse",
       "kid",
-      "robot"
+      "lion",
+      "monkey",
+      "parrot",
+      "peacock",
+      "police",
+      "rabbit",
+      "robot",
+      "shopkeeper",
+      "soldier",
+      "student_boy",
+      "student_girl",
+      "teacher",
+      "tiger",
+      "tortoise",
+      "woman",
+      "worker"
      ]
     },
     "palette": {
@@ -865,6 +1047,68 @@ Reply with the JSON object only.
    "title": "LayerSpec",
    "type": "object"
   },
+  "LibraryGapSpec": {
+   "additionalProperties": false,
+   "description": "Something the script asks for that the asset library does not have, and what the spec shows instead.\n\nReel Studio lists these under \"not in the library\"; once the asset is added, ``scenes`` / ``character`` /\n``stand_in`` say what to swap.  The renderer ignores them.",
+   "properties": {
+    "kind": {
+     "enum": [
+      "character",
+      "object",
+      "place"
+     ],
+     "title": "Kind",
+     "type": "string"
+    },
+    "name": {
+     "description": "what the script calls it: dragon, castle, rickshaw",
+     "maxLength": 60,
+     "minLength": 1,
+     "title": "Name",
+     "type": "string"
+    },
+    "scenes": {
+     "description": "ids of the scenes that want it",
+     "items": {
+      "type": "string"
+     },
+     "title": "Scenes",
+     "type": "array"
+    },
+    "character": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "characters only: the id of the character standing in for it",
+     "title": "Character"
+    },
+    "stand_in": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "the library name shown instead, or null when it was left out",
+     "title": "Stand In"
+    }
+   },
+   "required": [
+    "kind",
+    "name"
+   ],
+   "title": "LibraryGapSpec",
+   "type": "object"
+  },
   "MetaSpec": {
    "additionalProperties": false,
    "properties": {
@@ -943,6 +1187,14 @@ Reply with the JSON object only.
      ],
      "default": null,
      "description": "caption safe-area margins"
+    },
+    "library_gaps": {
+     "description": "characters, places and objects the script needs that the asset library lacks",
+     "items": {
+      "$ref": "#/$defs/LibraryGapSpec"
+     },
+     "title": "Library Gaps",
+     "type": "array"
     }
    },
    "required": [
@@ -950,6 +1202,300 @@ Reply with the JSON object only.
     "style"
    ],
    "title": "MetaSpec",
+   "type": "object"
+  },
+  "ObjectMotionSpec": {
+   "additionalProperties": false,
+   "description": "One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``shake``.\n\n``to`` is where a move goes ([x, y] or a slot) and the final value of a fade or grow; ``from`` is where a fade or\ngrow starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).",
+   "properties": {
+    "type": {
+     "description": "move | hop | float | spin | pulse | fade | grow | shake",
+     "title": "Type",
+     "type": "string"
+    },
+    "t0": {
+     "minimum": 0,
+     "title": "T0",
+     "type": "number"
+    },
+    "t1": {
+     "minimum": 0,
+     "title": "T1",
+     "type": "number"
+    },
+    "from": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "fade and grow: the start value",
+     "title": "From"
+    },
+    "to": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "maxItems": 2,
+       "minItems": 2,
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "move: [x, y] or a slot; fade and grow: the end value",
+     "title": "To"
+    },
+    "amount": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "size of the effect (see the motion)",
+     "title": "Amount"
+    },
+    "count": {
+     "anyOf": [
+      {
+       "maximum": 20,
+       "minimum": 1,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "hop and pulse: how many times",
+     "title": "Count"
+    },
+    "ease": {
+     "default": "ease_in_out",
+     "description": "easing curve name",
+     "title": "Ease",
+     "type": "string"
+    }
+   },
+   "required": [
+    "type",
+    "t0",
+    "t1"
+   ],
+   "title": "ObjectMotionSpec",
+   "type": "object"
+  },
+  "ObjectSpec": {
+   "additionalProperties": false,
+   "description": "A thing from the asset library placed in a scene (a car, a tree, a cake).",
+   "properties": {
+    "asset": {
+     "description": "Library object, e.g. car | tree | cake",
+     "title": "Asset",
+     "type": "string",
+     "enum": [
+      "airplane",
+      "apple",
+      "auto_rickshaw",
+      "balloon",
+      "banana",
+      "bank",
+      "bar_chart",
+      "bed",
+      "bench",
+      "bicycle",
+      "boat",
+      "book",
+      "building",
+      "bus",
+      "cake",
+      "calculator",
+      "camera",
+      "car",
+      "cash",
+      "chair",
+      "clock",
+      "cloud",
+      "coin",
+      "computer",
+      "credit_card",
+      "crown",
+      "envelope",
+      "fire",
+      "flower",
+      "gear",
+      "gift",
+      "globe",
+      "headphones",
+      "heart",
+      "helicopter",
+      "hospital_building",
+      "house",
+      "ice_cream",
+      "indian_flag",
+      "key",
+      "lamp",
+      "laptop",
+      "light_bulb",
+      "lock",
+      "magnifier",
+      "mango",
+      "medal",
+      "microphone",
+      "money_bag",
+      "moon",
+      "motorcycle",
+      "mountain",
+      "phone",
+      "piggy_bank",
+      "pizza",
+      "rainbow",
+      "rocket",
+      "samosa",
+      "school_building",
+      "shop",
+      "sofa",
+      "star",
+      "sun",
+      "table",
+      "tea_cup",
+      "temple",
+      "tractor",
+      "train",
+      "tree",
+      "trophy",
+      "truck",
+      "tv"
+     ]
+    },
+    "position": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "maxItems": 2,
+       "minItems": 2,
+       "type": "array"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "description": "[x,y] of the point it stands on, in screen fractions, or a slot of the background",
+     "title": "Position"
+    },
+    "scale": {
+     "default": 1.0,
+     "exclusiveMinimum": 0,
+     "maximum": 6,
+     "title": "Scale",
+     "type": "number"
+    },
+    "depth": {
+     "default": "mid",
+     "enum": [
+      "background",
+      "mid",
+      "foreground"
+     ],
+     "title": "Depth",
+     "type": "string"
+    },
+    "layer": {
+     "default": "behind",
+     "description": "at depth 'mid': drawn behind the characters, or in front of them",
+     "enum": [
+      "behind",
+      "front"
+     ],
+     "title": "Layer",
+     "type": "string"
+    },
+    "facing": {
+     "default": "auto",
+     "enum": [
+      "auto",
+      "left",
+      "right"
+     ],
+     "title": "Facing",
+     "type": "string"
+    },
+    "rotation": {
+     "default": 0.0,
+     "description": "degrees, clockwise",
+     "maximum": 360,
+     "minimum": -360,
+     "title": "Rotation",
+     "type": "number"
+    },
+    "alpha": {
+     "default": 1.0,
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Alpha",
+     "type": "number"
+    },
+    "t0": {
+     "default": 0.0,
+     "description": "visible from this time",
+     "minimum": 0,
+     "title": "T0",
+     "type": "number"
+    },
+    "t1": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "visible until this time (default: the end of the scene)",
+     "title": "T1"
+    },
+    "motions": {
+     "items": {
+      "$ref": "#/$defs/ObjectMotionSpec"
+     },
+     "title": "Motions",
+     "type": "array"
+    },
+    "palette": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "description": "colour overrides for the recolourable parts, hex",
+     "title": "Palette",
+     "type": "object"
+    }
+   },
+   "required": [
+    "asset"
+   ],
+   "title": "ObjectSpec",
    "type": "object"
   },
   "SafeArea": {
@@ -1013,6 +1559,14 @@ Reply with the JSON object only.
       "$ref": "#/$defs/LayerSpec"
      },
      "title": "Layers",
+     "type": "array"
+    },
+    "objects": {
+     "description": "things from the asset library placed in the scene",
+     "items": {
+      "$ref": "#/$defs/ObjectSpec"
+     },
+     "title": "Objects",
      "type": "array"
     },
     "captions": {

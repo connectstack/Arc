@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 290">
+  <path d="M46 40C14 36 0 58 0 82C0 108 24 126 58 132L54 114C36 110 20 100 20 82C20 68 28 58 46 56Z" fill="#c98311" data-role="body_dark"/>
+  <path d="M194 40C226 36 240 58 240 82C240 108 216 126 182 132L186 114C204 110 220 100 220 82C220 68 212 58 194 56Z" fill="#c98311" data-role="body_dark"/>
+  <path d="M44 16H196C196 100 170 164 120 166C70 164 44 100 44 16Z" fill="#f5b82e" data-role="body"/>
+  <path d="M105 163.4C109.7 164.9 114.7 165.8 120 166C170 164 196 100 196 16L166 16C166 91.2 145.2 150.3 105 163.4Z" fill="#c98311" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M62 40C64 88 80 130 108 152C86 132 72 94 70 40Z" fill="#ffdc73" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <path d="M120 54L127.3 71.9L146.6 73.3L131.9 85.9L136.5 104.7L120 94.5L103.5 104.7L108.1 85.9L93.4 73.3L112.7 71.9L120 54Z" fill="#ffdc73" data-role="body_light" data-lod="0"/>
+  <rect x="34" y="0" width="172" height="24" rx="12" fill="#ffdc73" data-role="body_light"/>
+  <rect x="104" y="160" width="32" height="46" fill="#c98311" data-role="body_dark"/>
+  <ellipse cx="120" cy="166" rx="30" ry="11" fill="#f5b82e" data-role="body"/>
+  <ellipse cx="120" cy="204" rx="28" ry="10" fill="#f5b82e" data-role="body"/>
+  <rect x="70" y="206" width="100" height="26" rx="4" fill="#5c361f" data-role="accent_dark"/>
+  <rect x="44" y="230" width="152" height="60" rx="6" fill="#7b4a2b" data-role="accent"/>
+  <rect x="94" y="245" width="52" height="28" rx="5" fill="#f5b82e" data-lod="1" data-shadow="false"/>
+  <rect x="100" y="251" width="40" height="16" rx="3" fill="#c98311" data-lod="1" data-shadow="false"/>
+</svg>

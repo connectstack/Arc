@@ -33,6 +33,10 @@ script.txt ─► SpecGenerator ─► spec.json ─► reel lint ─► reel re
   caption re-renders ~2 s, not the whole reel.
 * **Any script:** Hindi and other Indic scripts, Arabic, CJK and emoji captions are shaped properly (HarfBuzz) with system fallback fonts, and the
   voice-over follows the language when the machine has a voice for it.
+* **An asset library for everything else:** a script that mentions a village, a rickshaw or a dragon is not stuck with the engine's
+  own sets and people: ~110 built-in characters, objects and places (English, Hindi and Hinglish names), and you drop in your own SVG, PNG or JPG
+  (a plain background is removed for you). The planners see them, all three styles draw them, and a script that needs something the library
+  lacks is told so, with a button to add it ([docs/assets.md](docs/assets.md)).
 * **Lint, don't crash:** `reel lint` reports exactly what is missing from the registry so you can add it.
 
 ## Install
@@ -107,12 +111,14 @@ Every line is paid for once: clips are cached by (model, voice, text), so re-ren
 | `reel schema [--enums\|--check]` · `reel manifest` · `reel reference` · `reel prompt [--compact] [--schema]` | JSON Schema, the template catalog the LLM reads, generated reference docs, the exact script → JSON prompt |
 | `reel debug-actions A B -o sheet.png` · `reel debug-backgrounds T -o sheet.png` | contact sheets to check motion / sets without a full render |
 | `reel storyboard spec.json` · `reel match-cut spec.json A B CHAR` | HTML storyboard; make a hard cut match position/size/framing |
+| `reel assets list\|add\|remove\|check\|preview\|coverage\|fill` | the [asset library](docs/assets.md): see it, add your own picture (`add FILE --kind character --name dragon`), check it, draw a contact sheet in the three styles, say which things a script needs that the library lacks (`coverage script.txt`), swap a newly added asset into a spec that was planned without it (`fill spec.json`) |
 | `reel cache stats\|clear [frames\|segments\|tts]` · `reel doctor [--llm M] [--tts elevenlabs]` · `reel voices [--tts E]` | housekeeping; `doctor` shows which TTS engines and local LLMs are usable (and can check a hosted model or ElevenLabs against your key); `voices` lists an engine's voices |
 
 `reel serve [--open] [--port N] [--workspace DIR]` starts [Reel Studio](docs/ui.md), the web app (the brief it was built from is [docs/ui-prompt.md](docs/ui-prompt.md)).
 
 Every command accepts `--plugin PATH` (a module, `.py` file or folder) or `REEL_PLUGINS=PATH` to load extra actions, styles,
-backgrounds or SFX without touching the package.
+backgrounds or SFX without touching the package, and `--assets DIR` or `REEL_ASSETS=DIR` for a folder of your own characters, objects and places
+(an `assets/` folder next to the spec is always read; see [docs/assets.md](docs/assets.md)).
 
 ## A spec in 60 seconds
 
@@ -162,6 +168,7 @@ Full reference: [docs/spec.md](docs/spec.md) · two complete examples: [`example
 | [The scene spec](docs/spec.md) | every field, conventions, every lint code |
 | [Add an action in 5 minutes](docs/adding-an-action.md) | PR-style walkthrough (the `shrug` plugin) |
 | [Add a style](docs/adding-a-style.md) · [Add a background](docs/adding-a-background.md) | one folder + a decorator |
+| [The asset library](docs/assets.md) | characters, objects and places from SVG/PNG/JPG: using them, adding your own, drawing them so they look right, how scripts find them |
 | [Audio](docs/audio.md) · [Script → JSON](docs/llm.md) | TTS/SFX/music/mix; the LLM stage, its clients and repair loop; the exact prompts are in [docs/prompts/](docs/prompts/full.txt) |
 | [Reel Studio](docs/ui.md) | the web app: screens, architecture, API, security, accessibility, developing it |
 | [Performance & caching](docs/performance.md) | what is cached, segment keys, tuning |

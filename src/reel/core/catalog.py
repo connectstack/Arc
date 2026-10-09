@@ -29,6 +29,7 @@ KINDS: dict[str, str] = {
     "archetype": "archetypes",
     "prop": "props",
     "caption_style": "caption_styles",
+    "object": "objects",
 }
 
 #: Plural CLI word -> kind
@@ -44,6 +45,7 @@ PLURALS: dict[str, str] = {
     "sfx": "sfx",
     "archetypes": "archetype",
     "props": "prop",
+    "objects": "object",
     "captions": "caption_style",
     "caption_styles": "caption_style",
 }
@@ -80,6 +82,10 @@ class Catalog:
         self.archetypes: Registry[Any] = Registry("archetype", loader=loader)
         self.props: Registry[Any] = Registry("prop", loader=loader)
         self.caption_styles: Registry[Any] = Registry("caption_style", loader=loader)
+        #: things from the asset library placed in scenes (``scenes[].objects[].asset``)
+        self.objects: Registry[Any] = Registry("object", loader=loader)
+        #: every asset of the library, whatever its kind (an object, a sprite character, a place): see reel.assets
+        self.assets: Registry[Any] = Registry("asset", loader=loader)
         self._default = default
         self._loaded = False
         self.plugin_files: list[
@@ -98,6 +104,19 @@ class Catalog:
     def all_registries(self) -> dict[str, Registry[Any]]:
         return {k: getattr(self, attr) for k, attr in KINDS.items()}
 
+    def fork(self) -> Catalog:
+        """A copy whose registries can change without touching this catalog (the entries themselves are shared): what a
+        preview of something not saved yet is drawn with."""
+        self._ensure_loaded()
+        other = Catalog(default=False)
+        for attr in (
+            *KINDS.values(),
+            "assets",
+        ):  # `assets` is the library as a whole, not a kind of spec reference
+            setattr(other, attr, getattr(self, attr).copy())
+        other.plugin_files = list(self.plugin_files)
+        return other
+
     # -- loading ---------------------------------------------------------------------------
     def load_builtins(self) -> None:
         """Import the builtin modules (their decorators register into CATALOG), then plugins."""
@@ -106,7 +125,24 @@ class Catalog:
         self._loaded = True
         for mod in BUILTIN_MODULES:
             importlib.import_module(mod)
+        from reel.assets.library import BUILTIN_DIR, asset_dirs_from_env, load_dirs
+
+        load_dirs([BUILTIN_DIR], self, origin="builtin")
         self.load_plugins(os.environ.get(PLUGIN_ENV, "").split(os.pathsep))
+        load_dirs(
+            asset_dirs_from_env(), self, origin="user"
+        )  # REEL_ASSETS: the user's own library folders
+
+    def load_assets(self, dirs: Iterable[str]) -> list[str]:
+        """Load the user's asset folders into this catalog; returns what was wrong with any file (one line each)."""
+        from reel.assets.library import load_dirs
+
+        self._ensure_loaded()
+        return [str(p) for p in load_dirs(dirs, self, origin="user").problems]
+
+    def _ensure_loaded(self) -> None:
+        if self._default and not self._loaded:
+            self.load_builtins()
 
     def load_plugins(self, specs: Iterable[str]) -> list[str]:
         """Load plugin modules/files/directories.  Returns the module names imported."""

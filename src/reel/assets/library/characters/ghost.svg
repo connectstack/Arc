@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-11 11 262 344">
+  <path data-role="body" d="M51.1 175.1 L49.5 173.9 L47.4 172.5 L45 171.2 L42.4 169.8 L39.7 168.3 L36.9 166.7 L34.3 165.1 L31.9 163.4 L29.8 161.6 L28.2 159.9 L26.7 158 L24.9 155.7 L22.9 153.1 L20.8 150.2 L18.8 147.3 L16.8 144.5 L14.9 141.7 L13.3 139.2 L11.8 137 L10.8 135.2 L7.2 131.5 L2.3 130 L-2.8 131.2 L-6.5 134.8 L-8 139.7 L-6.8 144.8 L-6 146.4 L-5.1 148.6 L-4 151.4 L-2.9 154.7 L-1.5 158.2 L0 161.8 L1.6 165.5 L3.4 169.2 L5.5 172.8 L7.8 176.1 L10.3 179.2 L12.9 182.3 L15.4 185.4 L17.9 188.4 L20.3 191.2 L22.6 193.9 L24.7 196.3 L26.4 198.3 L27.8 199.8 L28.9 200.9 Z" fill="#f4f7ff"/>
+  <path data-role="body" d="M211.1 200.9 L212.2 199.8 L213.6 198.3 L215.3 196.3 L217.4 193.9 L219.7 191.2 L222.1 188.4 L224.6 185.4 L227.1 182.3 L229.7 179.2 L232.2 176.1 L234.5 172.8 L236.6 169.2 L238.4 165.5 L240 161.8 L241.5 158.2 L242.9 154.7 L244 151.4 L245.1 148.6 L246 146.4 L246.8 144.8 L248 139.7 L246.5 134.8 L242.8 131.2 L237.7 130 L232.8 131.5 L229.2 135.2 L228.2 137 L226.7 139.2 L225.1 141.7 L223.2 144.5 L221.2 147.3 L219.2 150.2 L217.1 153.1 L215.1 155.7 L213.3 158 L211.8 159.9 L210.2 161.6 L208.1 163.4 L205.7 165.1 L203.1 166.7 L200.3 168.3 L197.6 169.8 L195 171.2 L192.6 172.5 L190.5 173.9 L188.9 175.1 Z" fill="#f4f7ff"/>
+  <path data-role="body" d="M34 300 C28 240 14 200 20 150 C24 70 64 14 120 14 C176 14 216 70 220 150 C226 200 212 240 206 300 Q184 352 163 300 Q142 352 120 300 Q98 352 77 300 Q56 352 34 300 Z" fill="#f4f7ff"/>
+  <path data-role="body_dark" data-lod="1" data-shadow="false" d="M120 14 C176 14 216 70 220 150 C226 200 212 240 206 300 Q184 352 163 300 C226 236 226 100 120 14 Z" fill="#d3d9ef"/>
+  <ellipse data-lod="0" data-tag="eye" cx="92" cy="112" rx="14" ry="21" fill="#23262e"/>
+  <ellipse data-lod="0" data-tag="eye" cx="148" cy="112" rx="14" ry="21" fill="#23262e"/>
+  <circle data-lod="1" data-tag="glint" cx="88" cy="104" r="5" fill="#fff"/>
+  <circle data-lod="1" data-tag="glint" cx="144" cy="104" r="5" fill="#fff"/>
+  <circle data-lod="1" data-tag="glint" cx="96" cy="120" r="2.4" fill="#fff"/>
+  <circle data-lod="1" data-tag="glint" cx="152" cy="120" r="2.4" fill="#fff"/>
+  <ellipse data-lod="0" data-tag="mouth" cx="120" cy="162" rx="9" ry="11" fill="#23262e"/>
+  <ellipse data-role="accent" data-lod="1" data-shadow="false" data-tag="blush" cx="64" cy="146" rx="14" ry="8" fill="#f7a8b8" opacity="0.85"/>
+  <ellipse data-role="accent" data-lod="1" data-shadow="false" data-tag="blush" cx="176" cy="146" rx="14" ry="8" fill="#f7a8b8" opacity="0.85"/>
+</svg>

@@ -23,8 +23,14 @@ def get_health(request: Request) -> dict[str, Any]:
 
 
 @router.get("/catalog")
-def get_catalog() -> dict[str, Any]:
-    return build_catalog()
+def get_catalog(request: Request) -> dict[str, Any]:
+    store = ctx(request).assets
+    if store is None:
+        return build_catalog()
+    with (
+        store.lock
+    ):  # not while the library is being reloaded: a row would name an asset that has just gone
+        return build_catalog()
 
 
 @router.get("/schema")

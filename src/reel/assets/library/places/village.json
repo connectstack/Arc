@@ -1,0 +1,6 @@
+{
+  "summary": "An Indian village: mud huts, a stone well, a banyan tree, hay and a dirt path",
+  "tags": ["hamlet", "rural", "countryside", "गाँव", "गांव", "ग्राम", "देहात", "ग्रामीण", "gaon", "gaanv", "gram", "dehat"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.6, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "well": [0.5, 0.79], "hut_door": [0.14, 0.78], "tree": [0.84, 0.79]}}
+}

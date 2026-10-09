@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 -2 270.1 302.1">
+  <path d="M150 0 C150 0 161.7 26.3 170 40 C178.3 53.7 192 67.3 200 82 C208 96.7 215.3 111 218 128 C220.7 145 219.7 165.7 216 184 C212.3 202.3 207 225 196 238 C185 251 165 262 150 262 C135 262 117 251 106 238 C95 225 88.3 200.3 84 184 C79.7 167.7 78.7 154.3 80 140 C81.3 125.7 88.3 112 92 98 C95.7 84 102 56 102 56 C102 56 118 100 118 100 C118 100 130.3 72 134 60 C137.7 48 137.3 38 140 28 C142.7 18 150 0 150 0 Z" fill="#e8412c" data-role="body" data-material="emissive"/>
+  <path d="M150 70C150 70 141.6 88.9 135.6 98.8C129.6 108.7 119.8 118.5 114 129C108.2 139.6 103 149.9 101 162.2C99.1 174.4 99.8 189.3 102.5 202.5C105.1 215.7 109 232 116.9 241.4C124.8 250.7 139.2 258.6 150 258.6C160.8 258.6 173.8 250.7 181.7 241.4C189.6 232 194.4 214.2 197.5 202.5C200.6 190.7 201.3 181.1 200.4 170.8C199.5 160.5 194.4 150.6 191.8 140.6C189.1 130.5 184.6 110.3 184.6 110.3C184.6 110.3 173 142 173 142C173 142 164.2 121.8 161.5 113.2C158.9 104.6 159.1 97.4 157.2 90.2C155.3 83 150 70 150 70Z" fill="#ff8a1f" data-role="body_light" data-material="emissive"/>
+  <path d="M150 128 C156 156 184 172 184 204 C184 230 168 246 150 246 C132 246 116 230 116 204 C116 172 144 156 150 128 Z" fill="#ffd23f" data-role="accent" data-material="emissive"/>
+  <rect x="34" y="232" width="232" height="40" rx="3" fill="#8a5a36" transform="rotate(13 150 252)"/>
+  <path d="M266 256L266 269C266 270.7 264.7 272 263 272L37 272C35.3 272 34 270.7 34 269L34 256L266 256Z" fill="#6b4226" data-lod="1" data-shadow="false" transform="rotate(13 150 252)"/>
+  <ellipse cx="34" cy="252" rx="10" ry="20" fill="#e8bd85" data-lod="0" transform="rotate(13 150 252)"/>
+  <ellipse cx="34" cy="252" rx="5" ry="10.5" fill="#b98550" data-lod="1" data-shadow="false" transform="rotate(13 150 252)"/>
+  <ellipse cx="266" cy="252" rx="10" ry="20" fill="#e8bd85" data-lod="0" transform="rotate(13 150 252)"/>
+  <ellipse cx="266" cy="252" rx="5" ry="10.5" fill="#b98550" data-lod="1" data-shadow="false" transform="rotate(13 150 252)"/>
+  <rect x="34" y="232" width="232" height="40" rx="3" fill="#8a5a36" transform="rotate(-13 150 252)"/>
+  <path d="M266 256L266 269C266 270.7 264.7 272 263 272L37 272C35.3 272 34 270.7 34 269L34 256L266 256Z" fill="#6b4226" data-lod="1" data-shadow="false" transform="rotate(-13 150 252)"/>
+  <ellipse cx="34" cy="252" rx="10" ry="20" fill="#e8bd85" data-lod="0" transform="rotate(-13 150 252)"/>
+  <ellipse cx="34" cy="252" rx="5" ry="10.5" fill="#b98550" data-lod="1" data-shadow="false" transform="rotate(-13 150 252)"/>
+  <ellipse cx="266" cy="252" rx="10" ry="20" fill="#e8bd85" data-lod="0" transform="rotate(-13 150 252)"/>
+  <ellipse cx="266" cy="252" rx="5" ry="10.5" fill="#b98550" data-lod="1" data-shadow="false" transform="rotate(-13 150 252)"/>
+  <circle cx="100" cy="30" r="4.5" fill="#ffb63a" data-lod="1" data-shadow="false" data-material="emissive"/>
+  <circle cx="204" cy="52" r="3.5" fill="#ffb63a" data-lod="1" data-shadow="false" data-material="emissive"/>
+  <circle cx="186" cy="14" r="3" fill="#ffb63a" data-lod="1" data-shadow="false" data-material="emissive"/>
+</svg>

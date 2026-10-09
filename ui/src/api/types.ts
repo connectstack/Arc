@@ -34,6 +34,19 @@ export interface Meta {
   aspect?: '9:16'
   fx?: FxSpec | null
   safe_area?: SafeArea | null
+  /** what the script needs that the asset library lacked when the spec was planned (the renderer ignores it) */
+  library_gaps?: LibraryGap[]
+}
+
+/** A character, place or object a script asked for that the library does not have, and what the spec shows instead. */
+export interface LibraryGap {
+  kind: AssetKind
+  name: string
+  scenes: string[]
+  /** characters only: the id of the character standing in for it */
+  character?: string | null
+  /** the library name shown instead, or null/absent when it was left out */
+  stand_in?: string | null
 }
 
 export interface Character {
@@ -42,7 +55,8 @@ export interface Character {
   name?: string | null
   voice?: string | null
   props: string[]
-  palette: Partial<Record<PaletteRole, string>>
+  /** the engine's bodies are painted by these roles; a picture from the library by the parts its drawing marks (any name) */
+  palette: Partial<Record<PaletteRole, string>> & Record<string, string>
 }
 
 export interface CameraMove {
@@ -71,6 +85,38 @@ export interface Layer {
   depth: Depth
   facing: 'auto' | 'left' | 'right'
   actions: ActionClip[]
+}
+
+/** One motion of an object: move | hop | float | spin | pulse | fade | grow | shake (see reel/assets/objects.py). */
+export interface ObjectMotion {
+  type: string
+  t0: Seconds
+  t1: Seconds
+  from?: number | null
+  /** move: [x, y] or a slot; fade and grow: the end value */
+  to?: number | string | Vec2 | null
+  amount?: number | null
+  count?: number | null
+  ease: string
+}
+
+/** A thing from the asset library placed in a scene (a car, a tree, a cake). */
+export interface SceneObject {
+  asset: string
+  position: Vec2 | string
+  scale: number
+  depth: Depth
+  layer: 'behind' | 'front'
+  facing: 'auto' | 'left' | 'right'
+  /** degrees, clockwise */
+  rotation: number
+  alpha: number
+  t0: Seconds
+  /** null: until the end of the scene */
+  t1?: Seconds | null
+  motions: ObjectMotion[]
+  /** colour overrides for the recolourable parts (roles the asset's drawing marks), hex */
+  palette: Record<string, string>
 }
 
 export type CaptionStyle = 'subtitle' | 'title' | 'shout' | string
@@ -103,6 +149,7 @@ export interface Scene {
   background: { template: string; params: Record<string, unknown> }
   camera: { moves: CameraMove[] }
   layers: Layer[]
+  objects: SceneObject[]
   captions: Caption[]
   sfx: SfxEvent[]
   transition_out: Transition
@@ -153,9 +200,20 @@ export interface CatalogEntry {
   slots?: Record<string, Vec2>
   ground_y?: number
   perspective?: number
-  palette?: Partial<Record<PaletteRole, string>>
-  /** archetypes: design units tall; on screen a character is about height * 1.12 / 1920 of the frame at scale 1 */
+  /** archetypes: the default colours by role; library objects and pictures: the drawing's own colour for each role */
+  palette?: Partial<Record<PaletteRole, string>> & Record<string, string>
+  /** archetypes and objects: design units tall; on screen a thing is about height * 1.12 / 1920 of the frame at scale 1 */
   height?: number
+  /** library assets (characters that are pictures, objects, places): where they come from; absent for the engine's own */
+  library?: 'builtin' | 'user'
+  /** library assets: height as a share of a person (1 = a person) */
+  size?: number
+  /** library assets: the colours a palette can change ("body", "fur", ...) */
+  roles?: string[]
+  /** library assets: the drawing's width over its height */
+  aspect?: number
+  /** objects: where the art stands on its position, as fractions of its box */
+  anchor?: Vec2
 }
 
 export interface Catalog {
@@ -168,12 +226,125 @@ export interface Catalog {
   caption_styles: CatalogEntry[]
   archetypes: CatalogEntry[]
   props: CatalogEntry[]
+  objects: CatalogEntry[]
   sfx: CatalogEntry[]
   easings: CatalogEntry[]
   music_moods: string[]
   palette_roles: PaletteRole[]
   universal_slots: string[]
   limits: { min_total_sec: number; max_total_sec: number; max_scene_sec: number }
+}
+
+// ---------------------------------------------------------------- the asset library
+export type AssetKind = 'character' | 'object' | 'place'
+
+export interface PlaceInfo {
+  ground_y: number
+  horizon: number
+  perspective: number
+  slots: Record<string, Vec2>
+}
+
+/** A character, object or place of the library (`GET /api/assets`). */
+export interface AssetInfo {
+  name: string
+  kind: AssetKind
+  summary: string
+  /** the words a script may use for it (synonyms, other languages): the planners match on these */
+  tags: string[]
+  format: 'svg' | 'raster'
+  /** how tall it is drawn, design px at scale 1 (a person is 575) */
+  height: number
+  anchor: Vec2
+  facing: 'right' | 'left' | 'none'
+  origin: 'builtin' | 'user'
+  credit: string
+  /** recolourable parts the drawing marks */
+  roles?: string[]
+  cutout?: boolean | null
+  place?: PlaceInfo
+  warnings?: string[]
+  /** a file of the workspace library: can be changed and deleted here */
+  editable: boolean
+  /** changes when the art or its settings do: put it in thumbnail URLs */
+  version: string
+  file: string
+}
+
+export interface AssetList {
+  assets: AssetInfo[]
+  /** files of the library that could not be read, and why */
+  problems: { file: string; message: string }[]
+  /** the workspace's own assets folder (where "Add asset" saves) */
+  folder: string
+  other_folders: string[]
+  max_bytes: number
+}
+
+/** What the server found in an uploaded file, before anything is saved (`POST /api/assets/draft`). */
+export interface AssetDraft {
+  id: string
+  filename: string
+  format: 'svg' | 'picture'
+  bytes: number
+  suggested: { name: string; kind: AssetKind; summary: string; tags: string[]; height: number; anchor: Vec2; facing: AssetInfo['facing'] }
+  /** how it was read: "made the plain background transparent", warnings about things that cannot be drawn */
+  notes: string[]
+  roles: string[]
+  /** width / height of the art */
+  aspect: number
+}
+
+/** The settings of an asset (the sidecar file). */
+export interface AssetFields {
+  name: string
+  kind: AssetKind
+  summary: string
+  tags: string[]
+  height?: number
+  anchor?: Vec2
+  facing: AssetInfo['facing']
+  cutout?: boolean | null
+  credit?: string
+  place?: PlaceInfo
+}
+
+/** Settings that change how an unsaved upload is drawn (`GET /api/assets/draft/:id/thumb`). */
+export interface DraftLook {
+  style: string
+  timeOfDay?: string
+  /** show it next to a person at the size a scene would give it */
+  trueScale?: boolean
+  kind?: AssetKind
+  height?: number
+  anchor?: Vec2
+  facing?: AssetInfo['facing']
+  cutout?: boolean | null
+}
+
+/** What a script mentions: what the library can draw, and what it lacks (`POST /api/script/assets`). */
+export interface Coverage {
+  covered: { asset: string; kind: AssetKind; source: 'builtin' | 'user' | 'engine'; words: string[]; count: number }[]
+  missing: {
+    /** the canonical name: what to call the asset when adding it */
+    name: string
+    kind: AssetKind
+    /** how the script wrote it */
+    words: string[]
+    count: number
+    snippet: string
+    /** character offsets of the first mentions: [start, end] */
+    at: [number, number][]
+    /** every word the lexicon knows for it: the tags to give the new asset */
+    tags: string[]
+  }[]
+}
+
+export interface FillGapsResult {
+  spec: ReelSpec
+  filled: (LibraryGap & { asset: string })[]
+  pending: LibraryGap[]
+  lint: LintReport
 }
 
 // ---------------------------------------------------------------- lint

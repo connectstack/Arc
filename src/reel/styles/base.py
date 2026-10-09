@@ -18,6 +18,7 @@ from typing import Any, ClassVar
 import numpy as np
 import skia
 
+from reel.assets.raster import image_for
 from reel.core.catalog import CATALOG, Catalog
 from reel.core.figure import FigureBuild, ShadowInfo
 from reel.core.fx import FxConfig
@@ -30,7 +31,7 @@ from reel.core.geometry import (
     skcolor,
     smooth_curve,
 )
-from reel.core.ir import Ellipse, Limb, Line, PathG, Poly, Rect, Shape, bbox
+from reel.core.ir import Ellipse, ImageG, Limb, Line, PathG, Poly, Rect, Shape, bbox
 from reel.core.rig import PosedFigure
 from reel.core.rng import derive_rng
 
@@ -90,7 +91,16 @@ def shape_path(g: Any) -> skia.Path | None:
         p.lineTo(*g.b)
         return p
     if isinstance(g, PathG):
-        return path_from_cmds(g.cmds)
+        p = path_from_cmds(g.cmds)
+        if g.even_odd:
+            p.setFillType(skia.PathFillType.kEvenOdd)
+        return p
+    if isinstance(g, ImageG):  # what is opaque in the picture, else the whole rectangle
+        if g.outline:
+            return path_from_cmds(g.outline)
+        p = skia.Path()
+        p.addRect(skia.Rect(g.x, g.y, g.x + g.w, g.y + g.h))
+        return p
     raise TypeError(f"unknown geometry {type(g).__name__}")
 
 
@@ -140,8 +150,11 @@ class StylePack(ABC):  # noqa: B024 - all hooks have working defaults
         if shape.glow > 0 and shape.fill:
             self.paint_glow(canvas, shape, path, ctx)
         self.paint_shadow(canvas, shape, path, ctx)
-        self.paint_body(canvas, shape, path, ctx)
-        self.paint_decor(canvas, shape, path, ctx)
+        if isinstance(shape.geom, ImageG):
+            self.paint_image(canvas, shape, path, ctx)
+        else:
+            self.paint_body(canvas, shape, path, ctx)
+            self.paint_decor(canvas, shape, path, ctx)
         canvas.restore()
 
     def paint_glow(
@@ -173,6 +186,51 @@ class StylePack(ABC):  # noqa: B024 - all hooks have working defaults
         self, canvas: skia.Canvas, shape: Shape, path: skia.Path, ctx: StyleContext
     ) -> None:
         """Texture / shading on top of the fill (clipped to the shape by the override)."""
+
+    # ---- pictures (imported PNG/JPG assets) ---------------------------------------------------------------
+    def image_paint(
+        self, shape: Shape, ctx: StyleContext, *, saturation: float = 1.0
+    ) -> skia.Paint:
+        """A paint for a picture: the shape's opacity, the scene's light (ambient colour x exposure), optionally washed out."""
+        p = skia.Paint(AntiAlias=True)
+        p.setAlphaf(max(0.0, min(1.0, shape.alpha)))
+        lit = ctx.scheme.lit("#ffffff")
+        filt = None
+        if lit.lower() != "#ffffff":
+            filt = skia.ColorFilters.Blend(skcolor(lit), skia.BlendMode.kModulate)
+        if saturation < 0.999:
+            s = saturation
+            lum = (0.2126, 0.7152, 0.0722)
+            m = [
+                lum[0] * (1 - s) + s, lum[1] * (1 - s), lum[2] * (1 - s), 0, 0,
+                lum[0] * (1 - s), lum[1] * (1 - s) + s, lum[2] * (1 - s), 0, 0,
+                lum[0] * (1 - s), lum[1] * (1 - s), lum[2] * (1 - s) + s, 0, 0,
+                0, 0, 0, 1, 0,
+            ]  # fmt: skip
+            sat = skia.ColorFilters.Matrix(m)
+            filt = sat if filt is None else skia.ColorFilters.Compose(filt, sat)
+        if filt is not None:
+            p.setColorFilter(filt)
+        return p
+
+    def draw_picture(self, canvas: skia.Canvas, shape: Shape, paint: skia.Paint) -> None:
+        g = shape.geom
+        assert isinstance(g, ImageG)
+        img = image_for(g.key)
+        canvas.drawImageRect(
+            img,
+            skia.Rect(0, 0, img.width(), img.height()),
+            skia.Rect(g.x, g.y, g.x + g.w, g.y + g.h),
+            skia.SamplingOptions(skia.FilterMode.kLinear, skia.MipmapMode.kLinear),
+            paint,
+        )
+
+    def paint_image(
+        self, canvas: skia.Canvas, shape: Shape, path: skia.Path, ctx: StyleContext
+    ) -> None:
+        """Draw an imported picture (its shadow, if the style has one, is already down).  Styles override this to give
+        pictures their own edge and texture; the default is the picture itself."""
+        self.draw_picture(canvas, shape, self.image_paint(shape, ctx))
 
     def fill_paint(self, shape: Shape, path: skia.Path, ctx: StyleContext) -> skia.Paint:
         assert shape.fill is not None

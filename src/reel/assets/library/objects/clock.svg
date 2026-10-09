@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+  <circle data-role="body" cx="110" cy="110" r="110" fill="#e5483f"/>
+  <circle data-role="body_dark" cx="110" cy="110" r="98" fill="#b3322c" data-lod="1"/>
+  <circle cx="110" cy="110" r="92" fill="#fffaf0"/>
+  <path d="M148 44.2 L153 35.5 M175.8 72 L184.5 67 M175.8 148 L184.5 153 M148 175.8 L153 184.5 M72 175.8 L67 184.5 M44.2 148 L35.5 153 M44.2 72 L35.5 67 M72 44.2 L67 35.5" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" data-lod="1"/>
+  <path d="M110 44 L110 24 M176 110 L196 110 M110 176 L110 196 M44 110 L24 110" fill="none" stroke="#23262e" stroke-width="9" stroke-linecap="round" data-lod="0"/>
+  <line x1="110" y1="110" x2="69" y2="81.3" stroke="#23262e" stroke-width="11" stroke-linecap="round" data-lod="0"/>
+  <line x1="110" y1="110" x2="175.8" y2="72" stroke="#23262e" stroke-width="8" stroke-linecap="round" data-lod="0"/>
+  <circle cx="110" cy="110" r="10.5" fill="#23262e" data-lod="0"/>
+  <circle data-role="body" cx="110" cy="110" r="4" fill="#e5483f" data-lod="1"/>
+</svg>

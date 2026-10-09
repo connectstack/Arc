@@ -39,7 +39,8 @@ def _package_files() -> tuple[Path, ...]:
         sorted(
             p
             for p in root.rglob("*")
-            if p.suffix in (".py", ".json", ".md")
+            if p.suffix
+            in (".py", ".json", ".md", ".svg")  # the built-in library's art changes a pixel too
             and "__pycache__" not in p.parts
             and p.relative_to(root).parts[0] not in _NOT_RENDERING
         )

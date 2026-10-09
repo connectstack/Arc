@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 300">
+  <polygon points="34,268 70,268 66,300 38,300" fill="#6b4a32" data-lod="1"/>
+  <polygon points="550,268 586,268 582,300 554,300" fill="#6b4a32" data-lod="1"/>
+  <rect data-role="body_dark" x="40" y="0" width="540" height="214" rx="52" fill="#2c5ca8"/>
+  <rect data-role="body" x="0" y="96" width="100" height="178" rx="38" fill="#3f7fd4"/>
+  <rect data-role="body" x="520" y="96" width="100" height="178" rx="38" fill="#3f7fd4"/>
+  <rect data-role="body_light" x="6" y="100" width="88" height="52" rx="26" fill="#6fa0ec"/>
+  <rect data-role="body_light" x="526" y="100" width="88" height="52" rx="26" fill="#6fa0ec"/>
+  <rect data-role="body_dark" x="84" y="190" width="452" height="90" rx="18" fill="#2c5ca8"/>
+  <rect data-role="body" x="100" y="24" width="200" height="150" rx="34" fill="#3f7fd4"/>
+  <rect data-role="body" x="320" y="24" width="200" height="150" rx="34" fill="#3f7fd4"/>
+  <rect data-role="body_light" x="92" y="142" width="216" height="84" rx="26" fill="#6fa0ec"/>
+  <rect data-role="body_light" x="312" y="142" width="216" height="84" rx="26" fill="#6fa0ec"/>
+  <path d="M200 78 h0.1 M420 78 h0.1" fill="none" stroke="#23262e" stroke-width="12" stroke-linecap="round" opacity="0.35" data-lod="1"/>
+  <g transform="rotate(-14 458 140)">
+  <rect data-role="accent" x="416" y="98" width="84" height="84" rx="18" fill="#ffd23f"/>
+  <path d="M458 140 h0.1" fill="none" stroke="#23262e" stroke-width="12" stroke-linecap="round" opacity="0.25" data-lod="1"/>
+  </g>
+</svg>

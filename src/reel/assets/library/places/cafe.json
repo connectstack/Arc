@@ -1,0 +1,6 @@
+{
+  "summary": "A warm cafe: coffee counter, pendant lamps, chalkboard menu, small tables, a window",
+  "tags": ["café", "coffee shop", "coffee house", "restaurant", "dhaba", "chai shop", "कैफ़े", "कैफे", "रेस्टोरेंट", "होटल", "ढाबा", "चाय की दुकान", "chai ki dukaan"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.71, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "counter": [0.24, 0.79], "table": [0.8, 0.8], "window": [0.72, 0.79]}}
+}

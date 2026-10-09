@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApi } from '@/api/context'
 import { useCatalog, useDoctor, useExamples } from '@/api/hooks'
-import type { GenerateResult, LintReport, ReelSpec } from '@/api/types'
+import type { AssetInfo, Coverage, GenerateResult, LibraryGap, LintReport, ReelSpec } from '@/api/types'
 import { ApiError } from '@/api/types'
 import { Page, PageHeader } from '@/components/shell/PageHeader'
 import { Banner, Button, Chip, Field, IconButton, Input, NumberField, Segmented, SliderField, SwitchRow, Textarea, toast } from '@/components/ui'
@@ -12,6 +12,9 @@ import { cn } from '@/lib/cn'
 import { plural, titleCase, words } from '@/lib/format'
 import { useJobs } from '@/store/jobs'
 import { useUi } from '@/store/ui'
+import { CoveragePanel } from './CoveragePanel'
+import { AllFilled, GapsCard } from './GapsCard'
+import { useScriptCoverage } from './useScriptCoverage'
 
 type Planner = 'offline' | 'ollama' | 'openai' | 'anthropic'
 const STEPS = ['Script', 'Look & planner', 'Generating'] as const
@@ -57,9 +60,12 @@ export function WizardPage() {
   const [jobId, setJobId] = useState<string | null>(null)
   const job = useJobs((s) => (jobId ? s.jobs[jobId] : undefined))
   const [created, setCreated] = useState<{ id: string } | null>(null)
+  /** a planned reel that still lacks library things: kept open (not redirected) so they can be added before the studio opens */
+  const [ready, setReady] = useState<{ id: string; etag: string; spec: ReelSpec; gaps: LibraryGap[] } | null>(null)
   const started = useRef(false)
 
   const wordCount = useMemo(() => words(script), [script])
+  const coverage = useScriptCoverage(script)
   const estSeconds = wordCount / 2.5
   const llm = doctor?.llm
   const keyOf = (name: string) => llm?.keys.find((k) => k.name === name)?.source ?? null
@@ -93,7 +99,29 @@ export function WizardPage() {
     const doc = await api.createProject({ spec, script, title: name })
     void qc.invalidateQueries({ queryKey: ['projects'] })
     setCreated({ id: doc.id })
+    const gaps = spec.meta.library_gaps ?? []
+    if (gaps.length) {
+      setReady({ id: doc.id, etag: doc.etag, spec: doc.spec, gaps })
+      return
+    }
     setTimeout(() => nav(`/p/${doc.id}`), 900)
+  }
+
+  /** An asset was added for one gap: swap it into the saved reel (the stand-in character becomes it, the place is used, the object is placed). */
+  const onFilled = async (_asset: AssetInfo, gap: LibraryGap) => {
+    if (!ready) return
+    try {
+      const r = await api.fillGaps(ready.spec, [{ kind: gap.kind, name: gap.name }])
+      if (!r.filled.length) {
+        toast.info('Added to the library', `“${gap.name}” is there now, but this reel could not be changed to use it: open the studio and place it yourself.`)
+        return
+      }
+      const saved = await api.saveProject(ready.id, r.spec, script, ready.etag)
+      setReady({ id: ready.id, etag: saved.etag, spec: saved.spec, gaps: r.pending })
+      toast.success(`${gap.name} is in your reel`)
+    } catch (e) {
+      toast.error('Could not update the reel', e instanceof ApiError ? e.detail : String(e))
+    }
   }
 
   const start = () => {
@@ -129,6 +157,7 @@ export function WizardPage() {
                   {wordCount > 0 && estSeconds < 40 && <Chip tone="warning">a little short for 45–60 s: the planner will pace scenes out</Chip>}
                   {estSeconds > 75 && <Chip tone="warning">long: the planner will trim and compress</Chip>}
                 </div>
+                <CoveragePanel coverage={coverage.data} loading={coverage.isFetching} />
               </div>
               <div className="flex flex-col gap-3">
                 <Field label="Title" hint="Optional: it defaults to the first line">
@@ -248,6 +277,10 @@ export function WizardPage() {
               onManual={manual}
               planner={planner}
               plannerLabel={current.label}
+              ready={ready}
+              known={coverage.data?.missing}
+              onFilled={onFilled}
+              onOpen={() => ready && nav(`/p/${ready.id}`)}
             />
           )}
         </div>
@@ -276,13 +309,14 @@ export function WizardPage() {
   )
 }
 
-function Generating({ job, created, starting, onRetry, onManual, planner, plannerLabel }: { job: ReturnType<typeof useJobs.getState>['jobs'][string] | undefined; created: { id: string } | null; starting: boolean; onRetry: () => void; onManual: (spec: ReelSpec) => void; planner: string; plannerLabel: string }) {
+function Generating({ job, created, starting, onRetry, onManual, planner, plannerLabel, ready, known, onFilled, onOpen }: { job: ReturnType<typeof useJobs.getState>['jobs'][string] | undefined; created: { id: string } | null; starting: boolean; onRetry: () => void; onManual: (spec: ReelSpec) => void; planner: string; plannerLabel: string; ready: { id: string; spec: ReelSpec; gaps: LibraryGap[] } | null; known?: Coverage['missing']; onFilled: (asset: AssetInfo, gap: LibraryGap) => void; onOpen: () => void }) {
   const failed = job?.status === 'error'
   const notes = job?.notes ?? []
   const lint = failed ? (job?.error?.lint as LintReport | null | undefined) : null
   const draft = failed ? (job?.error?.spec as ReelSpec | null | undefined) : null
   const rows: { text: string; state: 'done' | 'active' | 'todo' }[] = notes.map((n, i) => ({ text: n, state: !job || job.status === 'done' || i < notes.length - 1 || failed ? 'done' : 'active' }))
-  if (created) rows.push({ text: 'Saved to your workspace: opening the studio…', state: 'done' })
+  if (created) rows.push({ text: ready ? 'Saved to your workspace.' : 'Saved to your workspace: opening the studio…', state: 'done' })
+  const sceneNumbers = Object.fromEntries((ready?.spec.scenes ?? []).map((sc, i) => [sc.id, i + 1]))
   return (
     <div className="mx-auto max-w-xl py-10">
       <div className="mb-6 text-center">
@@ -305,6 +339,16 @@ function Generating({ job, created, starting, onRetry, onManual, planner, planne
           </li>
         ))}
       </ul>
+      {ready && (
+        <div className="mt-5 flex flex-col gap-3">
+          {ready.gaps.length > 0 ? <GapsCard gaps={ready.gaps} sceneNumbers={sceneNumbers} known={known} onAdded={onFilled} /> : <AllFilled />}
+          <div className="flex justify-center">
+            <Button variant="primary" size="lg" onClick={onOpen}>
+              Open in the studio <ArrowRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
       {failed && job?.error && (
         <div className="mt-5 flex flex-col gap-3">
           <Banner tone="danger" title={job.error.message}>

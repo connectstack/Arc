@@ -1,4 +1,4 @@
-=== SYSTEM PROMPT (5657 characters, about 1414 tokens) ===
+=== SYSTEM PROMPT (7422 characters, about 1856 tokens) ===
 You turn a SCRIPT into ONE JSON scene spec for "reel", an offline renderer of 45-60 second vertical animated shorts (9:16). Reply with that JSON object only: no prose, no markdown fences, no comments, no trailing commas, no indentation. A machine validates it; every problem is sent back and you resend the FULL corrected JSON. Use only names from the CATALOG, spelled exactly. Never invent params. Leave out every optional field.
 
 SHAPE (CAPITALS are CATALOG names; times are seconds counted from the start of the scene)
@@ -25,11 +25,24 @@ RULES (all are checked)
 CATALOG (the only names you may use)
 BACKGROUNDS (scene "background" = {"template": NAME, "params": {...}}); every one takes time_of_day=dawn|day|dusk|night; mood=neutral|warm|cool|dramatic|playful|gloomy
 - abstract: Soft gradient stage with floating geometric shapes | pattern=blobs|circles|blocks|waves|rays
+- beach: A sunny beach with surf
+- cafe: A warm cafe
+- classroom: An Indian school classroom
+- desert: A golden desert
+- farm: A sunny farm
 - forest: Layered woodland, misty hills | season=spring|summer|autumn|winter
+- hospital: A pale-green hospital ward
+- market: An Indian bazaar lane
+- mountains: Snow-capped mountains, pine forest
+- office: A modern open office
+- park: A sunny city park
+- railway_station: An Indian railway platform
 - rooftop: City rooftop with a layered skyline | skyline=dense|sparse|harbor
 - room: Interior set with a window onto the sky | room=bedroom|living|office|kitchen
+- space: Outer space, stars
 - stage: Studio / theatre stage for titles and punchlines | backdrop=curtain|spotlight|city_lights|confetti
 - street: Charming city street | weather=clear|rain|snow|fog
+- village: An Indian village
 - whiteboard: Explainer set, a clean whiteboard filling the frame | grid=none|dots|lines
 
 ACTIONS (min = shortest length in s; * = moves the character)
@@ -61,12 +74,45 @@ CAPTION STYLES
 - title: Large headline in the upper third
 
 ARCHETYPES
+- alien: A green alien with a big head
+- bird: A small round brown sparrow
 - boss: Sharp suit and tie
+- cat: A friendly orange cat
+- chef: A cheerful chef in a tall white hat
+- cow: A gentle white Indian cow
+- crow: A black crow with a grey neck patch
+- deer: A spotted chital deer
+- dinosaur: A friendly green T-rex style dinosaur
+- doctor: A friendly doctor in a white coat
+- dog: A friendly brown dog
+- dragon: A friendly purple dragon
 - elder: Slightly stooped with white hair
+- elephant: A friendly grey elephant with a big ear
 - everyman: Friendly all-rounder, medium build
+- farmer: An Indian farmer in kurta
+- fish: A cheerful orange fish
+- fox: An orange fox with pointed ears
+- ghost: A cute white bedsheet ghost
+- grandmother: An elderly grandmother in a maroon
 - hero: Tall and broad-shouldered
+- horse: A friendly chestnut horse
 - kid: Small with a big head and short limbs
+- lion: A friendly male lion
+- monkey: A cheerful brown monkey standing
+- parrot: A green parrot with a red hooked beak
+- peacock: A blue peacock with a three-feather
+- police: An Indian police constable in khaki
+- rabbit: A cute white rabbit sitting
 - robot: Boxy metal body
+- shopkeeper: An Indian shopkeeper with a moustache
+- soldier: An Indian army soldier in camouflage
+- student_boy: A schoolboy in white shirt
+- student_girl: A schoolgirl in a blue pinafore
+- teacher: A woman teacher in glasses
+- tiger: A friendly orange tiger
+- tortoise: A tortoise with a domed patterned shell
+- woman: A friendly woman with long hair
+- worker: A construction worker in a yellow hard
 
 EXAMPLE (format only; write your own content)
 {"id":"mia","archetype":"kid","palette":{"shirt":"#e63946","pants":"#264653"}}
@@ -86,7 +132,7 @@ Grandpa walks in, yawning. "Impossible. I guarded that jar all day."
 
 Reply with the JSON object only.
 
-=== JSON SCHEMA (16198 characters; sent through the provider's structured-output channel, not in the prompt text) ===
+=== JSON SCHEMA (24233 characters; sent through the provider's structured-output channel, not in the prompt text) ===
 {
  "$defs": {
   "ActionSpec": {
@@ -237,11 +283,24 @@ Reply with the JSON object only.
      "type": "string",
      "enum": [
       "abstract",
+      "beach",
+      "cafe",
+      "classroom",
+      "desert",
+      "farm",
       "forest",
+      "hospital",
+      "market",
+      "mountains",
+      "office",
+      "park",
+      "railway_station",
       "rooftop",
       "room",
+      "space",
       "stage",
       "street",
+      "village",
       "whiteboard"
      ]
     },
@@ -449,12 +508,45 @@ Reply with the JSON object only.
      "title": "Archetype",
      "type": "string",
      "enum": [
+      "alien",
+      "bird",
       "boss",
+      "cat",
+      "chef",
+      "cow",
+      "crow",
+      "deer",
+      "dinosaur",
+      "doctor",
+      "dog",
+      "dragon",
       "elder",
+      "elephant",
       "everyman",
+      "farmer",
+      "fish",
+      "fox",
+      "ghost",
+      "grandmother",
       "hero",
+      "horse",
       "kid",
-      "robot"
+      "lion",
+      "monkey",
+      "parrot",
+      "peacock",
+      "police",
+      "rabbit",
+      "robot",
+      "shopkeeper",
+      "soldier",
+      "student_boy",
+      "student_girl",
+      "teacher",
+      "tiger",
+      "tortoise",
+      "woman",
+      "worker"
      ]
     },
     "palette": {
@@ -656,6 +748,68 @@ Reply with the JSON object only.
    "title": "LayerSpec",
    "type": "object"
   },
+  "LibraryGapSpec": {
+   "additionalProperties": false,
+   "description": "Something the script asks for that the asset library does not have, and what the spec shows instead.\n\nReel Studio lists these under \"not in the library\"; once the asset is added, ``scenes`` / ``character`` /\n``stand_in`` say what to swap.  The renderer ignores them.",
+   "properties": {
+    "kind": {
+     "enum": [
+      "character",
+      "object",
+      "place"
+     ],
+     "title": "Kind",
+     "type": "string"
+    },
+    "name": {
+     "description": "what the script calls it: dragon, castle, rickshaw",
+     "maxLength": 60,
+     "minLength": 1,
+     "title": "Name",
+     "type": "string"
+    },
+    "scenes": {
+     "description": "ids of the scenes that want it",
+     "items": {
+      "type": "string"
+     },
+     "title": "Scenes",
+     "type": "array"
+    },
+    "character": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "characters only: the id of the character standing in for it",
+     "title": "Character"
+    },
+    "stand_in": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "the library name shown instead, or null when it was left out",
+     "title": "Stand In"
+    }
+   },
+   "required": [
+    "kind",
+    "name"
+   ],
+   "title": "LibraryGapSpec",
+   "type": "object"
+  },
   "MetaSpec": {
    "additionalProperties": false,
    "properties": {
@@ -694,6 +848,300 @@ Reply with the JSON object only.
     "style"
    ],
    "title": "MetaSpec",
+   "type": "object"
+  },
+  "ObjectMotionSpec": {
+   "additionalProperties": false,
+   "description": "One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``shake``.\n\n``to`` is where a move goes ([x, y] or a slot) and the final value of a fade or grow; ``from`` is where a fade or\ngrow starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).",
+   "properties": {
+    "type": {
+     "description": "move | hop | float | spin | pulse | fade | grow | shake",
+     "title": "Type",
+     "type": "string"
+    },
+    "t0": {
+     "minimum": 0,
+     "title": "T0",
+     "type": "number"
+    },
+    "t1": {
+     "minimum": 0,
+     "title": "T1",
+     "type": "number"
+    },
+    "from": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "fade and grow: the start value",
+     "title": "From"
+    },
+    "to": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "items": {
+        "type": "number"
+       },
+       "maxItems": 2,
+       "minItems": 2,
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "move: [x, y] or a slot; fade and grow: the end value",
+     "title": "To"
+    },
+    "amount": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "size of the effect (see the motion)",
+     "title": "Amount"
+    },
+    "count": {
+     "anyOf": [
+      {
+       "maximum": 20,
+       "minimum": 1,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "hop and pulse: how many times",
+     "title": "Count"
+    },
+    "ease": {
+     "default": "ease_in_out",
+     "description": "easing curve name",
+     "title": "Ease",
+     "type": "string"
+    }
+   },
+   "required": [
+    "type",
+    "t0",
+    "t1"
+   ],
+   "title": "ObjectMotionSpec",
+   "type": "object"
+  },
+  "ObjectSpec": {
+   "additionalProperties": false,
+   "description": "A thing from the asset library placed in a scene (a car, a tree, a cake).",
+   "properties": {
+    "asset": {
+     "description": "Library object, e.g. car | tree | cake",
+     "title": "Asset",
+     "type": "string",
+     "enum": [
+      "airplane",
+      "apple",
+      "auto_rickshaw",
+      "balloon",
+      "banana",
+      "bank",
+      "bar_chart",
+      "bed",
+      "bench",
+      "bicycle",
+      "boat",
+      "book",
+      "building",
+      "bus",
+      "cake",
+      "calculator",
+      "camera",
+      "car",
+      "cash",
+      "chair",
+      "clock",
+      "cloud",
+      "coin",
+      "computer",
+      "credit_card",
+      "crown",
+      "envelope",
+      "fire",
+      "flower",
+      "gear",
+      "gift",
+      "globe",
+      "headphones",
+      "heart",
+      "helicopter",
+      "hospital_building",
+      "house",
+      "ice_cream",
+      "indian_flag",
+      "key",
+      "lamp",
+      "laptop",
+      "light_bulb",
+      "lock",
+      "magnifier",
+      "mango",
+      "medal",
+      "microphone",
+      "money_bag",
+      "moon",
+      "motorcycle",
+      "mountain",
+      "phone",
+      "piggy_bank",
+      "pizza",
+      "rainbow",
+      "rocket",
+      "samosa",
+      "school_building",
+      "shop",
+      "sofa",
+      "star",
+      "sun",
+      "table",
+      "tea_cup",
+      "temple",
+      "tractor",
+      "train",
+      "tree",
+      "trophy",
+      "truck",
+      "tv"
+     ]
+    },
+    "position": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "maxItems": 2,
+       "minItems": 2,
+       "type": "array"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "description": "[x,y] of the point it stands on, in screen fractions, or a slot of the background",
+     "title": "Position"
+    },
+    "scale": {
+     "default": 1.0,
+     "exclusiveMinimum": 0,
+     "maximum": 6,
+     "title": "Scale",
+     "type": "number"
+    },
+    "depth": {
+     "default": "mid",
+     "enum": [
+      "background",
+      "mid",
+      "foreground"
+     ],
+     "title": "Depth",
+     "type": "string"
+    },
+    "layer": {
+     "default": "behind",
+     "description": "at depth 'mid': drawn behind the characters, or in front of them",
+     "enum": [
+      "behind",
+      "front"
+     ],
+     "title": "Layer",
+     "type": "string"
+    },
+    "facing": {
+     "default": "auto",
+     "enum": [
+      "auto",
+      "left",
+      "right"
+     ],
+     "title": "Facing",
+     "type": "string"
+    },
+    "rotation": {
+     "default": 0.0,
+     "description": "degrees, clockwise",
+     "maximum": 360,
+     "minimum": -360,
+     "title": "Rotation",
+     "type": "number"
+    },
+    "alpha": {
+     "default": 1.0,
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Alpha",
+     "type": "number"
+    },
+    "t0": {
+     "default": 0.0,
+     "description": "visible from this time",
+     "minimum": 0,
+     "title": "T0",
+     "type": "number"
+    },
+    "t1": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "visible until this time (default: the end of the scene)",
+     "title": "T1"
+    },
+    "motions": {
+     "items": {
+      "$ref": "#/$defs/ObjectMotionSpec"
+     },
+     "title": "Motions",
+     "type": "array"
+    },
+    "palette": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "description": "colour overrides for the recolourable parts, hex",
+     "title": "Palette",
+     "type": "object"
+    }
+   },
+   "required": [
+    "asset"
+   ],
+   "title": "ObjectSpec",
    "type": "object"
   },
   "SafeArea": {

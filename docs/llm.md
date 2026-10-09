@@ -54,9 +54,17 @@ only ever mention names that exist right now:
 | 2 SPEC SHAPE | the schema as a skeleton: CAPITALISED words are catalog names, `[brackets]` are optional |
 | 3 HARD RULES | the budget with a worked sum, scene count and length, time windows inside scenes, feet placement and slots, cast, entrances/exits, caption timing, sound, camera, transitions: every rule is one the linter checks |
 | 4 DIRECTING | follow the script, hook → turn → final beat, match the set to the story, act the script out |
-| 5 CATALOG | rendered from the manifest: every background with its parameters and slots, every action with its parameters and minimum length (`*` marks moving actions), transitions, camera moves, caption styles, SFX, archetypes, props |
+| 5 CATALOG | rendered from the manifest: every background with its parameters and slots, every action with its parameters and minimum length (`*` marks moving actions), transitions, camera moves, caption styles, SFX, archetypes, props, and the library's **objects**. Library places, picture characters and objects also say how big they are next to a person, which colours a `palette` may change, and the **words** a script may call them (also in Hindi), so a script that says "गाँव" or "gaay" lands on `village` or `cow` |
 | 6 WORKED EXAMPLE | a two-character cast and one scene in the compact form, built from names that exist |
 | 7 BEFORE YOU ANSWER | the checklist |
+
+**When the library lacks something** the prompt says not to invent a name: use the closest catalog entry (or leave the object out) and report it in
+`meta.library_gaps`. `normalize_spec` also drops an object the library does not have (recording it there, so no repair round is spent), resolves
+a model's own word through the library's tags (`"automobile"` becomes `car`), clamps object times and positions like a layer's, makes room for wide
+picture characters (the outer ones move to the far slots, the scene is scaled down together, `reel.assets.layout`), and a
+model's gap that the library does fill after all is applied to the spec instead of kept. After a model's plan is accepted, the script itself is read once
+more (`reel.assets.coverage`) for the things a story would show that nothing draws; they are added to `meta.library_gaps` unless the model already reported them.
+The compact prompt (small models) leaves objects and gap reporting out and shows only the words of library places and characters.
 
 Conditional blocks (`{{#has action enter_from}} ... {{/has}}`) keep a rule only if the thing it names is registered, so removing an action, or
 running with a plugin that adds one, changes the prompt consistently; a test fails if the prompt ever names something outside the catalog.
@@ -202,6 +210,11 @@ always giving the same output.
    from verbs (walked, jumped, waved, laughed, thought, pointed, fell, picked up, gasped ...), listeners look at the speaker, SFX from the actions, a slow
    camera move, a rotating transition;
 5. **fit**: the same `normalize_spec` rescales to the 45-60 s budget, and the linter has the last word.
+
+The asset library takes part through the assets' own words (`reel.llm.library_plan`): a place named in a scene (`village`, `गाँव`) outweighs the
+engine's keyword tables, a creature or role the library draws ("Max the dog", "a farmer") becomes that character, and an object a scene names
+(a tree, a car) is placed on a spot clear of the cast, sized to fit, a vehicle driving across the frame when the text says it drives. A word several things
+answer to ("fruit", "vehicle") never guesses. What the script mentions that no asset draws is recorded in `meta.library_gaps`.
 
 It understands `Name:` lines for names written in Latin script; other scripts (Hindi, Arabic, CJK ...) are treated as narration, which renders fine
 (captions are shaped, the voice follows the language) but gives one narrator instead of a cast: use a model, or write the JSON, for multi-character

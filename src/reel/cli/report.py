@@ -13,14 +13,15 @@ _LABEL = {Severity.ERROR: "ERROR", Severity.WARNING: "warn", Severity.INFO: "not
 
 _ADD_HOW = {
     "action": "reel new-action {name}",
-    "background": "src/reel/templates/{name}.py  (@register_background)",
+    "background": "reel assets add FILE --kind place --name {name}  (or src/reel/templates/{name}.py)",
     "style": "reel new-style {name}",
     "transition": "core/transitions.py  (@register_transition)",
     "easing": "core/easing.py  (@register_easing)",
     "camera_move": "core/camera.py  (@register_camera_move)",
     "sfx": "audio/sfx.py  (@register_sfx)  or  assets/sfx/{name}.wav",
-    "archetype": "core/archetypes.py",
+    "archetype": "reel assets add FILE --kind character --name {name}  (or core/archetypes.py)",
     "prop": "core/archetypes.py",
+    "object": "reel assets add FILE --name {name}  (an SVG or PNG; docs/assets.md)",
     "caption_style": "core/captions.py  (@register_caption_style)",
 }
 
@@ -71,6 +72,25 @@ def print_report(console: Console, report: LintReport) -> None:
                     ),
                     soft_wrap=True,
                 )
+        console.print()
+
+    gaps = [i for i in report.issues if i.code == "LIBRARY_GAP" and i.kind and i.name]
+    if gaps:
+        console.print(
+            Text(
+                "Not in the asset library — the spec shows a stand-in or leaves it out:",
+                style="bold yellow",
+            )
+        )
+        for i in gaps:
+            line = Text("  ")
+            line.append(f"{i.kind:<14}", style="magenta")
+            line.append(f"{i.name}", style="bold")
+            console.print(line, soft_wrap=True)
+            console.print(
+                Text(f"      {i.hint or ''}", style="green"),
+                soft_wrap=True,
+            )
         console.print()
 
     summary = Text()

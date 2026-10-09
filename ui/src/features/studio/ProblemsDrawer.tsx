@@ -5,11 +5,12 @@ import type { LintIssue, ReelSpec } from '@/api/types'
 import { Button, Chip, IconButton } from '@/components/ui'
 import { clampMoveValues } from '@/lib/camera'
 import { cn } from '@/lib/cn'
-import { pathLabel, selectionFromPath } from '@/lib/spec'
+import { pathLabel, selectionFromPath, timeForPath } from '@/lib/spec'
 import { fitToDuration } from '@/lib/timeline'
 import { useLint } from '@/store/lint'
 import { useProject } from '@/store/project'
 import { useStudio } from '@/store/studio'
+import { fitObjectTimes } from './clips'
 
 const ICON = { error: CircleAlert, warning: AlertTriangle, info: Info } as const
 const TONE = { error: 'text-danger', warning: 'text-warning', info: 'text-info' } as const
@@ -38,6 +39,8 @@ function fixFor(issue: LintIssue, catalog: ReturnType<typeof useCatalog>['data']
         return { label: 'Use subtitle', run: (d) => void d.scenes.forEach((s) => s.captions.forEach((c) => c.style === name && (c.style = 'subtitle'))) }
       case 'sfx':
         return { label: 'Remove the sound', run: (d) => void d.scenes.forEach((s) => (s.sfx = s.sfx.filter((x) => x.name !== name))) }
+      case 'object':
+        return { label: 'Remove the object', run: (d) => void d.scenes.forEach((s) => (s.objects = s.objects.filter((o) => o.asset !== name))) }
     }
   }
   if (issue.code === 'CAMERA_MOVE_INVALID') {
@@ -54,6 +57,23 @@ function fixFor(issue: LintIssue, catalog: ReturnType<typeof useCatalog>['data']
   }
   if (issue.code === 'DURATION_BUDGET') return { label: 'Fit to 50 s', run: () => undefined } // handled by the caller (needs a whole-spec replace)
   if (issue.code === 'TIME_OVERFLOW') return { label: 'Fit inside the scene', run: (d) => void clampToScenes(d, catalog?.limits.max_scene_sec ?? 30) }
+  if (issue.code === 'POSITION_SLOT') {
+    // an object's place, or the place one of its moves goes to: only that one is repaired
+    const at = /^scenes\[(\d+)\]\.objects\[(\d+)\](?:\.motions\[(\d+)\]\.to|\.position)/.exec(issue.path)
+    if (at) {
+      return {
+        label: 'Use “center”',
+        run: (d) => {
+          const o = d.scenes[Number(at[1])]?.objects[Number(at[2])]
+          if (!o) return
+          if (at[3] !== undefined) {
+            const m = o.motions[Number(at[3])]
+            if (m) m.to = 'center'
+          } else o.position = 'center'
+        },
+      }
+    }
+  }
   if (issue.code === 'POSITION_SLOT') return { label: 'Use “center”', run: (d) => void d.scenes.forEach((s) => s.layers.forEach((l) => typeof l.position === 'string' && !(catalog?.universal_slots ?? []).includes(l.position) && (l.position = 'center'))) }
   return null
 }
@@ -63,6 +83,7 @@ function clampToScenes(d: ReelSpec, _max: number): void {
     for (const l of s.layers) for (const a of l.actions) ((a.t1 = Math.min(a.t1, s.duration_sec)), (a.t0 = Math.min(a.t0, Math.max(0, a.t1 - 0.1))))
     for (const c of s.captions) ((c.t1 = Math.min(c.t1, s.duration_sec)), (c.t0 = Math.min(c.t0, Math.max(0, c.t1 - 0.1))))
     for (const m of s.camera.moves) ((m.t1 = Math.min(m.t1, s.duration_sec)), (m.t0 = Math.min(m.t0, Math.max(0, m.t1 - 0.1))))
+    for (const o of s.objects ?? []) fitObjectTimes(o, s.duration_sec)
   }
 }
 
@@ -79,9 +100,9 @@ function Row({ issue, spec }: { issue: LintIssue; spec: ReelSpec }) {
     if (!sel) return
     select(sel)
     if ('scene' in sel) {
-      let t = 0
-      for (let i = 0; i < sel.scene; i++) t += spec.scenes[i].duration_sec
-      setPlayhead(t + 0.01)
+      // an object or a motion is shown at the moment it appears; anything else at the start of its scene
+      const at = timeForPath(spec, issue.path)
+      if (at !== null) setPlayhead(at)
     }
   }
   return (

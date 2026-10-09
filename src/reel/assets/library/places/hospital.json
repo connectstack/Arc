@@ -1,0 +1,6 @@
+{
+  "summary": "A pale-green hospital ward: a bed, a curtain, an IV stand, a heart monitor, a door",
+  "tags": ["clinic", "ward", "hospital ward", "healthcare", "infirmary", "अस्पताल", "हस्पताल", "दवाखाना", "वार्ड", "aspatal", "haspatal", "dawakhana"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.71, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "bed": [0.36, 0.8], "door": [0.86, 0.8], "monitor": [0.18, 0.8]}}
+}

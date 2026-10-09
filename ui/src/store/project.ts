@@ -132,7 +132,8 @@ export const useProject = create<ProjectState>((set, get) => ({
   select: (selection) => set({ selection, extra: [] }),
   toggleSelect: (sel) => {
     const { selection, extra } = get()
-    const clip = (x: Selection) => x.kind === 'action' || x.kind === 'caption' || x.kind === 'camera' || x.kind === 'sfx'
+    // the timeline's clips and an object's motions can be selected together; an object (the thing itself) is always on its own
+    const clip = (x: Selection) => x.kind === 'action' || x.kind === 'caption' || x.kind === 'camera' || x.kind === 'sfx' || x.kind === 'motion'
     if (!clip(sel)) return set({ selection: sel, extra: [] })
     if (!clip(selection)) return set({ selection: sel, extra: [] })
     if (sameSelection(selection, sel)) {

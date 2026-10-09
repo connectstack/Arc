@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-62 2 124 158">
+  <path d="M-38 96 V40 A38 38 0 0 1 38 40 V96 H22 V40 A22 22 0 0 0 -22 40 V96 Z" fill="#b3bdca"/>
+  <path d="M38 96V40A38 38 0 0 0 29.1 15.6L23 20.7A30 30 0 0 1 30 40V96Z" fill="#8e9aac" data-lod="1" data-shadow="false"/>
+  <rect x="-34" y="30" width="5" height="50" rx="2.5" fill="#e3e9f1" opacity="0.9" data-lod="1" data-shadow="false"/>
+  <rect x="-62" y="74" width="124" height="86" rx="17" fill="#f2b632" data-role="body"/>
+  <path d="M-62 142 H62 V143 Q62 160 45 160 H-45 Q-62 160 -62 143 Z" fill="#d9961c" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="-52" y="84" width="9" height="46" rx="4.5" fill="#ffd56b" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <rect x="-44" y="70" width="20" height="8" rx="3" fill="#7f8b9c" data-lod="1" data-shadow="false"/>
+  <rect x="24" y="70" width="20" height="8" rx="3" fill="#7f8b9c" data-lod="1" data-shadow="false"/>
+  <circle cx="-46" cy="148" r="4.5" fill="#c98a14" data-lod="1" data-shadow="false"/>
+  <circle cx="46" cy="148" r="4.5" fill="#c98a14" data-lod="1" data-shadow="false"/>
+  <circle cx="0" cy="106" r="12" fill="#23262e" data-lod="0"/>
+  <path d="M-5.5 112 H5.5 L9 138 H-9 Z" fill="#23262e" data-lod="0"/>
+</svg>

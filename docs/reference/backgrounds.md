@@ -16,6 +16,46 @@ Soft gradient stage with floating geometric shapes; good for explainers, titles 
 | `palette` | `auto` \| `sunrise` \| `ocean` \| `candy` \| `forest` \| `mono` \| `violet` | `auto` | colour family (auto follows mood) |
 | `floor` | boolean | `True` | draw a soft stage floor under the characters |
 
+## beach
+
+A sunny beach with surf, sailboats, a lighthouse, palm trees, an umbrella and rocks
+
+**slots:** `center`, `left`, `right`, `rock`, `shore`, `umbrella`
+
+_no parameters_
+
+## cafe
+
+A warm cafe: coffee counter, pendant lamps, chalkboard menu, small tables, a window
+
+**slots:** `center`, `counter`, `left`, `right`, `table`, `window`
+
+_no parameters_
+
+## classroom
+
+An Indian school classroom: blackboard, wooden desks, a window, a clock and a door
+
+**slots:** `bench`, `board`, `center`, `door`, `left`, `right`, `teacher_desk`
+
+_no parameters_
+
+## desert
+
+A golden desert: sand dunes, cacti, a rocky outcrop and a huge low sun
+
+**slots:** `cactus`, `center`, `dune`, `left`, `right`, `rock`
+
+_no parameters_
+
+## farm
+
+A sunny farm: green crop rows, a tubewell shed, a scarecrow, palms and a dirt track
+
+**slots:** `center`, `field`, `left`, `right`, `scarecrow`, `shed`
+
+_no parameters_
+
 ## forest
 
 Layered woodland: misty hills, rows of trees, a winding path with grass, rocks, mushrooms and flowers; spring / summer / autumn / winter, with light shafts and fireflies
@@ -28,6 +68,54 @@ Layered woodland: misty hills, rows of trees, a winding path with grass, rocks, 
 | `trees` | `broadleaf` \| `pine` \| `mixed` | `mixed` | broadleaf = round leafy trees (and birches); pine = tall evergreen conifers; mixed = both. In winter the broadleaf trees are bare. |
 | `fog` | number (0.0…1.0) | `0.25` | mist between the tree rows: 0 = crystal clear, 0.3 = soft haze, 1 = thick fog |
 | `path` | boolean | `True` | true = a winding dirt path leads into the woods; false = open grassy clearing |
+
+## hospital
+
+A pale-green hospital ward: a bed, a curtain, an IV stand, a heart monitor, a door
+
+**slots:** `bed`, `center`, `door`, `left`, `monitor`, `right`
+
+_no parameters_
+
+## market
+
+An Indian bazaar lane: striped awnings, fruit stalls, a cart, pennants and lanterns
+
+**slots:** `cart`, `center`, `left`, `right`, `stall`
+
+_no parameters_
+
+## mountains
+
+Snow-capped mountains, pine forest, a calm lake and a rocky shore
+
+**slots:** `center`, `lake`, `left`, `right`, `rock`
+
+_no parameters_
+
+## office
+
+A modern open office: glass wall, city skyline, a desk with monitors, a water cooler
+
+**slots:** `center`, `cooler`, `desk`, `left`, `right`, `window`
+
+_no parameters_
+
+## park
+
+A sunny city park: a curved path, a pond, trees, a bench, a lamp post and flower beds
+
+**slots:** `bench`, `center`, `lamp`, `left`, `pond`, `right`
+
+_no parameters_
+
+## railway_station
+
+An Indian railway platform: yellow safety line, a blue train, a clock and a canopy
+
+**slots:** `bench`, `center`, `left`, `platform`, `right`, `train_door`
+
+_no parameters_
 
 ## rooftop
 
@@ -53,6 +141,14 @@ Interior set (bedroom, living room, office or kitchen) with a window onto the sk
 | `view` | `sky` \| `city` \| `garden` | `city` | what shows through the window: plain sky with clouds/sun/moon, a city skyline, or a garden with hills and trees |
 | `lights` | `auto` \| `on` \| `off` | `auto` | lamps and screens: auto = switched on at dawn/dusk/night, on = always lit (e.g. a cosy day scene), off = dark (lights-out moment) |
 
+## space
+
+Outer space: stars, a ringed planet, a crescent Earth, a moon and a grey lunar ridge
+
+**slots:** `center`, `crater`, `left`, `right`, `rock`
+
+_no parameters_
+
 ## stage
 
 Studio / theatre stage for titles and punchlines: curtains, studio or city backdrop (or a confetti party), polished floor with pulsing spotlights, optional podium and sparkles. Slots: 'spot_left'/'spot_right' stand in the beams, 'podium' behind the lectern, 'apron' down-stage
@@ -77,6 +173,14 @@ Charming city street: layered skyline, shopfront buildings, lamp posts, sidewalk
 | `weather` | `clear` \| `rain` \| `snow` \| `fog` | `clear` | clear = open sky; rain = overcast, wet ground and falling rain; snow = white ground and falling snow; fog = thick mist that fades the distance |
 | `district` | `downtown` \| `suburb` \| `market` | `downtown` | downtown = tall shopfront buildings, cars and a traffic light; suburb = houses with lawns, hedges and picket fences; market = old-town square with colourful stalls, bunting and cobblestones |
 | `shops` | boolean | `True` | true = ground floors are shopfronts with awnings and signs (a corner store in the suburb); false = plain residential doors, stoops and porches |
+
+## village
+
+An Indian village: mud huts, a stone well, a banyan tree, hay and a dirt path
+
+**slots:** `center`, `hut_door`, `left`, `right`, `tree`, `well`
+
+_no parameters_
 
 ## whiteboard
 

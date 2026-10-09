@@ -7,13 +7,31 @@ so step-by-step behaviour is tested without depending on the real builtin conten
 from __future__ import annotations
 
 import copy
+import os
+from collections.abc import Iterator
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from reel.core.catalog import Catalog
+from reel.core.catalog import CATALOG, Catalog
+
+os.environ.pop(
+    "REEL_ASSETS", None
+)  # a developer's own asset folders must never leak into the tests
+
+
+@pytest.fixture(autouse=True)
+def _library_stays_the_built_in_one() -> Iterator[None]:
+    """Tests that add assets (the CLI, the server) change the process-wide catalog: put the library back afterwards."""
+    yield
+    if getattr(CATALOG, "_loaded", False) and any(
+        e.obj.origin == "user" for e in CATALOG.assets.entries()
+    ):
+        from reel.assets.library import reset_assets
+
+        reset_assets(CATALOG, ())
 
 
 class WalkParams(BaseModel):

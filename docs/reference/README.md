@@ -9,6 +9,7 @@ Generated from the live registries by `reel reference -o docs/reference`.
 - [camera](camera.md)
 - [captions](captions.md)
 - [archetypes](archetypes.md)
+- [assets](assets.md)
 - [props](props.md)
 - [sfx](sfx.md)
 - [easings](easings.md)

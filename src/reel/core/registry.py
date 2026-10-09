@@ -125,11 +125,15 @@ class Registry(Generic[T]):
 
     def items(self) -> list[tuple[str, T]]:
         self._ensure()
-        return [(n, self._entries[n].obj) for n in sorted(self._entries)]
+        snapshot = dict(
+            self._entries
+        )  # one copy: an entry removed meanwhile (the library reloading) cannot vanish half way
+        return [(n, snapshot[n].obj) for n in sorted(snapshot)]
 
     def entries(self) -> list[Entry[T]]:
         self._ensure()
-        return [self._entries[n] for n in sorted(self._entries)]
+        snapshot = dict(self._entries)
+        return [snapshot[n] for n in sorted(snapshot)]
 
     def suggest(self, name: str, n: int = 3, cutoff: float = 0.55) -> list[str]:
         known = list(self._entries)

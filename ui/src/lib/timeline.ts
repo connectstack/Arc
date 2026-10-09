@@ -48,6 +48,15 @@ export function sceneAt(slots: Slot[], t: number): Slot | undefined {
   return slots[slots.length - 1]
 }
 
+/** When scene `index` is fully on screen: once the transition that brings it in has finished (after a cut, its first frame).
+ *  Seeking to the slot's own start would show the outgoing scene, so what is selected could not be seen. */
+export function sceneVisibleFrom(slots: Slot[], index: number): number {
+  const s = slots[index]
+  if (!s) return 0
+  const intro = index > 0 ? slots[index - 1].overlap : 0
+  return Math.max(s.start, Math.min(s.start + intro + 0.001, s.end - 0.001))
+}
+
 export const toGlobal = (slot: Slot, local: number): number => slot.start + local
 export const toLocal = (slot: Slot, global: number): number => global - slot.start
 
@@ -152,6 +161,12 @@ export function fitToDuration(spec: ReelSpec, target: number, maxScene = 30): Re
     for (const c of sc.captions) ((c.t0 = ms(c.t0 * f)), (c.t1 = ms(c.t1 * f)))
     for (const m of sc.camera.moves) ((m.t0 = ms(m.t0 * f)), (m.t1 = ms(m.t1 * f)))
     for (const x of sc.sfx) x.t = ms(x.t * f)
+    for (const o of sc.objects ?? []) {
+      // when an object is on screen and what it does (an object that stays until the end of the scene still does)
+      o.t0 = ms(o.t0 * f)
+      if (o.t1 !== null && o.t1 !== undefined) o.t1 = ms(o.t1 * f)
+      for (const m of o.motions) ((m.t0 = ms(m.t0 * f)), (m.t1 = ms(m.t1 * f)))
+    }
   }
   return next
 }

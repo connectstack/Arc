@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="50" fill="#c98311" data-role="body_dark"/>
+  <circle cx="50" cy="50" r="44" fill="#ffd966" data-role="body_light" data-lod="1"/>
+  <circle cx="50" cy="50" r="35" fill="#f5b82e" data-role="body"/>
+  <path d="M39.9 32.3H51.5A8.7 8.7 0 0 1 51.5 49.6H39.9L55.3 67.7M39.9 42.1H60.1" fill="none" stroke="#c98311" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="body_dark" data-lod="0"/>
+  <path d="M89.8 50h0.1M87.9 62.3h0.1M82.2 73.4h0.1M73.4 82.2h0.1M62.3 87.9h0.1M50 89.8h0.1M37.7 87.9h0.1M26.6 82.2h0.1M17.8 73.4h0.1M12.1 62.3h0.1M10.2 50h0.1M12.1 37.7h0.1M17.8 26.6h0.1M26.6 17.8h0.1M37.7 12.1h0.1M50 10.2h0.1M62.3 12.1h0.1M73.4 17.8h0.1M82.2 26.6h0.1M87.9 37.7h0.1" fill="none" stroke="#f5b82e" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="body" data-lod="1"/>
+  <path d="M11.5 36C16.3 22.7 27.6 12.8 41.5 9.9L42.4 14.3C30.1 16.9 20 25.7 15.7 37.5L11.5 36Z" fill="#ffffff" data-lod="1" data-shadow="false" opacity="0.6"/>
+</svg>

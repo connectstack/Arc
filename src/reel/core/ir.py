@@ -66,9 +66,26 @@ class Line:
 @dataclass(slots=True, frozen=True)
 class PathG:
     cmds: tuple[tuple[Any, ...], ...]
+    even_odd: bool = False  # fill rule: holes by overlap parity (imported SVG art uses it) instead of by direction
 
 
-Geom = Union[Rect, Ellipse, Poly, Limb, Line, PathG]  # noqa: UP007
+@dataclass(slots=True, frozen=True)
+class ImageG:
+    """An imported picture in the rectangle (x, y, w, h), plus the traced outline of what is opaque in it.
+
+    ``key`` names the decoded pixels (``reel.assets.raster.image_for``); styles draw the picture their own way and use the
+    outline for what follows the shape of the thing (shadows, paper edges, ink lines).  Empty outline = the rectangle.
+    """
+
+    key: str
+    x: float
+    y: float
+    w: float
+    h: float
+    outline: tuple[tuple[Any, ...], ...] = ()
+
+
+Geom = Union[Rect, Ellipse, Poly, Limb, Line, PathG, ImageG]  # noqa: UP007
 
 
 def bbox(g: Geom) -> tuple[float, float, float, float]:
@@ -98,12 +115,37 @@ def bbox(g: Geom) -> tuple[float, float, float, float]:
             max(g.a[0], g.b[0]) + r,
             max(g.a[1], g.b[1]) + r,
         )
+    if isinstance(g, ImageG):
+        return g.x, g.y, g.x + g.w, g.y + g.h
     xs, ys = [], []
     for c in g.cmds:
         v = c[1:]
         xs += [float(v[i]) for i in range(0, len(v), 2)]
         ys += [float(v[i]) for i in range(1, len(v), 2)]
     return (min(xs), min(ys), max(xs), max(ys)) if xs else (0.0, 0.0, 0.0, 0.0)
+
+
+def xf_corners(box: tuple[float, float, float, float], xf: Xf) -> list[Pt]:
+    """The four corners of ``box`` after a runtime transform: scale about (ox, oy), rotate about it, then translate."""
+    dx, dy, rot, sx, sy, ox, oy = xf
+    c, s = math.cos(math.radians(rot)), math.sin(math.radians(rot))
+    out: list[Pt] = []
+    for x, y in ((box[0], box[1]), (box[2], box[1]), (box[2], box[3]), (box[0], box[3])):
+        px, py = ox + (x - ox) * sx, oy + (y - oy) * sy
+        rx, ry = ox + (px - ox) * c - (py - oy) * s, oy + (px - ox) * s + (py - oy) * c
+        out.append((rx + dx, ry + dy))
+    return out
+
+
+def shape_bbox(shape: Shape) -> tuple[float, float, float, float]:
+    """(x0, y0, x1, y1) of a shape *as drawn*: its geometry's box with the shape's own transform (``xf``) applied."""
+    box = bbox(shape.geom)
+    if shape.xf is None:
+        return box
+    pts = xf_corners(box, shape.xf)
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    return min(xs), min(ys), max(xs), max(ys)
 
 
 # ------------------------------------------------------------------------------- animation

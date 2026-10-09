@@ -41,6 +41,7 @@ class RenderRequest:
     no_audio: bool = False
     tts: str | None = None
     plugins: tuple[str, ...] = ()
+    assets: tuple[str, ...] = ()  # the user's asset folders (read again in every render worker)
     extra_warnings: list[str] = field(default_factory=list)
 
 
@@ -151,7 +152,7 @@ def _run_render(req: RenderRequest, console: Console, err: Console) -> int:
     opts = RenderOptions(
         style=req.style, scale=sc, lenient=is_lenient, workers=req.workers, cache=not req.no_cache,
         cache_dir=str(req.cache_dir) if req.cache_dir else None, crf=req.crf if req.crf is not None else (26 if req.preview else 20),
-        preset="veryfast" if req.preview else "medium", frame_range=frame_range, plugins=req.plugins, seed=req.seed,
+        preset="veryfast" if req.preview else "medium", frame_range=frame_range, plugins=req.plugins, assets=req.assets, seed=req.seed,
         audio=not req.no_audio, maxrate=_maxrate(req),
     )  # fmt: skip
     if req.frames_dir is not None:

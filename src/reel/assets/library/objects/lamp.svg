@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="1 0 228 620">
+  <rect data-role="accent" x="107" y="120" width="16" height="480" rx="3" fill="#c4912f"/>
+  <path data-role="accent_dark" d="M39 620 C39 598 71 586 115 586 C159 586 191 598 191 620 Z" fill="#97691c"/>
+  <ellipse data-role="accent" rx="36" cx="115" cy="588" fill="#c4912f" data-lod="1" ry="9"/>
+  <rect data-role="accent_dark" x="93" y="112" width="44" height="26" rx="6" fill="#97691c"/>
+  <rect data-role="accent_dark" x="101" y="380" width="28" height="12" rx="4" fill="#97691c" data-lod="1"/>
+  <circle cx="115" cy="152" r="50" fill="#ffd54a" opacity="0.35" data-lod="1" data-material="emissive"/>
+  <circle cx="115" cy="148" r="28" fill="#fff6c2" data-lod="0" data-material="emissive"/>
+  <path data-role="body" d="M53 0 L177 0 L227 134 L3 134 Z" fill="#f9d77c"/>
+  <path data-role="body_dark" d="M137 0 L177 0 L227 134 L157 134 Z" fill="#e1b55a" data-lod="1"/>
+  <path d="M65 0 L89 0 L53 134 L23 134 Z" fill="#ffffff" opacity="0.35" data-lod="1"/>
+  <rect data-role="accent_dark" x="1" y="126" width="228" height="14" rx="7" fill="#97691c" data-lod="1"/>
+  <path d="M59 6 L171 6 L215 122 L15 122 Z" fill="#fff6c2" opacity="0.38" data-lod="1" data-material="emissive"/>
+</svg>

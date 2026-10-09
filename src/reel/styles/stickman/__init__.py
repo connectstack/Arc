@@ -16,7 +16,7 @@ import skia
 from reel.core import fonts
 from reel.core.fx import FxConfig
 from reel.core.geometry import Pt, Rot2D, adjust, darken, mix, skcolor
-from reel.core.ir import Line, PathG, Shape, bbox
+from reel.core.ir import ImageG, Line, PathG, Shape, bbox
 from reel.styles.base import StyleContext, StylePack, register_style, shape_path
 
 INK = "#1f2430"
@@ -164,8 +164,28 @@ class Stickman(StylePack):
                 canvas.translate(ox, oy)
                 canvas.scale(sx, sy)
                 canvas.translate(-ox, -oy)
-        self._ink_shape(canvas, shape, path, ctx)
+        if isinstance(shape.geom, ImageG):
+            self._ink_picture(canvas, shape, path, ctx)
+        else:
+            self._ink_shape(canvas, shape, path, ctx)
         canvas.restore()
+
+    def _ink_picture(
+        self, canvas: skia.Canvas, shape: Shape, path: skia.Path, ctx: StyleContext
+    ) -> None:
+        """An imported picture on the whiteboard: washed out like a coloured pencil sketch, with a marker line round it."""
+        if shape.tag == "backdrop":  # a place: faded into the board, no outline
+            p = self.image_paint(shape, ctx, saturation=0.45)
+            p.setAlphaf(0.42 * shape.alpha)
+            canvas.drawRect(
+                skia.Rect(-10000, -10000, 10000, 10000), skia.Paint(Color=skcolor(BOARD))
+            )
+            self.draw_picture(canvas, shape, p)
+            return
+        canvas.drawPath(path, skia.Paint(AntiAlias=True, Color=skcolor(BOARD, shape.alpha)))
+        self.draw_picture(canvas, shape, self.image_paint(shape, ctx, saturation=0.6))
+        x0, y0, x1, y1 = bbox(shape.geom)
+        self._marker_path(canvas, path, INK, 7.0, ctx, _h((x0 + x1) / 2, (y0 + y1) / 2, 5))
 
     def _ink_shape(
         self, canvas: skia.Canvas, shape: Shape, path: skia.Path, ctx: StyleContext
@@ -212,6 +232,15 @@ class Stickman(StylePack):
 
     # ---- characters: stick figures ----------------------------------------------------------------------------
     def draw_character(self, canvas: skia.Canvas, build: Any, fig: Any, ctx: StyleContext) -> None:
+        if build.meta.get(
+            "sprite"
+        ):  # a character made from art: its own drawing, outlined; the bubbles as for a body
+            for s in build.shapes:
+                if s.tag in ("thought", "exclaim"):
+                    self._face_or_prop(canvas, s, ctx)
+                else:
+                    self.paint_shape(canvas, s, ctx)
+            return
         d = fig.dims
         P = fig.pts
         pal = build.meta["palette"]

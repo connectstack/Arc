@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="9 11 311 132">
+  <path data-role="skin_dark" data-lod="1" d="M40 104 L12 116 L38 122 Z" fill="#6e9a3f"/>
+  <rect data-role="skin_dark" data-lod="0" x="62" y="96" width="34" height="44" rx="14" fill="#6e9a3f"/>
+  <rect data-role="skin_dark" data-lod="0" x="176" y="96" width="34" height="44" rx="14" fill="#6e9a3f"/>
+  <ellipse data-role="skin" cx="262" cy="100" rx="26" ry="20" fill="#8dbb57"/>
+  <circle data-role="skin" cx="287" cy="80" r="28" fill="#8dbb57"/>
+  <path data-role="shell" d="M24 110 C24 52 76 14 142 14 C208 14 260 52 260 110 Z" fill="#b3773c"/>
+  <polygon data-role="shell_dark" data-lod="0" data-shadow="false" points="172 50 157 67.3 127 67.3 112 50 127 32.7 157 32.7" fill="#7d4f26"/>
+  <polygon data-role="shell_dark" data-lod="0" data-shadow="false" points="113 66 100.5 80.7 75.5 80.7 63 66 75.5 51.3 100.5 51.3" fill="#7d4f26"/>
+  <polygon data-role="shell_dark" data-lod="0" data-shadow="false" points="221 66 208.5 80.7 183.5 80.7 171 66 183.5 51.3 208.5 51.3" fill="#7d4f26"/>
+  <polygon data-role="shell_dark" data-lod="1" data-shadow="false" points="69 92 60.5 101.5 43.5 101.5 35 92 43.5 82.5 60.5 82.5" fill="#7d4f26"/>
+  <polygon data-role="shell_dark" data-lod="1" data-shadow="false" points="249 92 240.5 101.5 223.5 101.5 215 92 223.5 82.5 240.5 82.5" fill="#7d4f26"/>
+  <path data-lod="1" d="M44 60 C62 32 98 22 130 20" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.25"/>
+  <rect data-role="shell_light" x="18" y="98" width="248" height="22" rx="11" fill="#e2c283"/>
+  <rect data-role="skin" data-lod="0" x="90" y="98" width="36" height="42" rx="15" fill="#8dbb57"/>
+  <rect data-role="skin" data-lod="0" x="206" y="98" width="36" height="42" rx="15" fill="#8dbb57"/>
+  <circle data-lod="1" data-shadow="false" cx="100" cy="134" r="3" fill="#e2c283"/>
+  <circle data-lod="1" data-shadow="false" cx="116" cy="134" r="3" fill="#e2c283"/>
+  <circle data-lod="1" data-shadow="false" cx="216" cy="134" r="3" fill="#e2c283"/>
+  <circle data-lod="1" data-shadow="false" cx="232" cy="134" r="3" fill="#e2c283"/>
+  <path data-lod="1" d="M290 99 C298 105 309 103 315 95" stroke="#7d4f26" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle data-lod="1" data-shadow="false" data-tag="blush" cx="281" cy="91" r="6.5" fill="#f4a28f" opacity="0.75"/>
+  <ellipse data-lod="0" data-tag="eye" cx="295" cy="73" rx="8.5" ry="10" fill="#fff"/>
+  <ellipse data-lod="0" data-tag="pupil" cx="297.2" cy="74" rx="5" ry="6.2" fill="#23262e"/>
+  <circle data-lod="0" data-tag="glint" cx="298.9" cy="71.5" r="2" fill="#fff"/>
+</svg>

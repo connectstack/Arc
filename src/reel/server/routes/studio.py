@@ -56,7 +56,11 @@ def post_generate(body: GenerateBody, request: Request) -> dict[str, str]:
     job = c.jobs.submit(
         "generate",
         "Script to reel",
-        {**body.model_dump(), "plugins": list(c.plugins)},
+        {
+            **body.model_dump(),
+            "plugins": list(c.plugins),
+            "assets": c.assets.dirs() if c.assets else [],
+        },
         mode="thread",
     )
     return {"job_id": job.id}

@@ -1,5 +1,5 @@
 import { Grid3x3, Loader2, Maximize, PanelLeft, PanelRight, Pause, Play, Repeat, ScanLine, SkipBack, SkipForward, StepBack, StepForward, Volume2, VolumeX } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { useApi } from '@/api/context'
 import { useCatalog } from '@/api/hooks'
 import { ApiError } from '@/api/types'
@@ -9,12 +9,15 @@ import { cn } from '@/lib/cn'
 import { FramePipeline } from '@/lib/frames'
 import { useHotkeys } from '@/lib/hotkeys'
 import { movePaths } from '@/lib/paths'
-import { characterColor, characterHeightFrac, characterName, entry, layerPoint } from '@/lib/spec'
-import { clamp, sceneAt, sceneSlots, timecode, totalDuration } from '@/lib/timeline'
+import { characterColor, characterHeightFrac, characterName, entry, layerPoint, nearestSlot, objectBox, objectColor, objectPoint, scaleByDrag } from '@/lib/spec'
+import { clamp, sceneAt, sceneSlots, sceneVisibleFrom, timecode, totalDuration } from '@/lib/timeline'
 import { useWide } from '@/lib/useMedia'
 import { useProject } from '@/store/project'
 import { useStudio } from '@/store/studio'
 import { useUi } from '@/store/ui'
+import { objectMovePaths } from './motions'
+import { objectName, visibleAt } from './objects'
+import { addObject } from './ops'
 import { hasSound, useVoicePreview } from './useVoicePreview'
 
 // ------------------------------------------------------------------------------- the preview session
@@ -73,13 +76,29 @@ function useFramePipeline(info: PreviewInfo | null, onFrame: (n: number, b: Imag
   return pipe
 }
 
-function Stage({ session, onSize }: { session: PreviewSession; onSize?: (w: number, h: number) => void }) {
+/** The drag payload the library gives its items (`{kind: 'action' | 'object' ..., name}`), or null when the drag is something else. */
+export function readDraggedItem(e: DragEvent): { kind: string; name: string } | null {
+  const raw = e.dataTransfer.getData('application/x-reel-item')
+  if (!raw) return null
+  try {
+    const item = JSON.parse(raw) as { kind?: unknown; name?: unknown }
+    return typeof item.kind === 'string' && typeof item.name === 'string' ? { kind: item.kind, name: item.name } : null
+  } catch {
+    return null
+  }
+}
+
+export function Stage({ session, onSize }: { session: PreviewSession; onSize?: (w: number, h: number) => void }) {
   const spec = useProject((s) => s.spec) as ReelSpec
   const playhead = useProject((s) => s.playhead)
   const playing = useStudio((s) => s.playing)
+  const catalog = useCatalog().data
+  const edit = useProject((s) => s.edit)
+  const select = useProject((s) => s.select)
   const holder = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const [box, setBox] = useState({ w: 0, h: 0 })
+  const [dropping, setDropping] = useState(false)
   const wantedRef = useRef(0)
   const info = session.info
   const fps = info?.fps ?? spec.meta.fps
@@ -131,10 +150,45 @@ function Stage({ session, onSize }: { session: PreviewSession; onSize?: (w: numb
     if (bmp) draw(bmp)
   }, [pipe, frame, playing, draw])
 
+  // a library object dropped on the stage stands where it was let go (the point it stands on is the pointer)
+  const dropItem = (e: DragEvent<HTMLDivElement>) => {
+    setDropping(false)
+    const item = readDraggedItem(e)
+    if (!item) return
+    e.preventDefault()
+    if (item.kind !== 'object') return
+    const r = e.currentTarget.getBoundingClientRect()
+    const at: [number, number] = [(e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height)]
+    const st = useProject.getState()
+    const slot = sceneAt(sceneSlots(st.spec as ReelSpec), st.playhead)
+    if (!slot) return
+    edit((d) => {
+      const added = addObject(d, catalog, item.name, st.playhead, slot.index, at)
+      if (added) select(added)
+    })
+  }
+
   return (
     <div ref={holder} className="relative grid min-h-0 flex-1 place-items-center overflow-hidden" style={{ background: 'var(--stage)' }}>
-      <div className="relative overflow-hidden rounded-[26px] bg-black shadow-[0_0_0_5px_var(--raised),0_24px_70px_rgb(0_0_0/0.5)]" style={{ width: box.w, height: box.h }}>
+      <div
+        data-testid="stage"
+        className="relative overflow-hidden rounded-[26px] bg-black shadow-[0_0_0_5px_var(--raised),0_24px_70px_rgb(0_0_0/0.5)]"
+        style={{ width: box.w, height: box.h }}
+        onDragOver={(e) => {
+          if (![...e.dataTransfer.types].includes('application/x-reel-item')) return
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'copy'
+          setDropping(true)
+        }}
+        onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setDropping(false)}
+        onDrop={dropItem}
+      >
         <canvas ref={canvas} className="block size-full" aria-label="Preview of the reel at the playhead" role="img" />
+        {dropping && (
+          <div className="pointer-events-none absolute inset-0 z-10 grid place-items-end rounded-[26px] border-2 border-dashed border-accent bg-accent/10 pb-6 text-center">
+            <span className="mx-auto rounded-full bg-black/65 px-3 py-1 text-[12px] text-white">Drop to put it here</span>
+          </div>
+        )}
         {!info && !session.error && <div className="absolute inset-0 grid place-items-center text-[12px] text-white/60">Preparing the preview…</div>}
         {session.busy && info && <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2 py-0.5 text-[11px] text-white/85">updating…</span>}
         <StageOverlay box={box} />
@@ -146,7 +200,21 @@ function Stage({ session, onSize }: { session: PreviewSession; onSize?: (w: numb
 // ------------------------------------------------------------------------------- overlays and drag handles
 const SLOT_SNAP_PX = 16
 
-function StageOverlay({ box }: { box: { w: number; h: number } }) {
+/** A dashed arrow from where something starts to where it goes (a walk, a move). */
+function PathArrow({ from, to, color, opacity, W, H }: { from: [number, number]; to: [number, number]; color: string; opacity: number; W: number; H: number }) {
+  const [x1, y1, x2, y2] = [from[0] * W, from[1] * H, to[0] * W, to[1] * H]
+  const ang = Math.atan2(y2 - y1, x2 - x1)
+  const tip = (a: number, r: number) => `${x2 + Math.cos(ang + a) * r},${y2 + Math.sin(ang + a) * r}`
+  return (
+    <g pointerEvents="none" opacity={opacity}>
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeOpacity="0.55" strokeWidth="4.5" strokeDasharray="7 6" strokeLinecap="round" />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="2.5" strokeDasharray="7 6" strokeLinecap="round" />
+      <polygon points={`${x2},${y2} ${tip(Math.PI - 0.45, 11)} ${tip(Math.PI + 0.45, 11)}`} fill={color} stroke="#fff" strokeWidth="1.25" strokeLinejoin="round" />
+    </g>
+  )
+}
+
+export function StageOverlay({ box }: { box: { w: number; h: number } }) {
   const spec = useProject((s) => s.spec) as ReelSpec
   const playhead = useProject((s) => s.playhead)
   const selection = useProject((s) => s.selection)
@@ -156,7 +224,7 @@ function StageOverlay({ box }: { box: { w: number; h: number } }) {
   const end = useProject((s) => s.endGesture)
   const overlays = useUi((s) => s.overlays)
   const catalog = useCatalog().data
-  const [drag, setDrag] = useState<null | { layer: number; snap: string | null }>(null)
+  const [drag, setDrag] = useState<null | { snap: string | null }>(null)
   const slots = useMemo(() => sceneSlots(spec), [spec])
   const slot = sceneAt(slots, playhead)
   const scene = slot ? spec.scenes[slot.index] : undefined
@@ -164,38 +232,34 @@ function StageOverlay({ box }: { box: { w: number; h: number } }) {
 
   const W = box.w
   const H = box.h
+  const local = playhead - slot.start
   const sa = spec.meta.safe_area ?? { top: 0.1, bottom: 0.2, left: 0.07, right: 0.07 }
   const bg = entry(catalog?.backgrounds, scene.background.template)
   const slotList = Object.entries(bg?.slots ?? {}).filter(([n]) => !n.startsWith('off_'))
+  const objects = scene.objects ?? []
 
   const toNorm = (e: { clientX: number; clientY: number }, el: Element): [number, number] => {
     const r = el.getBoundingClientRect()
     return [clamp((e.clientX - r.left) / r.width, -0.1, 1.1), clamp((e.clientY - r.top) / r.height, 0, 1)]
   }
 
-  const startMove = (li: number) => (e: React.PointerEvent<SVGGElement>) => {
-    e.stopPropagation()
-    const svg = (e.currentTarget.ownerSVGElement as SVGSVGElement) ?? e.currentTarget
+  /** What a point on the stage is written as: the name of the set's place it is on (within a few pixels), else exact fractions. */
+  const placeAt = (nx: number, ny: number): { snap: string | null; value: string | [number, number] } => {
+    const snap = nearestSlot(slotList, nx, ny, W, H, SLOT_SNAP_PX)
+    return { snap, value: snap ?? [Math.round(nx * 1000) / 1000, Math.round(ny * 1000) / 1000] }
+  }
+
+  /** Press on a handle and drag: `apply` writes where the pointer is (minus the grab offset); one undo step for the whole drag. */
+  const startDrag = (e: React.PointerEvent<SVGElement>, grab: [number, number], apply: (place: ReturnType<typeof placeAt>) => void) => {
+    const svg = (e.currentTarget.ownerSVGElement as SVGSVGElement) ?? (e.currentTarget as unknown as SVGSVGElement)
     e.currentTarget.setPointerCapture(e.pointerId)
-    select({ kind: 'layer', scene: slot.index, layer: li })
     begin()
-    setDrag({ layer: li, snap: null })
+    setDrag({ snap: null })
     const move = (ev: PointerEvent) => {
       const [nx, ny] = toNorm(ev, svg)
-      let snapName: string | null = null
-      let best = SLOT_SNAP_PX
-      for (const [name, [sx, sy]] of slotList) {
-        const d = Math.hypot((sx - nx) * W, (sy - ny) * H)
-        if (d < best) ((best = d), (snapName = name))
-      }
-      edit(
-        (d) => {
-          const l = d.scenes[slot.index]?.layers[li]
-          if (l) l.position = snapName ?? [Math.round(nx * 1000) / 1000, Math.round(ny * 1000) / 1000]
-        },
-        { live: true },
-      )
-      setDrag({ layer: li, snap: snapName })
+      const place = placeAt(clamp(nx - grab[0], -0.1, 1.1), clamp(ny - grab[1], 0, 1))
+      apply(place)
+      setDrag({ snap: place.snap })
     }
     const up = () => {
       window.removeEventListener('pointermove', move)
@@ -205,6 +269,20 @@ function StageOverlay({ box }: { box: { w: number; h: number } }) {
     }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
+  }
+
+  const startMove = (li: number) => (e: React.PointerEvent<SVGGElement>) => {
+    e.stopPropagation()
+    select({ kind: 'layer', scene: slot.index, layer: li })
+    startDrag(e, [0, 0], (place) =>
+      edit(
+        (d) => {
+          const l = d.scenes[slot.index]?.layers[li]
+          if (l) l.position = place.value
+        },
+        { live: true },
+      ),
+    )
   }
 
   const startScale = (li: number) => (e: React.PointerEvent<SVGGElement>) => {
@@ -234,6 +312,71 @@ function StageOverlay({ box }: { box: { w: number; h: number } }) {
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
   }
+
+  // ---- objects: grab one anywhere on its box or by its marker; the point it stands on follows the pointer by the same offset
+  const startMoveObject = (oi: number) => (e: React.PointerEvent<SVGElement>) => {
+    e.stopPropagation()
+    const o = objects[oi]
+    const svg = e.currentTarget.ownerSVGElement as SVGSVGElement
+    const [px, py] = toNorm(e, svg)
+    const [ax, ay] = objectPoint(scene, o, catalog)
+    select({ kind: 'object', scene: slot.index, object: oi })
+    startDrag(e, [px - ax, py - ay], (place) =>
+      edit(
+        (d) => {
+          const x = d.scenes[slot.index]?.objects[oi]
+          if (x) x.position = place.value
+        },
+        { live: true },
+      ),
+    )
+  }
+
+  /** The corner handle scales the object about the point it stands on, by how much farther from it the pointer gets. */
+  const startScaleObject = (oi: number) => (e: React.PointerEvent<SVGElement>) => {
+    e.stopPropagation()
+    const o = objects[oi]
+    const svg = e.currentTarget.ownerSVGElement as SVGSVGElement
+    const [ax, ay] = objectPoint(scene, o, catalog)
+    const r0 = svg.getBoundingClientRect()
+    const startDist = Math.hypot(e.clientX - r0.left - ax * W, e.clientY - r0.top - ay * H)
+    const start = o.scale
+    e.currentTarget.setPointerCapture(e.pointerId)
+    select({ kind: 'object', scene: slot.index, object: oi })
+    begin()
+    const move = (ev: PointerEvent) => {
+      const r = svg.getBoundingClientRect()
+      const dist = Math.hypot(ev.clientX - r.left - ax * W, ev.clientY - r.top - ay * H)
+      const next = scaleByDrag(start, startDist, dist)
+      edit((d) => void (d.scenes[slot.index].objects[oi].scale = next), { live: true })
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      end()
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
+
+  /** The tip of the selected move: drag it to change where the object ends up. */
+  const startMoveDestination = (oi: number, mi: number) => (e: React.PointerEvent<SVGElement>) => {
+    e.stopPropagation()
+    select({ kind: 'motion', scene: slot.index, object: oi, motion: mi })
+    startDrag(e, [0, 0], (place) =>
+      edit(
+        (d) => {
+          const m = d.scenes[slot.index]?.objects[oi]?.motions[mi]
+          if (m) m.to = place.value
+        },
+        { live: true },
+      ),
+    )
+  }
+
+  const objectPicked = (oi: number): boolean => (selection.kind === 'object' || selection.kind === 'motion') && selection.scene === slot.index && selection.object === oi
+  // the selected object is drawn last, so its handles are never under a neighbour's box
+  const drawOrder = objects.map((_, oi) => oi).sort((a, b) => Number(objectPicked(a)) - Number(objectPicked(b)))
 
   return (
     <svg className="absolute inset-0 size-full select-none" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
@@ -269,24 +412,78 @@ function StageOverlay({ box }: { box: { w: number; h: number } }) {
                 </text>
               </g>
             ))}
+          {drawOrder.map((oi) => {
+            const o = objects[oi]
+            const [ax, ay] = objectPoint(scene, o, catalog)
+            const b = objectBox(catalog, scene, o, [ax, ay])
+            const [cx, cy] = [ax * W, ay * H]
+            const [bx, by, bw, bh] = [b.x0 * W, b.y0 * H, (b.x1 - b.x0) * W, (b.y1 - b.y0) * H]
+            const color = objectColor(catalog, o)
+            const shown = visibleAt(o, local)
+            const on = objectPicked(oi)
+            const label = `${objectName(o.asset)}${typeof o.position === 'string' ? ` · ${o.position}` : ''}${shown ? '' : ' · not on screen now'}`
+            return (
+              <g key={`object-${oi}`} data-object={oi}>
+                <g transform={`rotate(${o.rotation} ${cx} ${cy})`}>
+                  <rect
+                    x={bx}
+                    y={by}
+                    width={bw}
+                    height={bh}
+                    rx="3"
+                    fill="transparent"
+                    stroke={color}
+                    strokeWidth={on ? 1.75 : 1}
+                    strokeDasharray="5 4"
+                    opacity={on ? 0.95 : shown ? 0.6 : 0.3}
+                    pointerEvents={shown ? 'all' : 'none'}
+                    data-handle="object-box"
+                    onPointerDown={startMoveObject(oi)}
+                    style={{ cursor: 'grab' }}
+                  />
+                  {on && (
+                    <g data-handle="object-scale" onPointerDown={startScaleObject(oi)} style={{ cursor: 'nesw-resize' }}>
+                      <rect x={bx + bw - 6} y={by - 6} width="12" height="12" rx="3" fill="#fff" stroke={color} strokeWidth="2" />
+                    </g>
+                  )}
+                </g>
+                <g data-handle="object-marker" onPointerDown={startMoveObject(oi)} style={{ cursor: 'grab' }}>
+                  <circle cx={cx} cy={cy} r={14} fill="transparent" />
+                  <rect x={cx - 4.5} y={cy - 4.5} width="9" height="9" rx="2" transform={`rotate(45 ${cx} ${cy})`} fill={color} stroke="#fff" strokeWidth="2" />
+                  <text x={Math.max(2, bx)} y={Math.max(11, by - 5)} fontSize="11" fontWeight="600" fill="#fff" stroke="rgb(0 0 0 / 0.65)" strokeWidth="3" paintOrder="stroke" pointerEvents="none">
+                    {label}
+                  </text>
+                </g>
+              </g>
+            )
+          })}
+          {objects.flatMap((o, oi) => {
+            // where a moving object goes, while it does or while it (or that move) is selected
+            const color = objectColor(catalog, o)
+            return objectMovePaths(scene, o, catalog, local)
+              .filter((m) => m.active || objectPicked(oi))
+              .map((m) => {
+                const picked = selection.kind === 'motion' && selection.scene === slot.index && selection.object === oi && selection.motion === m.motion
+                return (
+                  <g key={`object-path-${oi}-${m.motion}`}>
+                    <PathArrow from={m.from} to={m.to} color={color} opacity={picked ? 1 : 0.7} W={W} H={H} />
+                    {picked && (
+                      <g data-handle="move-destination" onPointerDown={startMoveDestination(oi, m.motion)} style={{ cursor: 'grab' }}>
+                        <circle cx={m.to[0] * W} cy={m.to[1] * H} r={14} fill="transparent" />
+                        <circle cx={m.to[0] * W} cy={m.to[1] * H} r={6} fill="#fff" stroke={color} strokeWidth="2.5" />
+                      </g>
+                    )}
+                  </g>
+                )
+              })
+          })}
           {scene.layers.flatMap((layer, li) => {
             // where a walking, running, entering, leaving or jumping character goes, while it does or while its clip is selected
             const color = characterColor(spec, catalog, layer.character)
             const picked = selection.kind === 'action' && selection.scene === slot.index && selection.layer === li ? selection.action : -1
-            return movePaths(scene, li, catalog, playhead - slot.start)
+            return movePaths(scene, li, catalog, local)
               .filter((m) => m.active || m.action === picked)
-              .map((m) => {
-                const [x1, y1, x2, y2] = [m.from[0] * W, m.from[1] * H, m.to[0] * W, m.to[1] * H]
-                const ang = Math.atan2(y2 - y1, x2 - x1)
-                const tip = (a: number, r: number) => `${x2 + Math.cos(ang + a) * r},${y2 + Math.sin(ang + a) * r}`
-                return (
-                  <g key={`path-${li}-${m.action}`} pointerEvents="none" opacity={m.action === picked ? 1 : 0.7}>
-                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeOpacity="0.55" strokeWidth="4.5" strokeDasharray="7 6" strokeLinecap="round" />
-                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="2.5" strokeDasharray="7 6" strokeLinecap="round" />
-                    <polygon points={`${x2},${y2} ${tip(Math.PI - 0.45, 11)} ${tip(Math.PI + 0.45, 11)}`} fill={color} stroke="#fff" strokeWidth="1.25" strokeLinejoin="round" />
-                  </g>
-                )
-              })
+              .map((m) => <PathArrow key={`path-${li}-${m.action}`} from={m.from} to={m.to} color={color} opacity={m.action === picked ? 1 : 0.7} W={W} H={H} />)
           })}
           {scene.layers.map((layer, li) => {
             const [fx, fy] = layerPoint(scene, layer, catalog)
@@ -385,7 +582,7 @@ function Transport({ fps, total }: { fps: number; total: number }) {
   }, [playing, loop, total, frameDur, setPlayhead, voice.armed, voice.el])
 
   const sceneIdx = sceneAt(slots, playhead)?.index ?? 0
-  const gotoScene = (i: number) => slots[i] && seek(slots[i].start + 0.001)
+  const gotoScene = (i: number) => slots[i] && seek(sceneVisibleFrom(slots, i))
   const toggle = async () => {
     if (playing) return set({ playing: false })
     if (starting || voice.preparing) return
@@ -475,8 +672,8 @@ function Transport({ fps, total }: { fps: number; total: number }) {
           <Grid3x3 className="size-4" />
         </IconButton>
       </Tip>
-      <Tip label="Character handles: drag to place, corner to resize">
-        <IconButton label="Character handles" active={overlays.handles} onClick={() => setUi({ overlays: { ...overlays, handles: !overlays.handles } })} className="hidden md:inline-flex">
+      <Tip label="Character and object handles: drag to place, corner to resize">
+        <IconButton label="Character and object handles" active={overlays.handles} onClick={() => setUi({ overlays: { ...overlays, handles: !overlays.handles } })} className="hidden md:inline-flex">
           <Maximize className="size-4" />
         </IconButton>
       </Tip>

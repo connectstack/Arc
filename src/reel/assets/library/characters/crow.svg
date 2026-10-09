@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 22 238 154">
+  <path data-role="feathers_dark" d="M72 104 C44.1 98.8 5.4 123.5 -10 144 C13.4 139.9 56.6 124.5 72 104 Z" fill="#23262e"/>
+  <path data-role="feathers" d="M68 98 C44.5 93.6 6 111.2 -12 124 C11.1 127.2 52.6 118.8 68 98 Z" fill="#2e323d"/>
+  <path data-role="feathers" d="M66 92 C46.5 85.7 12.3 96.6 -4 106 C15.1 110.4 50.9 107.3 66 92 Z" fill="#2e323d"/>
+  <rect data-lod="0" x="88" y="116" width="8" height="50" rx="4" fill="#23262e"/>
+  <path data-lod="0" d="M92 168 L112 170 M92 168 L108 162 M92 168 L76 170" stroke="#23262e" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect data-lod="0" x="108" y="116" width="8" height="50" rx="4" fill="#383c4a"/>
+  <path data-lod="0" d="M112 168 L134 170 M112 168 L130 162 M112 168 L96 170" stroke="#383c4a" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <ellipse data-role="feathers" cx="96" cy="96" rx="58" ry="36" transform="rotate(-20 96 96)" fill="#2e323d"/>
+  <ellipse data-role="accent" cx="134" cy="82" rx="32" ry="24" transform="rotate(-30 134 82)" fill="#a6acb8"/>
+  <path data-role="feathers_dark" d="M124 88 C89.9 72.7 50.9 102 38 130 C65.1 130.9 112.1 118.2 124 88 Z" fill="#23262e"/>
+  <path data-role="feathers_light" data-lod="1" data-shadow="false" d="M118 82 C99.9 80.4 71.9 95.6 60 108 C75.3 103.3 105.3 92.5 118 82 Z" fill="#5a6785"/>
+  <path data-role="feathers_light" data-lod="1" data-shadow="false" d="M96 70 C85.4 70.4 66.9 78.9 58 84 C68.9 84.2 88.4 78.7 96 70 Z" fill="#5a6785"/>
+  <path data-lod="0" d="M160 58 C186 56 206 58 217 61 C208 70 188 74 160 68 Z" fill="#383c4a"/>
+  <path data-lod="0" d="M160 36 C186 29 209 40 220 59 C204 56 186 58 164 62 Z" fill="#4b5163"/>
+  <ellipse data-role="feathers" cx="154" cy="52" rx="27" ry="25" fill="#2e323d"/>
+  <ellipse data-role="feathers_light" data-lod="1" data-shadow="false" cx="147" cy="38" rx="13" ry="4.5" transform="rotate(-12 147 38)" fill="#5a6785"/>
+  <path data-lod="1" d="M184 37 C196 35 208 42 214 51" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.3"/>
+  <ellipse data-lod="0" data-tag="eye" cx="159" cy="46" rx="7.5" ry="8.5" fill="#fff"/>
+  <ellipse data-lod="0" data-tag="pupil" cx="161" cy="47" rx="4.4" ry="5.4" fill="#23262e"/>
+  <circle data-lod="0" data-tag="glint" cx="162.5" cy="44.8" r="1.8" fill="#fff"/>
+</svg>

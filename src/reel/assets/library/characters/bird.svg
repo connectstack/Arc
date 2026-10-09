@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 17 157 126">
+  <path data-role="feathers_dark" d="M52 72 C34.5 63.6 10 76.8 0 90 C15 91.3 42.4 86.5 52 72 Z" fill="#7a4a28"/>
+  <path data-role="feathers" d="M52 80 C35.3 79.4 12 96.6 2 108 C18.2 107.6 44.9 96.7 52 80 Z" fill="#a9693a"/>
+  <rect data-lod="0" x="68" y="100" width="7" height="34" rx="3" fill="#f0a53c"/>
+  <path data-lod="0" d="M71 136 L88 138 M71 136 L84 130 M71 136 L58 138" stroke="#f0a53c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect data-lod="0" x="92" y="100" width="7" height="34" rx="3" fill="#f0a53c"/>
+  <path data-lod="0" d="M95 136 L112 138 M95 136 L108 130 M95 136 L82 138" stroke="#f0a53c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path data-role="accent" data-lod="0" d="M108 50 C128 49 142 56 151 63 C142 70 128 72 108 70 Z" fill="#f0a53c"/>
+  <ellipse data-role="feathers" cx="80" cy="68" rx="50" ry="45" fill="#a9693a"/>
+  <path data-role="belly" d="M128.9 58.6 A50 45 0 0 1 49.2 103.5 C68 88 100 82 128.9 58.6 Z" fill="#f5e6c8"/>
+  <path data-role="feathers_dark" data-lod="1" data-shadow="false" d="M71 24 A50 45 0 0 1 127 53 C112 40 90 32 71 24 Z" fill="#7a4a28"/>
+  <path data-role="feathers_dark" d="M96 58 C66.7 48.1 40.2 75.7 34 100 C55.9 98.9 91.4 84.5 96 58 Z" fill="#7a4a28"/>
+  <path data-lod="1" d="M78 76 C66 80 56 86 48 92" stroke="#f5e6c8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path data-lod="1" d="M84 68 C74 70 64 74 58 78" stroke="#f5e6c8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle data-lod="1" data-shadow="false" cx="103" cy="68" r="6.5" fill="#f08a7a" opacity="0.8"/>
+  <path data-lod="1" d="M131 63 C137 67 144 66 148.5 63" stroke="#7a4a28" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <ellipse data-lod="0" data-tag="eye" cx="112" cy="49" rx="8" ry="9" fill="#fff"/>
+  <ellipse data-lod="0" data-tag="pupil" cx="114" cy="50.5" rx="4.6" ry="5.6" fill="#23262e"/>
+  <circle data-lod="0" data-tag="glint" cx="115.6" cy="48.3" r="1.9" fill="#fff"/>
+</svg>

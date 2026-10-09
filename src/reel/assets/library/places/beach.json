@@ -1,0 +1,6 @@
+{
+  "summary": "A sunny beach with surf, sailboats, a lighthouse, palm trees, an umbrella and rocks",
+  "tags": ["beach", "seaside", "shore", "coast", "sea", "ocean", "sand", "seashore", "shoreline", "coastline", "palm trees", "बीच", "समुद्र", "समंदर", "तट", "समुद्र तट", "समुद्री तट", "समुद्र किनारा", "samundar", "samandar", "samudra", "samundar kinara"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.56, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "shore": [0.42, 0.775], "umbrella": [0.86, 0.81], "rock": [0.12, 0.785]}}
+}

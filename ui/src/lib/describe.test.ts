@@ -11,6 +11,7 @@ const scene = (id: string, dur = 6): Scene => ({
     { character: 'mia', position: 'left', scale: 1, depth: 'mid', facing: 'auto', actions: [{ name: 'walk', t0: 1, t1: 3, params: {} }, { name: 'wave', t0: 3.5, t1: 5, params: {} }] },
     { character: 'pip', position: 'right', scale: 1, depth: 'mid', facing: 'auto', actions: [] },
   ],
+  objects: [],
   captions: [{ text: 'Hello there', t0: 1, t1: 3, style: 'subtitle', anchor: 'auto', speaker: 'mia' }],
   sfx: [{ name: 'pop', t: 1, volume: 1 }],
   transition_out: { type: 'cut', duration: 0, params: {} },
@@ -92,3 +93,47 @@ describe('describeChange', () => {
     expect(describeChange(...edit((d) => d.scenes.forEach((s) => void (s.background.template = 'forest'))))).toBe('Edited 2 scenes')
   })
 })
+
+describe('describeChange: objects', () => {
+  const car = (): Scene['objects'][number] => ({ asset: 'toy_car', position: [0.3, 0.8], scale: 1, depth: 'mid', layer: 'behind', facing: 'auto', rotation: 0, alpha: 1, t0: 0, t1: null, motions: [{ type: 'hop', t0: 1, t1: 2, ease: 'ease_in_out' }], palette: {} })
+  const withCar = (fn: (o: Scene['objects'][number]) => void = () => undefined): [ReelSpec, ReelSpec] => {
+    const a = base()
+    a.scenes[0].objects = [car()]
+    const b = structuredClone(a)
+    fn(b.scenes[0].objects[0])
+    return [a, b]
+  }
+
+  it('names adding and removing an object', () => {
+    expect(describeChange(...edit((d) => void d.scenes[0].objects.push(car())))).toBe('Added the toy car')
+    const [a, b] = withCar()
+    b.scenes[0].objects = []
+    expect(describeChange(a, b)).toBe('Removed the toy car')
+  })
+
+  it('names what was done to one', () => {
+    expect(describeChange(...withCar((o) => void (o.position = 'right')))).toBe('Moved the toy car')
+    expect(describeChange(...withCar((o) => void (o.scale = 1.5)))).toBe('Resized the toy car')
+    expect(describeChange(...withCar((o) => void (o.palette = { body: '#2a6fdb' })))).toBe('Recoloured the toy car')
+    expect(describeChange(...withCar((o) => void (o.rotation = 20)))).toBe('Turned the toy car')
+    expect(describeChange(...withCar((o) => void (o.alpha = 0.5)))).toBe('Changed the toy car’s opacity')
+    expect(describeChange(...withCar((o) => void (o.facing = 'left')))).toBe('Changed the toy car’s facing')
+    expect(describeChange(...withCar((o) => void (o.asset = 'tree')))).toBe('Changed toy car to tree')
+    expect(describeChange(...withCar((o) => void ((o.t0 = 1), (o.t1 = 4))))).toBe('Changed when the toy car is on screen')
+    expect(describeChange(...withCar((o) => void ((o.scale = 2), (o.alpha = 0.5))))).toBe('Edited the toy car')
+  })
+
+  it('names what was done to its motions', () => {
+    expect(describeChange(...withCar((o) => o.motions.push({ type: 'spin', t0: 2, t1: 3, ease: 'linear' })))).toBe('Added a spin for the toy car')
+    expect(describeChange(...withCar((o) => void o.motions.pop()))).toBe('Removed a hop for the toy car')
+    expect(describeChange(...withCar((o) => void ((o.motions[0].t0 = 1.5), (o.motions[0].t1 = 2.5))))).toBe('Moved the hop')
+    expect(describeChange(...withCar((o) => void (o.motions[0].t1 = 3)))).toBe('Resized the hop')
+    expect(describeChange(...withCar((o) => void (o.motions[0].count = 3)))).toBe('Edited the hop')
+    expect(describeChange(...withCar((o) => void (o.motions[0].type = 'float')))).toBe('Changed hop to float')
+  })
+
+  it('counts objects among the things a rescale touches', () => {
+    expect(describeChange(...edit((d) => d.scenes.forEach((s) => void ((s.duration_sec *= 1.2), s.objects.push(car())))))).toBe('Rescaled 2 scenes')
+  })
+})
+

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 344 344">
+  <g data-shadow="false" data-material="emissive">
+    <circle cx="170" cy="170" r="170" fill="#ffe58a" opacity="0.28" data-lod="1" data-shadow="false"/>
+    <circle cx="170" cy="170" r="142" fill="#ffe58a" opacity="0.36" data-lod="1" data-shadow="false"/>
+    <polygon points="156.2 64.9 170 22 183.8 64.9" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="210.6 72.1 244 41.8 234.5 85.9" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="254.1 105.5 298.2 96 267.9 129.4" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="275.1 156.2 318 170 275.1 183.8" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="267.9 210.6 298.2 244 254.1 234.5" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="234.5 254.1 244 298.2 210.6 267.9" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="183.8 275.1 170 318 156.2 275.1" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="129.4 267.9 96 298.2 105.5 254.1" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="85.9 234.5 41.8 244 72.1 210.6" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="64.9 183.8 22 170 64.9 156.2" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="72.1 129.4 41.8 96 85.9 105.5" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <polygon points="105.5 85.9 96 41.8 129.4 72.1" fill="#ffa51f" data-role="body_dark" data-lod="0"/>
+    <circle cx="170" cy="170" r="96" fill="#ffc42e" data-role="body"/>
+    <circle cx="160" cy="160" r="76" fill="#ffdc5e" data-role="body_light" data-lod="1" data-shadow="false"/>
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 0 824 820">
+  <rect data-role="body" x="20" y="276" width="250" height="544" fill="#f1f5fa"/>
+  <rect data-role="body" x="570" y="276" width="250" height="544" fill="#f1f5fa"/>
+  <rect data-role="body_light" x="270" y="14" width="300" height="806" fill="#ffffff"/>
+  <rect data-role="body" x="270" y="14" width="22" height="806" fill="#f1f5fa" data-lod="1"/>
+  <rect data-role="body" x="548" y="14" width="22" height="806" fill="#f1f5fa" data-lod="1"/>
+  <rect data-role="body_dark" x="8" y="260" width="276" height="28" rx="5" fill="#cbd6e4"/>
+  <rect data-role="body_dark" x="556" y="260" width="276" height="28" rx="5" fill="#cbd6e4"/>
+  <rect data-role="body_dark" x="254" y="0" width="332" height="30" rx="5" fill="#cbd6e4"/>
+  <rect data-role="body_dark" x="8" y="788" width="824" height="32" rx="3" fill="#cbd6e4"/>
+  <rect data-role="body_dark" x="322" y="44" width="196" height="196" rx="30" fill="#cbd6e4"/>
+  <rect x="332" y="54" width="176" height="176" rx="24" fill="#ffffff"/>
+  <polygon data-role="accent" points="395,76 445,76 445,117 486,117 486,167 445,167 445,208 395,208 395,167 354,167 354,117 395,117" fill="#e63946"/>
+  <path d="M40 342 h52 M40 440 h52 M40 538 h52 M40 636 h52 M40 734 h52 M120 342 h52 M120 440 h52 M120 538 h52 M120 636 h52 M120 734 h52 M200 342 h52 M200 440 h52 M200 538 h52 M200 636 h52 M200 734 h52 M590 342 h52 M590 440 h52 M590 538 h52 M590 636 h52 M590 734 h52 M670 342 h52 M670 440 h52 M670 538 h52 M670 636 h52 M670 734 h52 M750 342 h52 M750 440 h52 M750 538 h52 M750 636 h52 M750 734 h52 M300 342 h52 M300 440 h52 M300 538 h52 M392 342 h52 M392 440 h52 M392 538 h52 M484 342 h52 M484 440 h52 M484 538 h52" fill="none" stroke="#8fd0ea" stroke-width="64" data-lod="1"/>
+  <path d="M40 310 h52 v64 h-52Z M40 408 h52 v64 h-52Z M40 506 h52 v64 h-52Z M40 604 h52 v64 h-52Z M40 702 h52 v64 h-52Z M120 310 h52 v64 h-52Z M120 408 h52 v64 h-52Z M120 506 h52 v64 h-52Z M120 604 h52 v64 h-52Z M120 702 h52 v64 h-52Z M200 310 h52 v64 h-52Z M200 408 h52 v64 h-52Z M200 506 h52 v64 h-52Z M200 604 h52 v64 h-52Z M200 702 h52 v64 h-52Z M590 310 h52 v64 h-52Z M590 408 h52 v64 h-52Z M590 506 h52 v64 h-52Z M590 604 h52 v64 h-52Z M590 702 h52 v64 h-52Z M670 310 h52 v64 h-52Z M670 408 h52 v64 h-52Z M670 506 h52 v64 h-52Z M670 604 h52 v64 h-52Z M670 702 h52 v64 h-52Z M750 310 h52 v64 h-52Z M750 408 h52 v64 h-52Z M750 506 h52 v64 h-52Z M750 604 h52 v64 h-52Z M750 702 h52 v64 h-52Z M300 310 h52 v64 h-52Z M300 408 h52 v64 h-52Z M300 506 h52 v64 h-52Z M392 310 h52 v64 h-52Z M392 408 h52 v64 h-52Z M392 506 h52 v64 h-52Z M484 310 h52 v64 h-52Z M484 408 h52 v64 h-52Z M484 506 h52 v64 h-52Z" fill="none" stroke="#8fd0ea" stroke-width="3" stroke-linecap="round" data-lod="0"/>
+  <path d="M66 310 v64 M66 408 v64 M66 506 v64 M66 604 v64 M66 702 v64 M146 310 v64 M146 408 v64 M146 506 v64 M146 604 v64 M146 702 v64 M226 310 v64 M226 408 v64 M226 506 v64 M226 604 v64 M226 702 v64 M616 310 v64 M616 408 v64 M616 506 v64 M616 604 v64 M616 702 v64 M696 310 v64 M696 408 v64 M696 506 v64 M696 604 v64 M696 702 v64 M776 310 v64 M776 408 v64 M776 506 v64 M776 604 v64 M776 702 v64 M326 310 v64 M326 408 v64 M326 506 v64 M418 310 v64 M418 408 v64 M418 506 v64 M510 310 v64 M510 408 v64 M510 506 v64" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" data-lod="1"/>
+  <path d="M35 379 h62 M35 477 h62 M35 575 h62 M35 673 h62 M35 771 h62 M115 379 h62 M115 477 h62 M115 575 h62 M115 673 h62 M115 771 h62 M195 379 h62 M195 477 h62 M195 575 h62 M195 673 h62 M195 771 h62 M585 379 h62 M585 477 h62 M585 575 h62 M585 673 h62 M585 771 h62 M665 379 h62 M665 477 h62 M665 575 h62 M665 673 h62 M665 771 h62 M745 379 h62 M745 477 h62 M745 575 h62 M745 673 h62 M745 771 h62 M295 379 h62 M295 477 h62 M295 575 h62 M387 379 h62 M387 477 h62 M387 575 h62 M479 379 h62 M479 477 h62 M479 575 h62" fill="none" stroke="#cbd6e4" stroke-width="6" data-lod="1"/>
+  <rect x="350" y="650" width="140" height="138" rx="3" fill="#8fd0ea" data-lod="0"/>
+  <path d="M420 650 V788" fill="none" stroke="#cbd6e4" stroke-width="6" stroke-linecap="round" data-lod="0"/>
+  <rect data-role="body_dark" x="316" y="628" width="20" height="160" fill="#cbd6e4" data-lod="0"/>
+  <rect data-role="body_dark" x="504" y="628" width="20" height="160" fill="#cbd6e4" data-lod="0"/>
+  <rect data-role="accent" x="296" y="598" width="248" height="32" rx="6" fill="#e63946" data-lod="0"/>
+  <rect x="296" y="622" width="248" height="8" fill="#23262e" opacity="0.2" data-lod="1"/>
+</svg>

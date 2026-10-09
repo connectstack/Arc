@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.4 -2.8 232.8 225.2">
+  <path d="M160 196.6 A100 100 0 1 1 206.6 135.9 L188.2 131 A81 81 0 1 0 150.5 180.1 Z" fill="#d98f3a" data-role="body_dark"/>
+  <path d="M155.5 188.8 A91 91 0 1 1 197.9 133.6 L188.2 131 A81 81 0 1 0 150.5 180.1 Z" fill="#e2553a" data-lod="1" data-shadow="false"/>
+  <path d="M110 110 L152 182.7 A84 84 0 1 1 191.1 131.7 Z" fill="#ffd24d" data-role="body"/>
+  <line x1="110" y1="110" x2="88.8" y2="189.2" stroke="#e0a02a" stroke-width="2.6" stroke-linecap="round" data-lod="1" data-shadow="false"/>
+  <line x1="110" y1="110" x2="39" y2="151" stroke="#e0a02a" stroke-width="2.6" stroke-linecap="round" data-lod="1" data-shadow="false"/>
+  <line x1="110" y1="110" x2="30.8" y2="88.8" stroke="#e0a02a" stroke-width="2.6" stroke-linecap="round" data-lod="1" data-shadow="false"/>
+  <line x1="110" y1="110" x2="69" y2="39" stroke="#e0a02a" stroke-width="2.6" stroke-linecap="round" data-lod="1" data-shadow="false"/>
+  <line x1="110" y1="110" x2="131.2" y2="30.8" stroke="#e0a02a" stroke-width="2.6" stroke-linecap="round" data-lod="1" data-shadow="false"/>
+  <line x1="110" y1="110" x2="181" y2="69" stroke="#e0a02a" stroke-width="2.6" stroke-linecap="round" data-lod="1" data-shadow="false"/>
+  <circle cx="110" cy="162" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="107" cy="160" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <circle cx="63.2" cy="137" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="60.2" cy="135" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <circle cx="62.9" cy="88" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="59.9" cy="86" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <circle cx="103" cy="60.5" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="100" cy="58.5" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <circle cx="149.8" cy="76.6" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="146.8" cy="74.6" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <circle cx="99.7" cy="129.4" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="96.7" cy="127.4" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <circle cx="101.8" cy="87.4" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="98.8" cy="85.4" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <circle cx="133.6" cy="99" r="14" fill="#d6372d" data-role="accent"/>
+  <circle cx="130.6" cy="97" r="4.5" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <ellipse cx="42.2" cy="124.9" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(91.4 42.2 124.9)"/>
+  <ellipse cx="69.2" cy="50.8" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(110.8 69.2 50.8)"/>
+  <ellipse cx="81.3" cy="75.2" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(90 81.3 75.2)"/>
+  <ellipse cx="149.6" cy="47.8" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(127.4 149.6 47.8)"/>
+  <ellipse cx="113.6" cy="38.2" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(21.2 113.6 38.2)"/>
+  <ellipse cx="126.8" cy="181.4" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(46.5 126.8 181.4)"/>
+  <ellipse cx="81.3" cy="163.1" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(53.3 81.3 163.1)"/>
+  <ellipse cx="177" cy="101.8" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(118.2 177 101.8)"/>
+  <path d="M230.4 154.2C223.5 179.8 206.8 201.6 183.8 214.9L174.3 198.4C192.9 187.6 206.4 170 212 149.3Z" fill="#d98f3a" data-role="body_dark"/>
+  <path d="M221.1 154.1C214.7 175.7 200.5 194.1 181.3 205.9L176.1 197.4C193.2 186.9 205.8 170.5 211.5 151.3Z" fill="#e2553a" data-lod="1" data-shadow="false"/>
+  <path d="M213.9 153.6C207.9 172.4 195.5 188.5 178.9 199.1L141.3 140.1C144.1 138.3 146.2 135.6 147.2 132.5Z" fill="#ffd24d" data-role="body"/>
+  <circle cx="175.1" cy="159.9" r="12.5" fill="#d6372d" data-role="accent"/>
+  <circle cx="172.1" cy="157.9" r="4" fill="#a82320" data-lod="1" data-shadow="false"/>
+  <ellipse cx="153.4" cy="148.2" rx="7" ry="3.2" fill="#3fa34d" data-lod="1" data-shadow="false" transform="rotate(40 153.4 148.2)"/>
+</svg>

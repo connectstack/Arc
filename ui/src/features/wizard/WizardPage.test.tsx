@@ -29,6 +29,19 @@ describe('the new-reel wizard', () => {
     expect(await screen.findByTestId('elsewhere', {}, { timeout: 8000 })).toBeInTheDocument()
   })
 
+  it('checks the script against the library as it is typed and offers to add what is missing', async () => {
+    const user = userEvent.setup()
+    await renderScreen(<WizardPage />, { route: '/new', path: '/new' })
+    const script = await screen.findByRole('textbox', { name: /your script/i })
+    await user.type(script, 'The guard raised his sword at the castle gate.')
+
+    // the check waits for a pause in typing, then lists what the library lacks, each with its own way to add it
+    expect(await screen.findByRole('heading', { name: /library check/i }, { timeout: 5000 })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /add sword to the library/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /add castle to the library/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /choose a look/i })).toBeEnabled() // advice, never a gate
+  })
+
   it('offers a hosted planner only when its key exists, and asks before sending the script', async () => {
     const user = userEvent.setup()
     await renderScreen(<WizardPage />, { route: '/new', path: '/new' })

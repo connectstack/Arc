@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 120">
+  <rect x="0" y="0" width="170" height="120" rx="9" fill="#fdf0cf" data-role="body"/>
+  <path d="M0 12 L84 68 L0 110 Z" fill="#f4e0a8" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M170.0 12 L86.0 68 L170.0 110 Z" fill="#f4e0a8" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M3 118.0 L84 62 L86.0 62 L167.0 118.0 Q167.0 120.0 161.0 120.0 H9 Q3 120.0 3 118.0 Z" fill="#fff8e2" data-lod="1" data-shadow="false"/>
+  <path d="M0 9 Q0 0 9 0 H161.0 Q170.0 0 170.0 9 L92.0 70 Q85.0 76 78.0 70 Z" fill="#ecd08a" data-role="body_dark"/>
+  <path d="M10 5 H160.0" fill="none" stroke="#fff6d6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" data-lod="1" data-shadow="false"/>
+  <path d="M4 114.0 L71.0 76 M166.0 114.0 L99.0 76" fill="none" stroke="#e6c978" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <circle cx="85" cy="70" r="19" fill="#b02a36"/>
+  <circle cx="85" cy="70" r="15.5" fill="#e63946" data-role="accent"/>
+  <path d="M85.0 78.0 C73.0 69.5 76.0 61.0 81.0 61.0 C83.5 61.0 85.0 63.0 85.0 65.0 C85.0 63.0 86.5 61.0 89.0 61.0 C94.0 61.0 97.0 69.5 85.0 78.0 Z" fill="#ff9aa5" data-lod="1" data-shadow="false"/>
+</svg>

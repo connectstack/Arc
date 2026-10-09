@@ -25,7 +25,7 @@ from reel.core.captions import CaptionRender
 from reel.core.catalog import CATALOG, Catalog
 from reel.core.figure import build_figure
 from reel.core.fx import FxConfig
-from reel.core.ir import Particles, Shape, apply_anim, bbox, expand_particles
+from reel.core.ir import Particles, Shape, apply_anim, expand_particles, shape_bbox
 from reel.core.planner import PlanReport, SimpleWorld, plan_layer
 from reel.core.rig import solve, squash_scale
 from reel.core.rng import stable_int
@@ -81,6 +81,9 @@ class _PlaneData:
     static: list[Shape] = field(default_factory=list)
     dynamic: list[Shape] = field(default_factory=list)
     particles: list[Particles] = field(default_factory=list)
+    objects: list[Any] = field(
+        default_factory=list
+    )  # library objects that move or come and go: drawn every frame
 
 
 def to_array(surface: skia.Surface) -> np.ndarray:
@@ -174,6 +177,7 @@ class SceneStage:
             positions=self._position_of,
         )
         self._split_planes()
+        self.objects = self._build_objects()
 
         # --- characters ---------------------------------------------------------------------------------
         self.layers: list[LayerRT] = []
@@ -234,7 +238,12 @@ class SceneStage:
         # static part of every frame signature
         blob = json.dumps(
             {
-                "bg": [sc.background.template, sc.background.params],
+                "bg": [
+                    sc.background.template,
+                    sc.background.params,
+                    self._asset_hash(sc.background.template),
+                ],
+                "objects": [o.static_key() for o in self.objects],
                 "layers": [
                     [
                         lr.char_id,
@@ -244,6 +253,7 @@ class SceneStage:
                         sc.layers[lr.index].scale,
                         lr.depth,
                         sc.layers[lr.index].facing,
+                        self._arch_hash(lr.arch),
                     ]
                     for lr in self.layers
                 ],
@@ -272,6 +282,57 @@ class SceneStage:
     def _focus_of(self, char_id: str) -> float | None:
         lr = self._baked_by_char.get(char_id)
         return FOCUS_DEPTH[lr.depth] if lr else None
+
+    def _asset_hash(self, name: str) -> str:
+        """Content hash of the library asset behind a background or archetype name ('' for the engine's own)."""
+        return self.cat.assets.get(name).content_hash if name in self.cat.assets else ""
+
+    @staticmethod
+    def _arch_hash(arch: Archetype) -> str:
+        a = arch.features.get("asset")
+        return str(a.content_hash) if a is not None else ""
+
+    def _build_objects(self) -> list[Any]:
+        """The scene's library objects; static ones are drawn into the cached plates, moving ones every frame."""
+        from reel.assets.objects import build_object
+
+        out: list[Any] = []
+        for i, spec in enumerate(self.scene.objects):
+            if spec.asset not in self.cat.objects:
+                msg = f"scene {self.scene.id!r}: object {spec.asset!r} is not in the asset library"
+                if not self.cfg.lenient:
+                    raise KeyError(msg)
+                self.report.warn(msg + "; left out")
+                continue
+            try:
+                inst = build_object(
+                    i,
+                    spec,
+                    self.cat.objects.get(spec.asset),
+                    slot=self.world.slot,
+                    depth_scale=self.world.depth_scale,
+                    lenient=self.cfg.lenient,
+                    warn=self.report.warn,
+                )
+            except (
+                Exception
+            ) as exc:  # an asset that cannot be read: strict raises, lenient leaves the object out
+                if not self.cfg.lenient:
+                    raise
+                self.report.warn(
+                    f"scene {self.scene.id!r}: object {spec.asset!r} cannot be drawn ({exc}); left out"
+                )
+                continue
+            if inst is None:
+                continue
+            if inst.is_static:
+                pd = self.planes[inst.plane]
+                pd.static.extend(inst.shapes_at(0.0))
+                pd.static.sort(key=lambda x: x.z)
+            else:
+                self.planes[inst.plane].objects.append(inst)
+            out.append(inst)
+        return out
 
     def _split_planes(self) -> None:
         self.planes: dict[str, _PlaneData] = {p: _PlaneData() for p in self.graph.planes}
@@ -304,7 +365,7 @@ class SceneStage:
             return None
         x0, y0, x1, y1 = X1, Y1, X0, Y0
         for s in shapes:
-            bx0, by0, bx1, by1 = bbox(s.geom)
+            bx0, by0, bx1, by1 = shape_bbox(s)
             x0, y0, x1, y1 = min(x0, bx0), min(y0, by0), max(x1, bx1), max(y1, by1)
         pad = PLATE_PAD
         x0, y0, x1, y1 = max(X0, x0 - pad), max(Y0, y0 - pad), min(X1, x1 + pad), min(Y1, y1 + pad)
@@ -333,6 +394,8 @@ class SceneStage:
             )
         pd = self.planes[plane]
         dyn = [apply_anim(s, t) for s in pd.dynamic]
+        for o in pd.objects:
+            dyn.extend(o.shapes_at(t))
         for p in pd.particles:
             dyn.extend(expand_particles(p, t))
         if dyn:
@@ -410,7 +473,10 @@ class SceneStage:
             xf = plane_xform(st, group, FRAME_W, FRAME_H, self.style.dof)
             has_chars = any(lr.group == group for lr in self.layers)
             if not has_chars and not any(
-                self.planes[p].static or self.planes[p].dynamic or self.planes[p].particles
+                self.planes[p].static
+                or self.planes[p].dynamic
+                or self.planes[p].particles
+                or self.planes[p].objects
                 for p in planes
             ):
                 continue
@@ -462,6 +528,9 @@ class SceneStage:
         qfps = self.style.character_fps
         for lr in self.layers:
             h.update(lr.baked.signature_bytes(lr.baked.frame_index(t, qfps)))
+        for o in self.objects:
+            if not o.is_static:
+                h.update(o.key(t))
         return h.digest()
 
     # ------------------------------------------------------------------------------- captions

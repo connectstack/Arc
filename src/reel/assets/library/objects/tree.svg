@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 320">
+  <path data-role="trunk" d="M96 320 C98 280 100 240 98 196 L122 196 C120 240 122 280 126 320 Z" fill="#7a5238"/>
+  <path d="M108 250 L84 226" stroke="#5e3f2b" stroke-width="7" stroke-linecap="round" fill="none" data-lod="1"/>
+  <path d="M112 232 L134 210" stroke="#5e3f2b" stroke-width="6" stroke-linecap="round" fill="none" data-lod="1"/>
+  <circle data-role="leaves_dark" cx="110" cy="120" r="84" fill="#357a47"/>
+  <circle data-role="leaves" cx="64" cy="150" r="54" fill="#4c9a5b"/>
+  <circle data-role="leaves" cx="158" cy="148" r="58" fill="#4c9a5b"/>
+  <circle data-role="leaves_light" cx="108" cy="86" r="56" fill="#7fbf6b"/>
+  <circle cx="82" cy="104" r="9" fill="#e4572e" data-lod="1"/>
+  <circle cx="140" cy="132" r="9" fill="#e4572e" data-lod="1"/>
+  <circle cx="112" cy="160" r="9" fill="#e4572e" data-lod="1"/>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 -5.2 205.5 196.2">
+  <ellipse cx="110" cy="177" rx="100" ry="12" fill="#d8d0c0" data-lod="0"/>
+  <ellipse cx="110" cy="172" rx="100" ry="12" fill="#f4efe4" data-lod="0"/>
+  <path d="M172.8 85.6Q190.7 82.2 201.5 91.5Q211.5 100.3 210.2 114.6Q208.9 128.4 197.6 138Q185.2 148.5 166 148.5C162.4 148.5 159.5 145.6 159.5 142C159.5 138.4 162.4 135.5 166 135.5Q180.5 135.5 189.2 128.1Q196.5 121.9 197.3 113.4Q198 105.7 193 101.3Q187 96.1 175.2 98.4C171.7 99.1 168.3 96.7 167.6 93.2C166.9 89.7 169.3 86.3 172.8 85.6Z" fill="#2f9fd6" data-role="body"/>
+  <path d="M40 78 C40 130 62 168 110 170 C158 168 180 130 180 78 Z" fill="#2f9fd6" data-role="body"/>
+  <path d="M101 169.2C103.9 169.6 106.9 169.9 110 170C158 168 180 130 180 78L162 78C162 126.6 142.8 163 101 169.2Z" fill="#2480b3" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <ellipse cx="110" cy="78" rx="70" ry="14" fill="#7cc4ea" data-role="body_light"/>
+  <ellipse cx="110" cy="80" rx="61" ry="10" fill="#c47f3e" data-lod="1" data-shadow="false"/>
+  <ellipse cx="92" cy="77.5" rx="9" ry="2.2" fill="#dba066" data-lod="1" data-shadow="false"/>
+  <circle cx="66" cy="116.6" r="6" fill="#fffaf0" data-role="accent" data-lod="1" data-shadow="false"/>
+  <circle cx="88" cy="121.4" r="6" fill="#fffaf0" data-role="accent" data-lod="1" data-shadow="false"/>
+  <circle cx="110" cy="123" r="6" fill="#fffaf0" data-role="accent" data-lod="1" data-shadow="false"/>
+  <circle cx="132" cy="121.4" r="6" fill="#fffaf0" data-role="accent" data-lod="1" data-shadow="false"/>
+  <circle cx="154" cy="116.6" r="6" fill="#fffaf0" data-role="accent" data-lod="1" data-shadow="false"/>
+  <path d="M84 56 C74 46 94 38 84 28 C77 20 90 14 86 6" fill="none" stroke="#c3ceda" stroke-width="6.5" stroke-linecap="round" data-lod="0"/>
+  <path d="M112 52 C102 42 122 34 112 24 C105 16 118 10 114 0" fill="none" stroke="#c3ceda" stroke-width="6.5" stroke-linecap="round" data-lod="0"/>
+  <path d="M138 56 C128 46 148 38 138 28 C131 20 144 14 140 8" fill="none" stroke="#c3ceda" stroke-width="6.5" stroke-linecap="round" data-lod="0"/>
+</svg>

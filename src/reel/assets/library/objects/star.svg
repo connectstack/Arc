@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 0 192 181">
+  <polygon points="100 0 127 62.8 195.1 69.1 143.7 114.2 158.8 180.9 100 146 41.2 180.9 56.3 114.2 4.9 69.1 73 62.8" fill="#f09a1a" data-role="body_dark"/>
+  <polygon points="100 16 122.7 68.7 179.9 74 136.7 111.9 149.4 168 100 138.6 50.6 168 63.3 111.9 20.1 74 77.3 68.7" fill="#ffc72e" data-role="body" data-lod="1" data-shadow="false"/>
+  <polygon points="100 100 77.3 68.7 100 16" fill="#ffe57f" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <polygon points="100 100 122.7 68.7 179.9 74" fill="#ffe57f" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <polygon points="100 100 136.7 111.9 149.4 168" fill="#ffe57f" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <polygon points="100 100 100 138.6 50.6 168" fill="#ffe57f" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <polygon points="100 100 63.3 111.9 20.1 74" fill="#ffe57f" data-role="body_light" data-lod="1" data-shadow="false"/>
+</svg>

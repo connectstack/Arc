@@ -1,0 +1,6 @@
+{
+  "summary": "A sunny city park: a curved path, a pond, trees, a bench, a lamp post and flower beds",
+  "tags": ["garden", "public park", "city park", "lawn", "बाग", "बगीचा", "उद्यान", "पार्क", "bagh", "bagicha", "bageecha", "udyan"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.65, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "bench": [0.22, 0.79], "lamp": [0.4, 0.79], "pond": [0.72, 0.8]}}
+}

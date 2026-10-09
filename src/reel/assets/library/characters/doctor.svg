@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-104 118.9 208 587">
+  <path d="M7 676.9 Q7 671.9 12 671.9 L30 671.9 Q39 671.9 45.8 677.8 L48.6 680.2 Q57 687.3 55 693.6 L55 693.6 Q53 699.9 44 699.9 L11 699.9 Q7 699.9 7 695.9 Z" fill="#2a2a2e" data-role="shoes" data-lod="0"/>
+  <rect x="7" y="694.4" width="45" height="5.5" fill="#bdbdc2" data-lod="1"/>
+  <path d="M-7 676.9 Q-7 671.9 -12 671.9 L-30 671.9 Q-39 671.9 -45.8 677.8 L-48.6 680.2 Q-57 687.3 -55 693.6 L-55 693.6 Q-53 699.9 -44 699.9 L-11 699.9 Q-7 699.9 -7 695.9 Z" fill="#2a2a2e" data-role="shoes" data-lod="0"/>
+  <rect x="-52" y="694.4" width="45" height="5.5" fill="#bdbdc2" data-lod="1"/>
+  <path d="M7.1 555.9 Q7 550 13 550 L41 550 Q47 550 46.9 555.9 L44.1 669.9 Q44 675.9 38 675.9 L16 675.9 Q10 675.9 9.9 669.9 Z" fill="#34425a" data-role="pants" data-lod="0"/>
+  <path d="M-7.1 555.9 Q-7 550 -13 550 L-41 550 Q-47 550 -46.9 555.9 L-44.1 669.9 Q-44 675.9 -38 675.9 L-16 675.9 Q-10 675.9 -9.9 669.9 Z" fill="#34425a" data-role="pants" data-lod="0"/>
+  <rect x="-17" y="298" width="34" height="34" fill="#d7955d" data-role="skin_dark" data-lod="0"/>
+  <path d="M-35.7 319.8 Q-30 318 -24 318 L24 318 Q30 318 35.7 319.8 L46 323 Q62 328 64 344 L64.3 346.1 Q66 360 65.4 374 L62.5 438 Q62 450 63 461.9 L71.1 556 Q72 566 62 566 L-62 566 Q-72 566 -71.1 556 L-63 461.9 Q-62 450 -62.5 438 L-65.4 374 Q-66 360 -64.3 346.1 L-64 344 Q-62 328 -46 323 Z" fill="#f1f4f7" data-role="shirt" data-lod="0"/>
+  <path d="M-22 319.8 Q-23 317 -20 317 L20 317 Q23 317 22 319.8 L1 379.1 Q0 382 -1 379.1 Z" fill="#2fa59b" data-role="accent" data-lod="0"/>
+  <path d="M-37.6 322.9 Q-38 320 -35 319.4 L-24.9 317.5 Q-22 317 -21 319.8 L-1.9 377.1 Q-1 380 -2.7 382.4 L-10.3 393.5 Q-12 396 -13.7 393.5 L-30.3 370.4 Q-32 368 -32.4 365 Z" fill="#bbcbda" data-role="shirt_dark" data-lod="1"/>
+  <path d="M37.6 322.9 Q38 320 35 319.4 L24.9 317.5 Q22 317 21 319.8 L1.9 377.1 Q1 380 2.7 382.4 L10.3 393.5 Q12 396 13.7 393.5 L30.3 370.4 Q32 368 32.4 365 Z" fill="#bbcbda" data-role="shirt_dark" data-lod="1"/>
+  <path d="M14 536 Q14 540 18 540 L44 540 Q48 540 48 536 L48 518 Q48 514 44 514 L18 514 Q14 514 14 518 Z M-14 536 Q-14 540 -18 540 L-44 540 Q-48 540 -48 536 L-48 518 Q-48 514 -44 514 L-18 514 Q-14 514 -14 518 Z" fill="#bbcbda" data-role="shirt_dark" data-lod="1"/>
+  <path d="M0 396 L0 564" fill="none" stroke="#bbcbda" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="shirt_dark" data-lod="1"/>
+  <path d="M13.2 424 C13.2 421.6 11.3 419.8 9 419.8 C6.7 419.8 4.8 421.6 4.8 424 C4.8 426.3 6.7 428.2 9 428.2 C11.3 428.2 13.2 426.3 13.2 424 Z M13.2 468 C13.2 465.6 11.3 463.8 9 463.8 C6.7 463.8 4.8 465.6 4.8 468 C4.8 470.3 6.7 472.2 9 472.2 C11.3 472.2 13.2 470.3 13.2 468 Z M13.2 512 C13.2 509.6 11.3 507.8 9 507.8 C6.7 507.8 4.8 509.6 4.8 512 C4.8 514.3 6.7 516.2 9 516.2 C11.3 516.2 13.2 514.3 13.2 512 Z" fill="#a9b6c6" data-lod="1"/>
+  <path d="M71.7 332.5 L87.7 435.3 C89.2 442.9 84.3 450.2 76.7 451.7 C69.1 453.2 61.7 448.2 60.3 440.7 L36.3 339.4 C34.4 329.7 40.8 320.2 50.5 318.3 C60.3 316.4 69.7 322.8 71.7 332.5 Z" fill="#f1f4f7" data-role="shirt" data-lod="0"/>
+  <circle cx="77" cy="460" r="21" fill="#d9a273" data-role="skin" data-lod="0"/>
+  <path d="M-36.3 339.4 L-60.3 440.7 C-61.7 448.2 -69.1 453.2 -76.7 451.7 C-84.3 450.2 -89.2 442.9 -87.7 435.3 L-71.7 332.5 C-69.7 322.8 -60.3 316.4 -50.5 318.3 C-40.8 320.2 -34.4 329.7 -36.3 339.4 Z" fill="#f1f4f7" data-role="shirt" data-lod="0"/>
+  <circle cx="-77" cy="460" r="21" fill="#d9a273" data-role="skin" data-lod="0"/>
+  <ellipse cx="0" cy="219" rx="84" ry="90" fill="#d9a273" data-role="skin" data-lod="0"/>
+  <ellipse cx="-82.3" cy="220.8" rx="12.6" ry="18" fill="#d9a273" data-role="skin" data-lod="0"/>
+  <ellipse cx="82.3" cy="220.8" rx="12.6" ry="18" fill="#d9a273" data-role="skin" data-lod="0"/>
+  <path d="M-79.9 195.7 Q-85.9 199.4 -83.2 190.8 L-82.2 187.8 Q-79.5 179.2 -75.1 171.4 L-73.6 168.9 Q-69.2 161.1 -63.1 154.5 L-61.3 152.5 Q-55.2 145.9 -47.8 140.8 L-45.9 139.5 Q-38.5 134.5 -30.1 131.3 L-28.2 130.5 Q-19.7 127.3 -10.8 126.3 L-8.9 126 Q0 124.9 8.9 126 L10.8 126.3 Q19.7 127.3 28.2 130.5 L30.1 131.3 Q38.5 134.5 45.9 139.5 L47.8 140.8 Q55.2 145.9 61.3 152.5 L63.1 154.5 Q69.2 161.1 73.6 168.9 L75.1 171.4 Q79.5 179.2 82.2 187.8 L83.2 190.8 Q85.9 199.4 79 195.7 L79 195.7 Q72.2 192 64.2 187.9 L41.6 176.3 Q33.6 172.2 25 169.6 L-16.6 156.8 Q-25.2 154.2 -33.3 158 L-43.9 163 Q-52.1 166.8 -58 173.6 L-68 185.2 Q-73.9 192 -79.9 195.7 Z" fill="#231c19" data-role="hair" data-lod="0"/>
+  <path d="M-47 163.1 Q-31.2 147.4 -9.8 144.5" fill="none" stroke="#5c4a43" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="hair_light" data-lod="1"/>
+  <ellipse cx="-26" cy="211.8" rx="14.3" ry="22.5" fill="#ffffff" data-lod="0" data-tag="eye"/>
+  <line x1="-26" y1="212" x2="-26" y2="213.6" stroke="#23262e" stroke-width="16.4" stroke-linecap="round" data-lod="0" data-tag="pupil"/>
+  <ellipse cx="26" cy="211.8" rx="14.3" ry="22.5" fill="#ffffff" data-lod="0" data-tag="eye"/>
+  <line x1="26" y1="212" x2="26" y2="213.6" stroke="#23262e" stroke-width="16.4" stroke-linecap="round" data-lod="0" data-tag="pupil"/>
+  <path d="M-9.6 180.7 Q-26 176.7 -42.5 180.7 M9.6 180.7 Q26 176.7 42.5 180.7" fill="none" stroke="#191411" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="hair_dark" data-lod="0" data-tag="brow"/>
+  <ellipse cx="0" cy="232.5" rx="5.5" ry="7.6" fill="#d7955d" data-role="skin_dark" data-lod="1" data-tag="nose"/>
+  <path d="M-17.6 260.4 Q0 276.4 17.6 260.4" fill="none" stroke="#23262e" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" data-lod="0" data-tag="mouth"/>
+  <path d="M-27 316 C-27 316 -37.2 339.6 -34 350 C-30.8 360.3 -14.3 369.6 -8 378 C-1.7 386.3 1.7 393 4 400 C6.3 407 6 420 6 420" fill="none" stroke="#4a5566" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-lod="0"/>
+  <path d="M27 316 C27 316 35.5 339.6 34 350 C32.5 360.3 23 369.6 18 378 C13 386.3 4 400 4 400" fill="none" stroke="#4a5566" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-lod="0"/>
+  <circle cx="6" cy="432" r="13" fill="#4a5566" data-lod="0"/>
+  <circle cx="6" cy="432" r="7" fill="#cfd8e2" data-lod="1"/>
+  <rect x="26" y="370" width="28" height="22" rx="3" fill="#8fcaee" data-lod="1"/>
+  <rect x="26" y="370" width="28" height="8" rx="3" fill="#2f7fb8" data-lod="1"/>
+</svg>

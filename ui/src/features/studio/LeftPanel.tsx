@@ -6,18 +6,19 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApi } from '@/api/context'
 import { useCatalog } from '@/api/hooks'
-import type { ReelSpec } from '@/api/types'
+import type { CatalogEntry, ReelSpec } from '@/api/types'
 import { ApiError } from '@/api/types'
-import { Banner, Button, Menu, StatusChip, Tabs, toast } from '@/components/ui'
+import { Banner, Button, Menu, StatusChip, Tabs, toast, type MenuEntry } from '@/components/ui'
 import { LibraryBrowser } from '@/features/library/LibraryBrowser'
 import { bgColor } from '@/lib/colors'
 import { cn } from '@/lib/cn'
 import { normalizeSpec } from '@/lib/normalize'
 import { characterColor, characterName } from '@/lib/spec'
 import { plural } from '@/lib/format'
-import { sceneAt, sceneSlots } from '@/lib/timeline'
+import { sceneAt, sceneSlots, sceneVisibleFrom } from '@/lib/timeline'
 import { useProject } from '@/store/project'
 import { useStudio, type LeftTab } from '@/store/studio'
+import { SceneObjects } from './SceneObjects'
 import { addCharacter, addScene, deleteSelection, duplicateSelection, moveScene } from './ops'
 
 // ------------------------------------------------------------------------------- scene thumbnails
@@ -89,7 +90,7 @@ function SceneCard({ spec, index, thumb }: { spec: ReelSpec; index: number; thum
           className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
           onClick={() => {
             select({ kind: 'scene', scene: index })
-            setPlayhead(slots[index].start + 0.001)
+            setPlayhead(sceneVisibleFrom(slots, index))
           }}
           aria-current={here ? 'true' : undefined}
         >
@@ -152,6 +153,7 @@ function ScenesTab({ spec }: { spec: ReelSpec }) {
           </SortableContext>
         </DndContext>
       </div>
+      <SceneObjects spec={spec} />
       <div className="border-t border-line p-2.5">
         <Button className="w-full" onClick={() => edit((d) => select(addScene(d)))}>
           <Plus className="size-4" /> Add a scene
@@ -204,11 +206,19 @@ function CastTab({ spec }: { spec: ReelSpec }) {
               <UserPlus className="size-4" /> Add a character
             </Button>
           }
-          entries={[{ heading: 'Body type' }, ...(catalog?.archetypes ?? []).map((a) => ({ label: a.name, onSelect: () => edit((d) => select(addCharacter(d, a.name))) }))]}
+          entries={bodyTypeEntries(catalog?.archetypes ?? [], (name) => edit((d) => select(addCharacter(d, name))))}
         />
       </div>
     </div>
   )
+}
+
+/** The "Add a character" menu: the engine's jointed bodies, then the pictures of the asset library (a long list, so it is sectioned). */
+function bodyTypeEntries(archetypes: CatalogEntry[], add: (archetype: string) => void): MenuEntry[] {
+  const entry = (a: CatalogEntry): MenuEntry => ({ label: a.name.replace(/_/g, ' '), onSelect: () => add(a.name) })
+  const bodies = archetypes.filter((a) => !a.library)
+  const pictures = archetypes.filter((a) => a.library)
+  return [{ heading: 'Body type' }, ...bodies.map(entry), ...(pictures.length ? [{ heading: 'Pictures from the library' }, ...pictures.map(entry)] : [])]
 }
 
 // ------------------------------------------------------------------------------- script tab

@@ -1,7 +1,8 @@
 import { produce } from 'immer'
 import { describe, expect, it } from 'vitest'
-import type { ReelSpec, Scene } from '@/api/types'
-import { baseOf, copyClips, deleteMany, describeClipboard, duplicateMany, isClipSelection, nudgeMany, pasteClips, pasteTarget, selectedClips, shiftClips, type ClipSelection } from './clips'
+import type { ObjectMotion, ReelSpec, Scene, SceneObject } from '@/api/types'
+import { newObject } from '@/lib/spec'
+import { baseOf, copyClips, deleteMany, describeClipboard, duplicateMany, fitObjectTimes, isClipSelection, nudgeMany, pasteClips, pasteObjectTarget, pasteTarget, selectedClips, shiftClips, type ClipSelection } from './clips'
 
 const scene = (id: string): Scene => ({
   id,
@@ -12,6 +13,7 @@ const scene = (id: string): Scene => ({
     { character: 'mia', position: 'left', scale: 1, depth: 'mid', facing: 'auto', actions: [{ name: 'walk', t0: 1, t1: 3, params: {} }, { name: 'wave', t0: 4, t1: 5, params: {} }, { name: 'idle', t0: 6, t1: 8, params: {} }] },
     { character: 'pip', position: 'right', scale: 1, depth: 'mid', facing: 'auto', actions: [{ name: 'talk', t0: 2, t1: 4, params: {} }] },
   ],
+  objects: [],
   captions: [
     { text: 'one', t0: 1, t1: 2, style: 'subtitle', anchor: 'auto', speaker: 'mia' },
     { text: 'two', t0: 3, t1: 4, style: 'subtitle', anchor: 'auto', speaker: 'pip' },
@@ -163,3 +165,163 @@ describe('copy and paste', () => {
     expect(describeClipboard(copyClips(s, [act(0, 0, 0), { kind: 'sfx', scene: 0, sfx: 0 }]))).toBe('2 clips')
   })
 })
+
+// ------------------------------------------------------------------------------- objects: the lanes of the timeline's Objects group
+describe('objects and their motions as clips', () => {
+  const mo = (type: string, t0: number, t1: number, extra: Partial<ObjectMotion> = {}): ObjectMotion => ({ type, t0, t1, ease: 'ease_in_out', ...extra })
+  const car = (): SceneObject => ({ ...newObject('car', [0.2, 0.8], 0.7), t0: 1, t1: 8, palette: { body: '#2a6fdb' }, motions: [mo('hop', 1, 2, { count: 3 }), mo('move', 3, 5, { to: 'right' })] })
+  const tree = (): SceneObject => ({ ...newObject('tree', 'left') })
+  /** scene a (street) has a car and a tree, scene b (forest, 6 s) has a tree */
+  const withObjects = (): ReelSpec => {
+    const s = base()
+    s.scenes[0].objects = [car(), tree()]
+    s.scenes[1].objects = [tree()]
+    s.scenes[1].background.template = 'forest'
+    s.scenes[1].duration_sec = 6
+    return s
+  }
+  const obj = (scene: number, object: number): ClipSelection => ({ kind: 'object', scene, object })
+  const mot = (scene: number, object: number, motion: number): ClipSelection => ({ kind: 'motion', scene, object, motion })
+
+  it('counts an object and a motion among the clips', () => {
+    expect(isClipSelection(obj(0, 0))).toBe(true)
+    expect(isClipSelection(mot(0, 0, 1))).toBe(true)
+    expect(selectedClips(obj(0, 0), [mot(0, 0, 1), { kind: 'layer', scene: 0, layer: 0 }])).toEqual([obj(0, 0), mot(0, 0, 1)])
+  })
+
+  it('copies an object whole and deep, with the times it is on screen (to the end of its scene when it stays)', () => {
+    const start = withObjects()
+    const board = copyClips(start, [obj(0, 0), obj(0, 1)])!
+    expect(board.items).toMatchObject([
+      { kind: 'object', t0: 1, t1: 8, template: 'street', clip: { asset: 'car', palette: { body: '#2a6fdb' } } },
+      { kind: 'object', t0: 0, t1: 10, template: 'street', clip: { asset: 'tree' } },
+    ])
+    const edited = produce(start, (d) => void (d.scenes[0].objects[0].palette.body = '#000000'))
+    expect(edited.scenes[0].objects[0].palette.body).toBe('#000000')
+    expect((board.items[0] as { clip: SceneObject }).clip.palette.body).toBe('#2a6fdb')
+    expect(describeClipboard(board)).toBe('2 objects')
+    expect(describeClipboard(copyClips(start, [obj(0, 0)]))).toBe('1 object')
+  })
+
+  it('pastes an object into the scene under the playhead, with its motions, fitted to that scene', () => {
+    const start = withObjects()
+    const board = copyClips(start, [obj(0, 0)])!
+    let pasted: ClipSelection[] | null = null
+    const next = produce(start, (d) => void (pasted = pasteClips(d, board, 12.5))) // 2.5 s into scene b, which lasts 6 s
+    expect(pasted).toEqual([obj(1, 1)])
+    const got = next.scenes[1].objects[1]
+    expect(got).toMatchObject({ asset: 'car', position: [0.2, 0.8], scale: 0.7, palette: { body: '#2a6fdb' }, t0: 1 })
+    expect(got.t1).toBe(6) // cut at the end of the shorter scene
+    expect(got.motions.map((m) => [m.type, m.t0, m.t1])).toEqual([['hop', 1, 2], ['move', 3, 5]])
+    expect(next.scenes[0].objects).toHaveLength(2) // the original stays
+  })
+
+  it('keeps an object that stays to the end staying to the end, and keeps times that already fit', () => {
+    const start = withObjects()
+    const board = copyClips(start, [obj(0, 1)])!
+    const next = produce(start, (d) => void pasteClips(d, board, 12.5))
+    expect(next.scenes[1].objects[1]).toMatchObject({ asset: 'tree', t0: 0, t1: null })
+  })
+
+  it('puts a copy a little to the side when its twin is still where it stood, and turns an unknown place into the middle of the set', () => {
+    const start = withObjects()
+    const board = copyClips(start, [obj(0, 0)])!
+    const twice = produce(start, (d) => {
+      pasteClips(d, board, 3)
+      pasteClips(d, board, 3)
+    })
+    expect(twice.scenes[0].objects.slice(2).map((o) => o.position)).toEqual([[0.28, 0.8], [0.36, 0.8]])
+
+    const sofa = produce(start, (d) => void ((d.scenes[0].objects[0].position = 'sofa'), (d.scenes[0].background.template = 'room')))
+    const asked = copyClips(sofa, [obj(0, 0)])!
+    const there = produce(sofa, (d) => void pasteClips(d, asked, 12.5)) // scene b is a forest: no sofa
+    expect(there.scenes[1].objects[1].position).toBe('center')
+    const keeps = produce(sofa, (d) => void ((d.scenes[0].objects[0].position = 'far_left'), pasteClips(d, copyClips(d, [obj(0, 0)])!, 12.5)))
+    expect(keeps.scenes[1].objects[1].position).toBe('far_left') // a place every set has stays
+  })
+
+  it('pastes a motion onto the selected object, at the playhead, keeping its length', () => {
+    const start = withObjects()
+    const board = copyClips(start, [mot(0, 0, 1)])! // the move, 3 to 5
+    expect(board.items[0]).toMatchObject({ kind: 'motion', asset: 'car', t0: 3, t1: 5 })
+    let pasted: ClipSelection[] | null = null
+    const next = produce(start, (d) => {
+      d.scenes[0].objects.push({ ...newObject('car', [0.8, 0.8]) })
+      pasted = pasteClips(d, board, 6, undefined, { scene: 0, object: 2 }) // onto the new car
+    })
+    expect(pasted).toEqual([mot(0, 2, 0)])
+    expect(next.scenes[0].objects[2].motions).toEqual([{ type: 'move', t0: 6, t1: 8, to: 'right', ease: 'ease_in_out' }])
+    expect(next.scenes[0].objects[0].motions).toHaveLength(2) // the first car keeps what it had
+  })
+
+  it('sends a motion back to the object it came from when none is chosen, or to one of the same drawing, else nowhere', () => {
+    const start = withObjects()
+    const board = copyClips(start, [mot(0, 0, 0)])! // the hop of the first car
+    const home = produce(start, (d) => void pasteClips(d, board, 6))
+    expect(home.scenes[0].objects[0].motions.map((m) => [m.type, m.t0])).toEqual([['hop', 1], ['move', 3], ['hop', 6]])
+    // another scene with a car in it gets it; one without a car gets nothing (and the paste says so)
+    const elsewhere = produce(start, (d) => void d.scenes[1].objects.push(newObject('car')))
+    const there = produce(elsewhere, (d) => void pasteClips(d, board, 12.5))
+    expect(there.scenes[1].objects[1].motions.map((m) => m.type)).toEqual(['hop'])
+    let none: ClipSelection[] | null | undefined
+    const nothing = produce(start, (d) => void (none = pasteClips(d, board, 12.5)))
+    expect(none).toBeNull()
+    expect(nothing.scenes[1].objects[0].motions).toHaveLength(0)
+  })
+
+  it('aims a motion at the object of the selection', () => {
+    expect(pasteObjectTarget(obj(1, 2))).toEqual({ scene: 1, object: 2 })
+    expect(pasteObjectTarget(mot(1, 2, 0))).toEqual({ scene: 1, object: 2 })
+    expect(pasteObjectTarget({ kind: 'scene', scene: 1 })).toBeUndefined()
+    expect(describeClipboard(copyClips(withObjects(), [mot(0, 0, 0), mot(0, 0, 1)]))).toBe('2 motions')
+    expect(describeClipboard(copyClips(withObjects(), [mot(0, 0, 0), obj(0, 1)]))).toBe('2 clips')
+  })
+
+  it('deletes motions and objects together without the indices getting in each other’s way', () => {
+    const next = produce(withObjects(), (d) => void deleteMany(d, [obj(0, 0), mot(0, 0, 1), obj(0, 1), act(0, 0, 0)]))
+    expect(next.scenes[0].objects).toHaveLength(0)
+    expect(names(next)).toEqual(['wave', 'idle'])
+    const some = produce(withObjects(), (d) => void deleteMany(d, [mot(0, 0, 0), obj(0, 1)]))
+    expect(some.scenes[0].objects.map((o) => [o.asset, o.motions.map((m) => m.type)])).toEqual([['car', ['move']]])
+  })
+
+  it('duplicates objects and motions next to themselves and says where the copies are', () => {
+    let copies: ClipSelection[] = []
+    const next = produce(withObjects(), (d) => void (copies = duplicateMany(d, [obj(0, 1), obj(0, 0)])))
+    expect(next.scenes[0].objects.map((o) => o.asset)).toEqual(['car', 'car', 'tree', 'tree'])
+    expect(copies).toEqual([obj(0, 3), obj(0, 1)])
+    let motions: ClipSelection[] = []
+    const more = produce(withObjects(), (d) => void (motions = duplicateMany(d, [mot(0, 0, 0), mot(0, 0, 1)])))
+    expect(more.scenes[0].objects[0].motions.map((m) => m.type)).toEqual(['hop', 'hop', 'move', 'move'])
+    expect(motions).toEqual([mot(0, 0, 1), mot(0, 0, 3)])
+  })
+
+  it('moves motions with the rest of a selection and leaves the objects out of the group', () => {
+    const start = withObjects()
+    const sels: ClipSelection[] = [mot(0, 0, 0), act(0, 0, 0), obj(0, 0)]
+    const b = baseOf(start, sels)
+    expect(b.map((x) => [x.sel.kind, x.t0, x.t1])).toEqual([['motion', 1, 2], ['action', 1, 3]]) // an object's bar is moved on its own
+    const next = produce(start, (d) => void shiftClips(d, b, 2))
+    expect(next.scenes[0].objects[0].motions[0]).toMatchObject({ t0: 3, t1: 4 })
+    expect(next.scenes[0].layers[0].actions[0]).toMatchObject({ t0: 3, t1: 5 })
+    expect(next.scenes[0].objects[0]).toMatchObject({ t0: 1, t1: 8 })
+  })
+
+  it('nudges motions and objects, each inside its scene', () => {
+    const next = produce(withObjects(), (d) => void nudgeMany(d, [mot(0, 0, 1), obj(0, 0), obj(0, 1)], 1.5))
+    expect(next.scenes[0].objects[0].motions[1]).toMatchObject({ t0: 4.5, t1: 6.5 })
+    expect(next.scenes[0].objects[0]).toMatchObject({ t0: 2.5, t1: 9.5 })
+    expect(next.scenes[0].objects[1]).toMatchObject({ t0: 1.5, t1: null })
+  })
+
+  it('fits an object’s times to a scene: nothing starts or ends outside it, and nothing is shorter than a moment', () => {
+    const o: SceneObject = { ...newObject('car'), t0: 9, t1: 12, motions: [mo('hop', 7, 12), mo('spin', 20, 22)] }
+    fitObjectTimes(o, 6)
+    expect(o).toMatchObject({ t0: 5.9, t1: 6 })
+    expect(o.motions.map((m) => [m.t0, m.t1])).toEqual([[5.9, 6], [5.9, 6]])
+    const open: SceneObject = { ...newObject('car'), t0: 2 }
+    fitObjectTimes(open, 6)
+    expect(open.t1).toBeNull()
+  })
+})
+

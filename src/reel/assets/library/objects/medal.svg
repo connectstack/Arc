@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 0 134 210">
+  <polygon points="10 0 44 0 78 102 44 102" fill="#ffffff" data-lod="0"/>
+  <polygon points="8.8 0 21.3 0 55.3 102 42.8 102" fill="#e63946" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="32.7 0 44 0 78 102 66.7 102" fill="#2b63d9" data-lod="1" data-shadow="false"/>
+  <polygon points="140 0 106 0 72 102 106 102" fill="#ffffff" data-lod="0"/>
+  <polygon points="141.2 0 128.7 0 94.7 102 107.2 102" fill="#e63946" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="117.3 0 106 0 72 102 83.3 102" fill="#2b63d9" data-lod="1" data-shadow="false"/>
+  <circle cx="75" cy="104" r="10" fill="#c98311" data-role="body_dark"/>
+  <circle cx="75" cy="104" r="5" fill="#ffdc73" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <circle cx="75" cy="156" r="54" fill="#c98311" data-role="body_dark"/>
+  <circle cx="75" cy="156" r="47" fill="#ffdc73" data-role="body_light" data-lod="1"/>
+  <circle cx="75" cy="156" r="38" fill="#f5b82e" data-role="body"/>
+  <path d="M76.8 133.2L83.6 149.9L101.5 151.2L87.7 162.8L92.1 180.2L76.8 170.7L61.5 180.2L65.9 162.8L52.1 151.2L70 149.9L76.8 133.2Z" fill="#c98311" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M75 131L81.8 147.7L99.7 149L85.9 160.6L90.3 178L75 168.5L59.7 178L64.1 160.6L50.3 149L68.2 147.7L75 131Z" fill="#ffdc73" data-role="body_light" data-lod="0"/>
+  <path d="M27.1 138.6C33.5 120.8 49.2 108.1 67.9 105.5L68.6 110.4C51.8 112.8 37.6 124.3 31.8 140.3L27.1 138.6Z" fill="#ffffff" data-lod="1" data-shadow="false" opacity="0.6"/>
+</svg>

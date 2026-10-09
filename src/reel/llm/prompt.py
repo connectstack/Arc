@@ -228,7 +228,11 @@ def _render_backgrounds(rows: list[dict[str, Any]], catalog: Catalog) -> list[st
             out.append(f"  params every background takes: {_params_line(shared, 60)}")
     shared_names = {p["name"] for p in shared}
     for r in rows:
-        out.append(f"- {r['name']}: {_short(r.get('summary', ''), 160)}")
+        words = _words(r.get("tags"), r["name"]) if r.get("library") else ""
+        out.append(
+            f"- {r['name']}: {_short(r.get('summary', ''), 160)}"
+            + (f" [words {words}]" if words else "")
+        )
         own = [p for p in r.get("params", []) if p["name"] not in shared_names]
         if own:
             out.append(f"    params: {_params_line(own, 100)}")
@@ -293,6 +297,62 @@ def _render_simple(title: str, rows: list[dict[str, Any]], limit: int) -> list[s
     return out
 
 
+def _words(tags: list[str] | None, name: str, *, latin: int = 5, indic: int = 0) -> str:
+    """The words a script may use for a library asset, short: plurals folded away, the Latin ones (English synonyms and
+    Hinglish) first, then any Indic-script ones.  The full prompt leaves Indic words out (they cost many tokens and a model
+    that reads Hindi maps "गाँव" to ``village`` by itself); they are what the offline planner and the script check match."""
+    have = set(tags or [])
+    own = name.replace("_", " ")
+    out_latin: list[str] = []
+    out_indic: list[str] = []
+    for t in tags or []:
+        if t == own or (t.endswith("s") and t[:-1] in have):
+            continue
+        (out_latin if t.isascii() else out_indic).append(t)
+    return ", ".join([*out_latin[:latin], *out_indic[:indic]])
+
+
+def _asset_tail(row: dict[str, Any], *, kind_note: str = "") -> str:
+    """``[size 0.5; roles body, accent; words car, taxi]`` for a library asset's catalog line."""
+    bits: list[str] = []
+    if kind_note:
+        bits.append(kind_note)
+    if "size" in row:
+        bits.append(f"size {row['size']:g}")
+    if row.get("roles"):
+        bits.append("roles " + ", ".join(row["roles"]))
+    words = _words(row.get("tags"), row["name"])
+    if words:
+        bits.append("words " + words)
+    return f" [{'; '.join(bits)}]" if bits else ""
+
+
+#: how each object motion is written, for the catalog (a test keeps the keys equal to ``reel.assets.objects.MOTIONS``)
+MOTION_HINTS: dict[str, str] = {
+    "move": "to=[x,y] or SLOT",
+    "hop": "count, amount",
+    "float": "amount",
+    "spin": "amount = turns",
+    "pulse": "amount, count",
+    "fade": "from, to = 0..1",
+    "grow": "from, to = times its size",
+    "shake": "amount",
+}
+
+
+def _render_objects(rows: list[dict[str, Any]]) -> list[str]:
+    out = [
+        'OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale": n, '
+        '"layer": "behind"|"front", "t0": s, "t1": s, "motions": [{"type": MOTION, "t0": s, "t1": s, ...}], '
+        '"palette": {ROLE: "#rrggbb"}}; size = height as a share of a person (1 = a person), '
+        'roles = the colours "palette" can change, words = what a script may call it',
+        "  MOTION types: " + "; ".join(f"{k} ({v})" for k, v in MOTION_HINTS.items()),
+    ]
+    for r in rows:
+        out.append(f"- {r['name']}: {_short(r.get('summary', ''), 80)}{_asset_tail(r)}")
+    return out
+
+
 def render_catalog(catalog: Catalog | None = None, *, compact: bool = False) -> str:
     """The compact, human-readable catalog of everything a spec may reference (live registries).
 
@@ -321,7 +381,23 @@ def render_catalog(catalog: Catalog | None = None, *, compact: bool = False) -> 
             _render_simple('SFX - scenes[].sfx[] = {"name": NAME, "t": s}', m["sfx"], 70)
         )
     if m["archetypes"]:
-        sections.append(_render_simple("ARCHETYPES - characters[].archetype", m["archetypes"], 70))
+        has_pictures = any(r.get("category") == "sprite" for r in m["archetypes"])
+        lines = [
+            "ARCHETYPES - characters[].archetype"
+            + (
+                "; [picture] ones are one drawing: they cannot use their arms (no waving, pointing or holding things) "
+                "and otherwise move like anyone else"
+                if has_pictures
+                else ""
+            )
+        ]
+        for r in m["archetypes"]:
+            sprite = r.get("category") == "sprite"
+            lines.append(
+                f"- {r['name']}: {_short(r.get('summary', ''), 70)}"
+                f"{_asset_tail(r, kind_note='picture') if sprite else ''}"
+            )
+        sections.append(lines)
     if m["props"]:
         sections.append(
             _render_simple(
@@ -330,6 +406,8 @@ def render_catalog(catalog: Catalog | None = None, *, compact: bool = False) -> 
                 45,
             )
         )
+    if m["objects"]:
+        sections.append(_render_objects(m["objects"]))
     return "\n\n".join("\n".join(s) for s in sections)
 
 
@@ -520,7 +598,12 @@ def example_parts(
 
     # --- background: prefer a real set over the abstract stage, show time_of_day/mood + one own param
     bg_names = cat.backgrounds.names()
-    template = next((n for n in bg_names if n != "abstract"), bg_names[0] if bg_names else "")
+    template = next(
+        (
+            n for n in bg_names if n != "abstract" and n not in cat.assets
+        ),  # the engine's own set, not a library one
+        next((n for n in bg_names if n != "abstract"), bg_names[0] if bg_names else ""),
+    )
     params: dict[str, Any] = {}
     slots = ["left", "right"]
     if template:
@@ -571,6 +654,9 @@ def example_parts(
         a, b = _MOVE_VALUES[move]
         scene["camera"] = {"moves": [{"type": move, "from": a, "to": b, "t0": 0, "t1": dur}]}
     scene["layers"] = layers
+    thing = _first(cat.objects, ("tree", "car", "gift")) if not compact else None
+    if thing:
+        scene["objects"] = [{"asset": thing, "position": [0.88, 0.8], "scale": 0.7}]
     cap_style = _first(cat.caption_styles, ("subtitle",)) or "subtitle"
     scene["captions"] = [
         {
@@ -762,9 +848,9 @@ def build_user_message(
 
 #: properties the compact schema leaves out: optional, decorative, or filled in by the normaliser
 _COMPACT_DROP: dict[str, tuple[str, ...]] = {
-    "MetaSpec": ("fps", "resolution", "aspect", "fx", "safe_area"),
+    "MetaSpec": ("fps", "resolution", "aspect", "fx", "safe_area", "library_gaps"),
     "CharacterSpec": ("props", "voice"),
-    "SceneSpec": ("camera", "sfx", "notes"),
+    "SceneSpec": ("camera", "sfx", "notes", "objects"),
     "LayerSpec": ("scale", "depth", "facing"),
     "CaptionSpec": ("speak", "anchor"),
 }

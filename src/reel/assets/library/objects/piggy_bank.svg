@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 0 295 222">
+  <circle cx="148" cy="24" r="24" fill="#c98311"/>
+  <circle cx="148" cy="24" r="17" fill="#f5b82e" data-lod="1" data-shadow="false"/>
+  <rect x="103" y="150" width="34" height="72" rx="14" fill="#d8618c" data-role="body_dark"/>
+  <rect x="163" y="150" width="34" height="72" rx="14" fill="#d8618c" data-role="body_dark"/>
+  <rect x="62" y="150" width="36" height="72" rx="15" fill="#f58aae" data-role="body"/>
+  <rect x="202" y="150" width="36" height="72" rx="15" fill="#f58aae" data-role="body"/>
+  <path d="M40 108C22 108 10 98 13 86C16 74 33 74 33 85C33 93 24 94 22 88" fill="none" stroke="#d8618c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="body_dark"/>
+  <ellipse cx="150" cy="112" rx="118" ry="82" fill="#f58aae" data-role="body"/>
+  <path d="M138 170C203.2 170 256 133.3 256 88C256 83 255.4 78.1 254.1 73.4C263 84.9 268 98 268 112C268 157.3 215.2 194 150 194C92 194 43.8 164.9 33.9 126.6C53.7 152.4 92.9 170 138 170Z" fill="#d8618c" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <ellipse cx="92" cy="64" rx="34" ry="11" fill="#ffb9d0" data-role="body_light" data-lod="1" data-shadow="false" transform="rotate(-24 92 64)"/>
+  <path d="M194 52C194 34 202 18 212 10C224 18 236 30 240 50Z" fill="#f58aae" data-role="body"/>
+  <path d="M204 48C204 36 208 26 213 21C220 27 227 36 230 48Z" fill="#d8618c" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="250" y="96" width="48" height="42" rx="16" fill="#ffb9d0" data-role="body_light"/>
+  <ellipse cx="292" cy="117" rx="8.5" ry="19" fill="#d8618c" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <ellipse cx="292" cy="110" rx="2.6" ry="3.8" fill="#8e2a52" data-lod="0" data-shadow="false"/>
+  <ellipse cx="292" cy="125" rx="2.6" ry="3.8" fill="#8e2a52" data-lod="0" data-shadow="false"/>
+  <ellipse cx="226" cy="114" rx="14" ry="8.5" fill="#d8618c" data-role="body_dark" data-lod="1" data-shadow="false" opacity="0.55"/>
+  <circle cx="236" cy="92" r="7.5" fill="#23262e" data-lod="0"/>
+  <circle cx="238.4" cy="89.2" r="2.5" fill="#ffffff" data-lod="1" data-shadow="false"/>
+  <rect x="118" y="33" width="64" height="11" rx="5.5" fill="#8e2a52" data-lod="0"/>
+</svg>

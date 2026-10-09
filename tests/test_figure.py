@@ -9,7 +9,8 @@ from reel.core.figure import build_figure
 from reel.core.ir import bbox
 from reel.core.rig import default_pose, solve
 
-ARCHS = CATALOG.archetypes.names()
+#: bodies (jointed, drawn from a skeleton); a character made from library art is one picture and is tested in test_assets_*
+ARCHS = [n for n in CATALOG.archetypes.names() if CATALOG.archetypes.get(n).category != "sprite"]
 PROPS = CATALOG.props.names()
 
 

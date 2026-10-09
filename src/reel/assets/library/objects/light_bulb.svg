@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-137.2 -143 274.4 302">
+  <circle cx="0" cy="-8" r="118" fill="#fff3a8" opacity="0.3" data-lod="1" data-shadow="false" data-material="emissive"/>
+  <line x1="0" y1="-104" x2="0" y2="-132" stroke="#ffb703" stroke-width="11" stroke-linecap="round" data-lod="1" data-shadow="false" data-material="emissive" data-stroke-role="body_dark"/>
+  <line x1="62.6" y1="-83.1" x2="79.4" y2="-105.4" stroke="#ffb703" stroke-width="11" stroke-linecap="round" data-lod="1" data-shadow="false" data-material="emissive" data-stroke-role="body_dark"/>
+  <line x1="-62.6" y1="-83.1" x2="-79.4" y2="-105.4" stroke="#ffb703" stroke-width="11" stroke-linecap="round" data-lod="1" data-shadow="false" data-material="emissive" data-stroke-role="body_dark"/>
+  <line x1="99.5" y1="-30.4" x2="126.2" y2="-38.6" stroke="#ffb703" stroke-width="11" stroke-linecap="round" data-lod="1" data-shadow="false" data-material="emissive" data-stroke-role="body_dark"/>
+  <line x1="-99.5" y1="-30.4" x2="-126.2" y2="-38.6" stroke="#ffb703" stroke-width="11" stroke-linecap="round" data-lod="1" data-shadow="false" data-material="emissive" data-stroke-role="body_dark"/>
+  <line x1="97.1" y1="37.3" x2="123.2" y2="47.3" stroke="#ffb703" stroke-width="11" stroke-linecap="round" data-lod="1" data-shadow="false" data-material="emissive" data-stroke-role="body_dark"/>
+  <line x1="-97.1" y1="37.3" x2="-123.2" y2="47.3" stroke="#ffb703" stroke-width="11" stroke-linecap="round" data-lod="1" data-shadow="false" data-material="emissive" data-stroke-role="body_dark"/>
+  <path d="M-30 98 C-34 72 -80 58 -80 0 A80 80 0 1 1 80 0 C80 58 34 72 30 98 Z" fill="#ffd93d" data-role="body" data-material="emissive"/>
+  <path d="M-21 90 C-24 66 -57 52 -57 0 A57 57 0 1 1 57 0 C57 52 24 66 21 90 Z" fill="#fff0a3" data-role="body_light" data-material="emissive" data-shadow="false" data-lod="1"/>
+  <ellipse cx="-44" cy="-40" rx="10" ry="24" fill="#ffffff" opacity="0.8" transform="rotate(32 -44 -40)" data-lod="1" data-shadow="false"/>
+  <path d="M-13 100 V58 L-22 38 Q-17 26 -9 38 Q0 52 9 38 Q17 26 22 38 L13 58 V100" fill="none" stroke="#f08a24" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" data-lod="0" data-shadow="false"/>
+  <path d="M-33 98 Q-33 92 -27 92 H27 Q33 92 33 98 V128 L26 148 H-26 L-33 128 Z" fill="#aab3bf"/>
+  <rect x="-33" y="107" width="66" height="8" rx="4" fill="#8d97a5" data-lod="1" data-shadow="false"/>
+  <rect x="-33" y="122" width="66" height="8" rx="4" fill="#8d97a5" data-lod="1" data-shadow="false"/>
+  <rect x="-29" y="137" width="58" height="8" rx="4" fill="#8d97a5" data-lod="1" data-shadow="false"/>
+  <path d="M-13 148 H13 A13 11 0 0 1 -13 148 Z" fill="#23262e" data-lod="0"/>
+</svg>

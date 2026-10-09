@@ -34,10 +34,19 @@ def build_catalog() -> dict[str, Any]:
         )  # on-screen size = CHAR_UNIT * scale * max(.35, 1 + perspective * (y - .8))
     for arch in cat["archetypes"]:
         obj = CATALOG.archetypes.get(arch["name"])
-        arch["palette"] = dict(getattr(obj, "palette", {}) or {})
+        picture = (getattr(obj, "features", None) or {}).get(
+            "asset"
+        )  # a library character: its own roles
+        arch["palette"] = (
+            dict(picture.role_colors)
+            if picture is not None
+            else dict(getattr(obj, "palette", {}) or {})
+        )
         arch["height"] = float(
             getattr(obj, "height", 575.0)
         )  # design units; a character is ~height*1.12/1920 of the frame
+    for row in cat["objects"]:
+        row["palette"] = dict(CATALOG.objects.get(row["name"]).role_colors)
     cat["easings"] = [
         {"name": n, "summary": ""} if isinstance(n, str) else n for n in cat["easings"]
     ]

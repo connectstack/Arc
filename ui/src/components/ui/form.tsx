@@ -91,9 +91,31 @@ export function SliderField({ value, onChange, min, max, step = 0.01, unit, labe
         </RSlider.Track>
         <RSlider.Thumb id={id} aria-label={label} className="block size-3.5 rounded-full border-2 border-accent bg-panel shadow transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" />
       </RSlider.Root>
-      <NumberField value={value} onChange={onChange} min={min} max={max} step={step} unit={unit} className="w-[72px]" aria-label={`${label} value`} />
+      {/* a number typed into the box, or a reset, is a finished edit: the caller's commit (the end of an undo step) comes with it, as it does when a slider is let go */}
+      <NumberField
+        value={value}
+        onChange={(v) => {
+          onChange(v)
+          onCommit?.()
+        }}
+        min={min}
+        max={max}
+        step={step}
+        unit={unit}
+        className="w-[72px]"
+        aria-label={`${label} value`}
+      />
       {defaultValue !== undefined && value !== defaultValue && (
-        <button type="button" aria-label={`Reset ${label}`} title="Reset to default" onClick={() => onChange(defaultValue)} className="text-faint hover:text-fg">
+        <button
+          type="button"
+          aria-label={`Reset ${label}`}
+          title="Reset to default"
+          onClick={() => {
+            onChange(defaultValue)
+            onCommit?.()
+          }}
+          className="text-faint hover:text-fg"
+        >
           <RotateCcw className="size-3.5" />
         </button>
       )}
@@ -215,7 +237,8 @@ export function SelectBox<T extends string>({ value, onChange, options, placehol
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
 
-export function ColorField({ value, onChange, fallback, label }: { value: string | undefined; onChange: (v: string | undefined) => void; fallback: string; label: string }) {
+/** `resetTo` names what the reset button goes back to (default: a character's archetype colour; an object's is "the drawing's own colour"). */
+export function ColorField({ value, onChange, fallback, label, resetTo }: { value: string | undefined; onChange: (v: string | undefined) => void; fallback: string; label: string; resetTo?: string }) {
   const shown = value ?? fallback
   const [text, setText] = useState(shown)
   useEffect(() => setText(shown), [shown])
@@ -234,7 +257,7 @@ export function ColorField({ value, onChange, fallback, label }: { value: string
         onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
       />
       {value !== undefined && (
-        <button type="button" aria-label={`Reset ${label} to the archetype default`} title="Use the archetype's colour" onClick={() => onChange(undefined)} className="text-faint hover:text-fg">
+        <button type="button" aria-label={`Reset ${label} to ${resetTo ?? 'the archetype default'}`} title={resetTo ? `Use ${resetTo}` : "Use the archetype's colour"} onClick={() => onChange(undefined)} className="text-faint hover:text-fg">
           <RotateCcw className="size-3.5" />
         </button>
       )}

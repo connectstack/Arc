@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="3.5 2.5 263.9 289.7">
+  <g data-material="emissive">
+    <path d="M107.2 6.7 A140 140 0 1 0 238.9 248.1 A16 16 0 0 0 225.8 220.1 A112 112 0 0 1 123.7 32.9 A16 16 0 0 0 107.2 6.7 Z" fill="#ffe38a" data-role="body"/>
+    <path d="M10.4 127.8C15.4 71.6 53.5 23.9 107.2 6.7C114.1 4.5 121.7 7.3 125.6 13.4C125.6 13.5 125.7 13.6 125.7 13.7C122.7 12.7 119.4 12.7 116.2 13.7C62.5 30.9 24.4 78.6 19.4 134.8C15.4 180.8 34.3 225.1 68.7 254.1C28.7 225.6 6.1 177.7 10.4 127.8ZM242.3 227.5C238.9 221.9 232.4 218.9 225.8 220.1C195.3 225.9 164.7 218.7 140.5 201.7C165.9 223.7 200.4 233.6 234.8 227.1C237.4 226.6 239.9 226.8 242.3 227.5Z" fill="#fff3b8" data-role="body_light" data-lod="1" data-shadow="false"/>
+    <path d="M234.6 233.5 A127 127 0 0 1 117.6 17.9 A7.5 7.5 0 0 1 127.9 28.8 A112 112 0 0 0 231.1 218.9 A7.5 7.5 0 0 1 234.6 233.5 Z" fill="#f2c660" data-role="body_dark" data-lod="1" data-shadow="false"/>
+    <circle cx="46" cy="152" r="13" fill="#f2c660" data-role="body_dark" data-lod="1" data-shadow="false"/>
+    <circle cx="66" cy="96" r="9" fill="#f2c660" data-role="body_dark" data-lod="1" data-shadow="false"/>
+    <circle cx="76" cy="208" r="11" fill="#f2c660" data-role="body_dark" data-lod="1" data-shadow="false"/>
+    <polygon points="231.4 65.5 235.4 87 256.7 91.7 237.5 102.1 239.6 123.9 223.7 108.8 203.7 117.5 213.1 97.8 198.6 81.4 220.3 84.3" fill="#ffd23f" data-role="accent" data-lod="0"/>
+    <polygon points="242.2 154.3 250 167.7 265.4 165.7 255.1 177.3 261.8 191.3 247.6 185.1 236.4 195.8 237.9 180.3 224.2 172.9 239.4 169.6" fill="#ffd23f" data-role="accent" data-lod="0"/>
+  </g>
+</svg>

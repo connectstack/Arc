@@ -65,6 +65,7 @@ Add `"$schema": "../schema/scene_spec.schema.json"` to get validation and comple
 | `style` | which style pack paints the spec; `reel render --style X` overrides it with no other change |
 | `seed` | seeds blinks, gaze, grain, jitter, background scatter, camera shake... |
 | `fx` | multipliers/overrides of the style's post-FX; `0` switches an effect off, `letterbox` is the fraction of the height blanked top and bottom |
+| `library_gaps` | what the script needed that the [asset library](assets.md) lacked when the spec was planned, one `{kind, name, scenes, character?, stand_in?}` per thing (`kind` is `character`, `object` or `place`; `stand_in` is what is shown instead, absent when it was left out). The renderer ignores it; the linter notes it, Reel Studio lists it with an Add button, and `reel assets fill` swaps in an asset added later |
 
 ### `characters`
 `archetype` (body/face template: `everyman kid elder hero robot boss`), `palette` (colour overrides by role:
@@ -72,11 +73,33 @@ Add `"$schema": "../schema/scene_spec.schema.json"` to get validation and comple
 umbrella phone book coffee flower balloon`), `name`/`voice` (TTS voice selection: `voice` is an engine-specific voice name such as a macOS
 `say -v ?` voice or a Piper model; without it `say` picks one that suits the archetype and the name, see [audio.md](audio.md)).
 
+A character may also be one of the library's **pictures** (`cat`, `dragon`, `doctor`, `farmer` ...: see [reference/assets.md](reference/assets.md)):
+a drawing posed as one piece. The same actions drive it (walking rocks and hops it, `jump` lifts it, talking squashes it, `face` mirrors it) but
+what needs a jointed body (waving, pointing, holding a prop) only takes time, and `reel lint` says so (`PICTURE_LIMIT`). Its `palette` roles are
+the ones its drawing marks (`fur`, `skin`, `shirt` ...), listed in the catalog.
+
 ### `scenes[].layers[]`
 `character`, `position`, `scale` (0-4, 1 ≈ a third of the frame height), `depth` (`background|mid|foreground`: which
 parallax plane the character lives on), `facing`, `actions`.
 Actions are the registered action library ([reference/actions.md](reference/actions.md)); times are scene-local and
 may be clamped by the scene end (a warning). Two root-moving actions that overlap warn: the later one wins.
+
+### `scenes[].objects[]`
+Things from the [asset library](assets.md) placed in a scene: a tree, a car, a cake.
+
+| field | notes |
+|---|---|
+| `asset` | the library object (`reel assets list --kind object`) |
+| `position` | `[x, y]` screen fractions of the point it **stands on** (bottom centre of its art unless its anchor says otherwise), or a slot name of the background |
+| `scale` | 0-6; at 1 an object is drawn at its own `height` (a person is 575), and the catalog's `size` says how tall that is next to a person |
+| `depth`, `layer` | the parallax plane (`background mid foreground`); at `mid`, `behind` (default) or `front` of the characters |
+| `facing`, `rotation`, `alpha` | `auto left right` (art is drawn facing right; `left` mirrors it), degrees clockwise, 0-1 |
+| `t0`, `t1` | on screen from / until, scene-local seconds (`t1` absent: to the end of the scene) |
+| `palette` | colours of the roles its drawing marks (`{"body": "#2a6fdb"}`: a blue car); shades like `body_dark` follow |
+| `motions[]` | `{type, t0, t1, from?, to?, amount?, count?, ease}`: `move` (to `[x,y]` or a slot, then stays), `hop` (`count`, `amount` of its height), `float`, `spin` (`amount` turns), `pulse`, `fade` (`from`/`to` opacity), `grow` (`from`/`to` times its size), `shake` |
+
+Unknown names are `REGISTRY_MISSING` errors with the way to add them; `--lenient` leaves an unknown object out. Planners that cannot find
+a thing in the library leave it out (or use a stand-in) and record it in `meta.library_gaps`.
 
 ### `scenes[].camera.moves[]`
 `type` is `pan | zoom | shake | dolly | rack_focus`; `from`/`to` meaning depends on the type
@@ -145,7 +168,10 @@ list: exactly what to add (`reel new-action <name>`, a template file, ...).
 | `TRANSITION_ZERO` / `TRANSITION_CLAMPED` / `TRANSITION_OVERLAP` / `TRANSITION_LAST` | warn / info | transitions that behave like cuts, get clamped, or are ignored |
 | `ACTION_OVERLAP`, `ACTION_TOO_SHORT`, `ACTION_CHECK` | warn | overlapping root motion, a window too short to read, action-specific advice (e.g. `pick_up` of an item the character does not own) |
 | `CAPTION_LONG` / `CAPTION_FAST` / `CAPTION_OVERLAP` / `CAPTION_EMPTY` | warn | readability (≤140 chars, ≤5 words/s, no stacked captions) |
-| `PALETTE_COLOR` / `PALETTE_ROLE` | error / warn | bad hex colour, unknown colour role |
+| `PALETTE_COLOR` / `PALETTE_ROLE` | error / warn | bad hex colour, unknown colour role (for a library picture: the roles its drawing marks are listed) |
+| `OBJECT_MOTION` / `OBJECT_CLUTTER` | error / warn | an unknown object motion or one missing its `to`; more than 14 objects in a scene |
+| `PICTURE_LIMIT` | info | a library picture asked for something only a body does (wave, point, hold a prop): it takes the time and keeps still |
+| `LIBRARY_GAP` / `LIBRARY_GAP_FILLED` | info | `meta.library_gaps`: the library still lacks it (with how to add it), or has it now (`reel assets fill` swaps it in) |
 | `FILE_MISSING`, `AUDIO_CONFIG` | error / warn | referenced music/voiceover file does not exist; inconsistent audio settings or an unknown `procedural:<mood>` (with a did-you-mean) |
 | `ASPECT`, `FPS`, `EMPTY_SCENE`, `UNUSED_CHARACTER`, `POSITION_RANGE`, `CAMERA_MOVE_INVALID` | warn / info | housekeeping |
 

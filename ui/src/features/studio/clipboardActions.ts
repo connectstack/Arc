@@ -5,7 +5,7 @@ import { MOD } from '@/lib/hotkeys'
 import { sameSelection, type Selection } from '@/lib/spec'
 import { useClipboard } from '@/store/clipboard'
 import { useProject } from '@/store/project'
-import { copyClips, deleteMany, describeClipboard, duplicateMany, nudgeMany, pasteClips, pasteTarget, selectedClips } from './clips'
+import { copyClips, deleteMany, describeClipboard, duplicateMany, nudgeMany, pasteClips, pasteObjectTarget, pasteTarget, selectedClips, type ObjectRef } from './clips'
 import { deleteSelection, duplicateSelection, nudge } from './ops'
 
 /** Make `sel` the selection unless it is already part of one (so a right-click on a selected clip keeps the group). */
@@ -54,13 +54,21 @@ export function copySelection(cut = false): boolean {
     const sels = selectedClips(st.selection, st.extra)
     st.edit((d) => st.select(deleteMany(d, sels)))
   }
-  toast.info(`${cut ? 'Cut' : 'Copied'} ${what}`, toldHow ? undefined : `Put the playhead where you want ${board.items.length === 1 ? 'it' : 'them'}, click a character’s name to paste onto them, and press ${MOD}V.`)
+  const objectsOnly = board.items.every((i) => i.kind === 'object')
+  toast.info(
+    `${cut ? 'Cut' : 'Copied'} ${what}`,
+    toldHow ? undefined : objectsOnly ? `Put the playhead in the scene you want ${board.items.length === 1 ? 'it' : 'them'} in and press ${MOD}V.` : `Put the playhead where you want ${board.items.length === 1 ? 'it' : 'them'}, click a character’s or an object’s name to paste onto ${board.items.length === 1 ? 'it' : 'them'}, and press ${MOD}V.`,
+  )
   toldHow = true
   return true
 }
 
-/** Paste at the playhead. `character` aims actions at a lane; without it the selected character (or the clip's own) is used. Returns false when nothing was pasted. */
-export function pasteAtPlayhead(character?: string): boolean {
+/**
+ * Paste at the playhead. `character` aims actions at a lane; without it the selected character (or the clip's own) is used.
+ * `object` aims motions at an object of the scene the playhead is in; without it the selected object (or the motion's own) is used.
+ * Returns false when nothing was pasted.
+ */
+export function pasteAtPlayhead(character?: string, object?: ObjectRef): boolean {
   const st = useProject.getState()
   const board = useClipboard.getState().board
   if (!st.spec) return false
@@ -69,13 +77,14 @@ export function pasteAtPlayhead(character?: string): boolean {
     return false
   }
   const who = character ?? pasteTarget(st.spec, st.selection)
+  const target = object ?? pasteObjectTarget(st.selection)
   let pasted: ReturnType<typeof pasteClips> = null
   st.edit((d) => {
-    pasted = pasteClips(d, board, st.playhead, who)
+    pasted = pasteClips(d, board, st.playhead, who, target)
   })
   const got = pasted as ReturnType<typeof pasteClips>
   if (!got) {
-    toast.warning('Could not paste here', 'The character is no longer in the cast, or the playhead is outside every scene.')
+    toast.warning('Could not paste here', board.items.some((i) => i.kind === 'motion') ? 'There is no object in this scene to give the motions to: select one first. (Otherwise the character is gone from the cast, or the playhead is outside every scene.)' : 'The character is no longer in the cast, or the playhead is outside every scene.')
     return false
   }
   // the first pasted clip is the one the inspector shows; the rest join the selection

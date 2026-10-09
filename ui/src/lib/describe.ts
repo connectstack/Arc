@@ -1,6 +1,6 @@
 // A short name for what changed between two versions of a spec: the labels of the undo history ("Moved walk", "Edited caption").
 // It compares the two specs structurally, so every route to an edit (timeline, inspector, keyboard, JSON) is named the same way.
-import type { ActionClip, Caption, ReelSpec, Scene } from '@/api/types'
+import type { ActionClip, Caption, ObjectMotion, ReelSpec, Scene, SceneObject } from '@/api/types'
 
 const same = (a: unknown, b: unknown): boolean => a === b || JSON.stringify(a) === JSON.stringify(b)
 const trim = (s: string, n = 28): string => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
@@ -34,6 +34,40 @@ function describeAction(a: ActionClip, b: ActionClip): string {
   return describeClip(a, b, b.name, other) ?? `Edited ${b.name}`
 }
 
+const objectName = (o: SceneObject): string => o.asset.replace(/_/g, ' ')
+
+function describeMotion(a: ObjectMotion, b: ObjectMotion): string {
+  if (a.type !== b.type) return `Changed ${a.type} to ${b.type}`
+  const other = changedKeys(a, b).some((k) => k !== 't0' && k !== 't1')
+  return describeClip(a, b, `the ${b.type}`, other) ?? `Edited the ${b.type}`
+}
+
+function describeObject(a: SceneObject, b: SceneObject): string {
+  const name = objectName(b)
+  const keys = changedKeys(a, b)
+  if (keys.length === 1) {
+    switch (keys[0]) {
+      case 'asset':
+        return `Changed ${objectName(a)} to ${name}`
+      case 'position':
+        return `Moved the ${name}`
+      case 'scale':
+        return `Resized the ${name}`
+      case 'palette':
+        return `Recoloured the ${name}`
+      case 'rotation':
+        return `Turned the ${name}`
+      case 'alpha':
+        return `Changed the ${name}’s opacity`
+      case 'motions':
+        return listChange(a.motions, b.motions, 'motion', (m) => `a ${m.type} for the ${name}`, describeMotion) ?? `Edited the ${name}`
+    }
+    if (keys[0] !== 't0' && keys[0] !== 't1') return `Changed the ${name}’s ${keys[0]}`
+  }
+  if (keys.length > 0 && keys.every((k) => k === 't0' || k === 't1')) return `Changed when the ${name} is on screen`
+  return `Edited the ${name}`
+}
+
 function describeCaption(a: Caption, b: Caption): string {
   const other = changedKeys(a, b).filter((k) => k !== 't0' && k !== 't1')
   if (other.includes('text')) return `Edited caption “${trim(b.text, 22)}”`
@@ -60,6 +94,7 @@ function describeScene(a: Scene, b: Scene, n: number, spec: ReelSpec): string {
   if (only('captions')) return listChange(a.captions, b.captions, 'caption', (c) => `a caption “${trim(c.text, 22)}”`, describeCaption) ?? `${at}: edited captions`
   if (only('sfx')) return listChange(a.sfx, b.sfx, 'sound', (x) => `the ${x.name} sound`, (x, y) => (x.name !== y.name ? `Changed ${x.name} to ${y.name}` : x.t !== y.t ? 'Moved a sound' : 'Edited a sound')) ?? `${at}: edited sounds`
   if (only('camera')) return listChange(a.camera.moves, b.camera.moves, 'camera move', (m) => `a ${m.type.replace('_', ' ')} move`, (x, y) => describeClip(x, y, `the ${y.type.replace('_', ' ')} move`, changedKeys(x, y).some((k) => k !== 't0' && k !== 't1')) ?? `Edited the ${y.type.replace('_', ' ')} move`) ?? `${at}: edited the camera`
+  if (only('objects')) return listChange(a.objects, b.objects, 'object', (o) => `the ${objectName(o)}`, describeObject) ?? `${at}: edited objects`
   if (only('layers')) {
     const who = (c: string) => spec.characters.find((x) => x.id === c)?.name || c
     const i = firstDiff(a.layers, b.layers)
@@ -127,7 +162,7 @@ export function describeChange(before: ReelSpec, after: ReelSpec): string {
     if (ids(a) !== ids(b) && [...a.map((s) => s.id)].sort().join('|') === [...b.map((s) => s.id)].sort().join('|')) return 'Reordered the scenes'
     const differing = a.map((s, i) => (same(s, b[i]) ? -1 : i)).filter((i) => i >= 0)
     if (differing.length === 1) return describeScene(a[differing[0]], b[differing[0]], differing[0], after)
-    if (differing.every((i) => changedKeys(a[i], b[i]).every((k) => k === 'duration_sec' || k === 'captions' || k === 'layers' || k === 'camera' || k === 'sfx'))) return `Rescaled ${differing.length} scenes`
+    if (differing.every((i) => changedKeys(a[i], b[i]).every((k) => k === 'duration_sec' || k === 'captions' || k === 'layers' || k === 'objects' || k === 'camera' || k === 'sfx'))) return `Rescaled ${differing.length} scenes`
     return `Edited ${differing.length} scenes`
   }
   return 'Edited the reel'

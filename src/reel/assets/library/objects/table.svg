@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 300">
+  <polygon data-role="body_dark" points="134,8 166,8 163,240 137,240" fill="#98602f"/>
+  <polygon data-role="body_dark" points="514,8 546,8 543,240 517,240" fill="#98602f"/>
+  <polygon data-role="body" points="12,70 44,70 41,300 15,300" fill="#c98a4b"/>
+  <polygon data-role="body" points="396,70 428,70 425,300 399,300" fill="#c98a4b"/>
+  <rect data-role="body_dark" x="40" y="94" width="360" height="20" fill="#98602f"/>
+  <polygon data-role="body_dark" points="428,60 560,0 560,36 428,96" fill="#98602f"/>
+  <rect data-role="body" x="0" y="60" width="440" height="36" rx="3" fill="#c98a4b"/>
+  <polygon data-role="body_light" points="0,60 440,60 560,0 120,0" fill="#e8b46e"/>
+  <path d="M120 44 L330 44 M220 30 L420 30 M60 54 L200 54 M300 54 L400 54" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.3" data-lod="1"/>
+</svg>

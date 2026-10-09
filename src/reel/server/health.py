@@ -100,6 +100,7 @@ def doctor() -> dict[str, Any]:
             "styles": len(CATALOG.styles),
             "backgrounds": len(CATALOG.backgrounds),
             "transitions": len(CATALOG.transitions),
+            "assets": len(CATALOG.assets),
         },
         "cache_dir": str(default_cache_dir()),
     }

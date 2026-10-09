@@ -64,10 +64,14 @@ class Archetype:
     features: dict[str, Any] = field(default_factory=dict)
     rest: dict[str, float] = field(default_factory=dict)  # resting pose offsets (e.g. stoop)
     category: str = "humanoid"
+    #: a character made from library art (category "sprite"): the asset's name, the words a script uses for it, its height
+    asset: str | None = None
+    tags: tuple[str, ...] = ()
+    height_px: float | None = None
 
     @property
     def height(self) -> float:
-        return self.dims.height
+        return self.dims.height if self.height_px is None else self.height_px
 
 
 _BASE_PALETTE = {

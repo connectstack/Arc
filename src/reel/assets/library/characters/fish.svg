@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-7 -7 198 188">
+  <path data-role="scales_dark" d="M48 92 C36 74 18 54 -4 36 C6 58 8 76 10 92 C8 108 6 126 -4 148 C18 130 36 110 48 92 Z" fill="#e0651f"/>
+  <path data-role="scales_dark" d="M74 46 C82 6 126 -4 152 44 Z" fill="#e0651f"/>
+  <path data-role="scales_dark" d="M90 146 C96 170 128 178 140 150 Z" fill="#e0651f"/>
+  <path data-role="scales" d="M186 94 C186 56 150 32 112 32 C78 32 54 54 40 86 L40 98 C54 130 78 152 112 152 C150 152 186 132 186 94 Z" fill="#f5a03a"/>
+  <path data-role="belly" data-lod="1" data-shadow="false" d="M52.4 119.9 C66.6 139.6 86.5 152 112 152 C150 152 186 132 186 94 C176 118 130 130 52.4 119.9 Z" fill="#ffc66e"/>
+  <path data-lod="1" d="M74 50 C66 78 66 108 76 136" stroke="#fff4dc" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path data-lod="1" d="M108 40 C100 70 100 112 110 146" stroke="#fff4dc" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path data-role="scales_dark" d="M120 100 C96.7 97.2 82.9 120.9 84 140 C97.5 134 119.6 117.8 120 100 Z" fill="#e0651f"/>
+  <path data-lod="1" d="M136 64 C146 82 146 106 136 124" stroke="#e0651f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <ellipse data-lod="1" data-shadow="false" data-tag="blush" cx="152" cy="104" rx="9" ry="6" fill="#ff8c7a" opacity="0.65"/>
+  <path data-lod="0" d="M166 112 C174 122 184 118 186 106" stroke="#e0651f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <ellipse data-lod="0" data-tag="eye" cx="160" cy="74" rx="14" ry="15" fill="#fff"/>
+  <ellipse data-lod="0" data-tag="pupil" cx="163" cy="76" rx="8" ry="9.4" fill="#23262e"/>
+  <circle data-lod="0" data-tag="glint" cx="165.8" cy="72.2" r="3.4" fill="#fff"/>
+</svg>

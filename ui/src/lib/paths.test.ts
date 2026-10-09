@@ -17,6 +17,7 @@ const scene = (actions: Scene['layers'][0]['actions']): Scene => ({
     { character: 'mia', position: 'left', scale: 1, depth: 'mid', facing: 'auto', actions },
     { character: 'pip', position: [0.8, 0.7], scale: 1, depth: 'mid', facing: 'auto', actions: [] },
   ],
+  objects: [],
   captions: [],
   sfx: [],
   transition_out: { type: 'cut', duration: 0, params: {} },

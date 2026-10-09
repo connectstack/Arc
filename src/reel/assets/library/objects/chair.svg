@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 234 330">
+  <rect data-role="body_dark" x="48" y="4" width="28" height="300" rx="4" fill="#98602f" data-lod="1"/>
+  <rect data-role="body_dark" x="206" y="182" width="28" height="124" rx="4" fill="#98602f"/>
+  <polygon data-role="body" points="28,30 68,8 68,48 28,70" fill="#c98a4b"/>
+  <polygon data-role="body" points="28,88 68,66 68,90 28,112" fill="#c98a4b"/>
+  <polygon data-role="body" points="28,130 68,108 68,132 28,154" fill="#c98a4b"/>
+  <polygon data-role="body_dark" points="170,176 230,154 230,194 190,204" fill="#98602f"/>
+  <rect data-role="body" x="24" y="176" width="166" height="28" rx="3" fill="#c98a4b"/>
+  <polygon data-role="body_light" points="28,176 190,176 230,154 68,154" fill="#e8b46e"/>
+  <rect data-role="body" x="0" y="26" width="28" height="304" rx="4" fill="#c98a4b"/>
+  <rect data-role="body" x="162" y="196" width="28" height="134" rx="4" fill="#c98a4b"/>
+  <rect data-role="body_dark" x="24" y="266" width="142" height="16" fill="#98602f" data-lod="1"/>
+  <path d="M60 168 L150 168 M92 160 L170 160" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.3" data-lod="1"/>
+</svg>

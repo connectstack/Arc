@@ -9,6 +9,7 @@ import type {
   JobEvent,
   JobEventInput,
   JobSnapshot,
+  LibraryGap,
   LintIssue,
   LintReport,
   PreviewInfo,
@@ -22,6 +23,7 @@ import type {
   VoiceInfo,
 } from '../types'
 import { ApiError } from '../types'
+import { createMockAssets } from './assets'
 import { mockFrameBlob, posterSvg } from './frames'
 import { sceneSlots, totalDuration } from '@/lib/timeline'
 
@@ -94,6 +96,7 @@ export async function createMockApi(): Promise<Api> {
     import('./data/scripts.json'),
   ])
   const catalog = clone(cat.default) as unknown as Catalog
+  const assetApi = createMockAssets(catalog)
   const hasKey = new URLSearchParams(location.search).get('mock') === 'eleven'
   const projects = new Map<string, { spec: ReelSpec; script: string; etag: string; updated_at: number }>()
   const seed = (id: string, spec: unknown, script: string, ago: number) =>
@@ -168,6 +171,7 @@ export async function createMockApi(): Promise<Api> {
 
   const api: Api = {
     kind: 'mock',
+    ...assetApi,
     health: async () => ({ version: '0.1.0 (mock)', python: '3.12', ffmpeg: 'ffmpeg 8.0 (mock)', ffmpeg_ok: true, skia: '144 (mock)', workers: 10, cache_dir: '~/.cache/reel', plugins: [], workspace: '(in memory)' }),
     catalog: async () => clone(catalog),
     schema: async () => ({ title: 'ReelSpec (mock)', type: 'object', required: ['meta', 'scenes'] }),
@@ -253,6 +257,13 @@ export async function createMockApi(): Promise<Api> {
         spec.meta.style = body.style
         spec.meta.seed = body.seed
         spec.meta.title = body.script.trim().split('\n')[0].slice(0, 60) || 'Untitled'
+        const gaps: LibraryGap[] = (await api.scriptAssets(body.script)).missing.map((m) => ({
+          kind: m.kind,
+          name: m.name,
+          scenes: [spec.scenes[0].id],
+          ...(m.kind === 'character' ? { character: spec.characters[0].id, stand_in: spec.characters[0].archetype } : m.kind === 'place' ? { stand_in: spec.scenes[0].background.template } : {}),
+        }))
+        if (gaps.length) spec.meta.library_gaps = gaps
         emit({ type: 'note', message: `offline planner (no LLM): ${spec.scenes.length} scenes, ${spec.characters.length} character(s)` })
         await sleep(400)
         emit({ type: 'note', message: `rescaled scene durations: total 54.3s -> ${body.target_duration.toFixed(1)}s` })

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 272 120">
+  <polygon points="226 52 272 0 272 68 226 120" fill="#3b925a" data-role="body_dark"/>
+  <rect x="0" y="52" width="226" height="68" fill="#58b573" data-role="body"/>
+  <polygon points="0 52 226 52 272 0 46 0" fill="#a4dcb2" data-role="body_light"/>
+  <path d="M3 65.6H223" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="2.6" opacity="0.45" stroke-linecap="round"/>
+  <path d="M230 64.6L268 14.6" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+  <path d="M3 79.2H223" fill="none" data-lod="0" data-shadow="false" stroke="#ffffff" stroke-width="2.6" opacity="0.45" stroke-linecap="round"/>
+  <path d="M230 78.2L268 28.2" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+  <path d="M3 92.8H223" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="2.6" opacity="0.45" stroke-linecap="round"/>
+  <path d="M230 91.8L268 41.8" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+  <path d="M3 106.4H223" fill="none" data-lod="0" data-shadow="false" stroke="#ffffff" stroke-width="2.6" opacity="0.45" stroke-linecap="round"/>
+  <path d="M230 105.4L268 55.4" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+  <polygon points="14.6 45.8 222.5 45.8 257.4 6.2 49.5 6.2" data-lod="1" data-shadow="false" fill="none" stroke="#58b573" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="181.2" cy="26" rx="25" ry="16" fill="#58b573" data-role="body" data-lod="0" data-shadow="false"/>
+  <ellipse cx="181.2" cy="26" rx="16" ry="10" fill="#a4dcb2" data-role="body_light" data-lod="1" data-shadow="false"/>
+  <ellipse cx="181.2" cy="26" rx="7" ry="4.4" fill="#3b925a" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <ellipse cx="36.4" cy="36.4" rx="4.2" ry="2.7" fill="#58b573" data-role="body" data-lod="1" data-shadow="false"/>
+  <ellipse cx="54.8" cy="15.6" rx="4.2" ry="2.7" fill="#58b573" data-role="body" data-lod="1" data-shadow="false"/>
+  <ellipse cx="224" cy="36.4" rx="4.2" ry="2.7" fill="#58b573" data-role="body" data-lod="1" data-shadow="false"/>
+  <ellipse cx="242.4" cy="15.6" rx="4.2" ry="2.7" fill="#58b573" data-role="body" data-lod="1" data-shadow="false"/>
+  <polygon points="58.8 52 90.4 52 136.4 0 104.8 0" fill="#f4e3b4" data-role="accent"/>
+  <rect x="58.8" y="52" width="31.6" height="68" fill="#f4e3b4" data-role="accent"/>
+  <rect x="58.8" y="52" width="3" height="68" fill="#d6bf84" data-lod="1" data-shadow="false"/>
+  <rect x="87.4" y="52" width="3" height="68" fill="#d6bf84" data-lod="1" data-shadow="false"/>
+</svg>

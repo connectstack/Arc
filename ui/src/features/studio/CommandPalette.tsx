@@ -1,7 +1,8 @@
 import * as RDialog from '@radix-ui/react-dialog'
-import { Activity, AudioLines, Clapperboard, ClipboardPaste, Copy, Keyboard, Library, LayoutGrid, Moon, PanelLeft, PanelRight, Plus, Redo2, Save, Scissors, Search, Sun, Undo2, UserPlus, Wand2, Type, Film, Ruler } from 'lucide-react'
+import { Activity, AudioLines, Boxes, Clapperboard, ClipboardPaste, Copy, Keyboard, Library, LayoutGrid, Moon, PanelLeft, PanelRight, Plus, Redo2, Save, Scissors, Search, Sun, Undo2, UserPlus, Wand2, Type, Film, Ruler } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCatalog } from '@/api/hooks'
 import { Kbd } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { MOD } from '@/lib/hotkeys'
@@ -11,7 +12,10 @@ import { useProject } from '@/store/project'
 import { useStudio } from '@/store/studio'
 import { useUi } from '@/store/ui'
 import { copySelection, pasteAtPlayhead } from './clipboardActions'
-import { addCaption, addCharacter, addScene } from './ops'
+import { sizeText } from './ObjectPicker'
+import { objectName } from './objects'
+import { PERSON_HEIGHT } from '@/lib/spec'
+import { addCaption, addCharacter, addObject, addScene } from './ops'
 
 interface Command {
   id: string
@@ -20,6 +24,10 @@ interface Command {
   icon: ReactNode
   shortcut?: string
   group: string
+  /** more words that find it (not shown): a library object's tags, its summary */
+  keywords?: string
+  /** listed only once something is typed (a library has too many objects to list them all) */
+  searchOnly?: boolean
   run: () => void
 }
 
@@ -32,6 +40,8 @@ export function CommandPalette() {
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const catalog = useCatalog().data
 
   const commands = useMemo<Command[]>(() => {
     const st = useProject.getState
@@ -52,6 +62,8 @@ export function CommandPalette() {
       { id: 'add-scene', group: 'Add', label: 'Add a scene at the end', icon: <Plus />, run: () => (close(), st().edit((d) => st().select(addScene(d)))) },
       { id: 'add-caption', group: 'Add', label: 'Add a caption at the playhead', icon: <Type />, run: () => (close(), st().edit((d) => { const s = addCaption(d, st().playhead); if (s) st().select(s) })) },
       { id: 'add-character', group: 'Add', label: 'Add a character', icon: <UserPlus />, run: () => (close(), st().edit((d) => st().select(addCharacter(d, 'everyman')))) },
+      // lists the library's objects as "Add object: <name>" (they are too many to show unasked)
+      { id: 'add-object', group: 'Add', label: 'Add object…', hint: 'a car, a tree, a cake … from the asset library', icon: <Boxes />, run: () => (setQ('Add object: '), requestAnimationFrame(() => inputRef.current?.focus())) },
       { id: 'fit', group: 'Edit', label: 'Fit the reel to 50 seconds', hint: 'scales every scene and what happens inside it', icon: <Ruler />, run: () => (close(), st().spec && st().replace(fitToDuration(st().spec as NonNullable<typeof spec>, 50))) },
       { id: 'render-draft', group: 'Render', label: 'Render a draft…', icon: <Film />, shortcut: `${MOD}↵`, run: () => set({ paletteOpen: false, exportOpen: true, exportPreset: 'draft' }) },
       { id: 'render-full', group: 'Render', label: 'Render in Full HD…', icon: <Wand2 />, run: () => set({ paletteOpen: false, exportOpen: true, exportPreset: 'full' }) },
@@ -88,14 +100,30 @@ export function CommandPalette() {
       spec.characters.forEach((c) =>
         out.push({ id: `char-${c.id}`, group: 'Cast', label: `Select ${characterName(spec, c.id)}`, hint: c.archetype, icon: <UserPlus />, run: () => (close(), st().select({ kind: 'character', id: c.id })) }),
       )
+      for (const o of catalog?.objects ?? [])
+        out.push({
+          id: `object-${o.name}`,
+          group: 'Objects',
+          label: `Add object: ${objectName(o.name)}`,
+          hint: [sizeText(o.size ?? (o.height === undefined ? undefined : o.height / PERSON_HEIGHT)), o.summary].filter(Boolean).join(' · '),
+          keywords: [...(o.tags ?? []), o.summary, o.name].join(' '),
+          searchOnly: true,
+          icon: <Boxes />,
+          run: () =>
+            (close(),
+            st().edit((d) => {
+              const added = addObject(d, catalog, o.name, st().playhead)
+              if (added) st().select(added)
+            })),
+        })
     }
     return out
-  }, [spec, id, nav, set])
+  }, [spec, id, nav, set, catalog])
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
-    if (!needle) return commands
-    return commands.filter((c) => `${c.group} ${c.label} ${c.hint ?? ''}`.toLowerCase().includes(needle))
+    if (!needle) return commands.filter((c) => !c.searchOnly)
+    return commands.filter((c) => `${c.group} ${c.label} ${c.hint ?? ''} ${c.keywords ?? ''}`.toLowerCase().includes(needle))
   }, [commands, q])
 
   useEffect(() => setActive(0), [q, open])
@@ -117,10 +145,10 @@ export function CommandPalette() {
         <RDialog.Overlay className="fade fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px]" />
         <RDialog.Content aria-label="Command palette" className="pop fixed left-1/2 top-[14vh] z-50 w-[min(560px,calc(100vw-32px))] -translate-x-1/2 overflow-hidden rounded-[14px] bg-panel shadow-[var(--shadow-pop)] outline-none" onKeyDown={onKey}>
           <RDialog.Title className="sr-only">Command palette</RDialog.Title>
-          <RDialog.Description className="sr-only">Type to search commands, scenes and characters</RDialog.Description>
+          <RDialog.Description className="sr-only">Type to search commands, scenes, characters and library objects</RDialog.Description>
           <div className="flex items-center gap-2 border-b border-line px-3">
             <Search className="size-4 text-faint" aria-hidden />
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search commands, scenes, characters…" aria-label="Search commands" className="h-11 flex-1 bg-transparent text-[14px] outline-none placeholder:text-faint" />
+            <input ref={inputRef} autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search commands, scenes, characters, objects…" aria-label="Search commands" className="h-11 flex-1 bg-transparent text-[14px] outline-none placeholder:text-faint" />
             <Kbd>esc</Kbd>
           </div>
           <div ref={listRef} role="listbox" aria-label="Commands" className="max-h-[50vh] overflow-y-auto p-1.5">

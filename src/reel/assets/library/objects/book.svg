@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 148">
+  <polygon points="106,20 132,0 132,128 106,148" fill="#fff1d0"/>
+  <polygon points="0,20 106,20 132,0 26,0" fill="#fff8e4"/>
+  <polygon points="132,0 132,128 129.1,130.2 129.1,2.2" fill="#157a6c" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <polygon points="26,0 132,0 129.1,2.2 23.1,2.2" fill="#157a6c" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <line x1="113.8" y1="20" x2="113.8" y2="136" stroke="#c9b27c" stroke-width="1.8" stroke-linecap="round" data-lod="0"/>
+  <line x1="119" y1="16" x2="119" y2="132" stroke="#c9b27c" stroke-width="1.8" stroke-linecap="round" data-lod="0"/>
+  <line x1="124.2" y1="12" x2="124.2" y2="128" stroke="#c9b27c" stroke-width="1.8" stroke-linecap="round" data-lod="0"/>
+  <line x1="13.8" y1="14" x2="107.8" y2="14" stroke="#c9b27c" stroke-width="1.8" stroke-linecap="round" data-lod="0"/>
+  <line x1="19" y1="10" x2="113" y2="10" stroke="#c9b27c" stroke-width="1.8" stroke-linecap="round" data-lod="0"/>
+  <line x1="24.2" y1="6" x2="118.2" y2="6" stroke="#c9b27c" stroke-width="1.8" stroke-linecap="round" data-lod="0"/>
+  <rect x="0" y="20" width="106" height="128" rx="4" fill="#1f9d8b" data-role="body"/>
+  <path d="M14 20.0 H4 Q0 20.0 0 24.0 V144.0 Q0 148.0 4 148.0 H14 Z" fill="#157a6c" data-role="body_dark"/>
+  <rect x="16.5" y="24" width="2.6" height="120" rx="1.3" fill="#ffd23f" data-lod="1" data-shadow="false"/>
+  <rect x="30" y="34" width="66" height="100" rx="3" fill="none" stroke="#ffd23f" stroke-width="2.2" data-lod="1" data-shadow="false"/>
+  <polygon points="63,52 68,65.1 82,65.8 71.1,74.6 74.8,88.2 63,80.5 51.2,88.2 54.9,74.6 44,65.8 58,65.1" fill="#ffd23f" data-lod="0"/>
+  <rect x="44" y="106" width="38" height="4.5" rx="2.2" fill="#ffd23f" data-lod="1" data-shadow="false"/>
+  <rect x="50" y="116" width="26" height="3.5" rx="1.7" fill="#ffd23f" opacity="0.8" data-lod="1" data-shadow="false"/>
+</svg>

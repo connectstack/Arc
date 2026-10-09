@@ -2,8 +2,9 @@
 // The timeline, the inspector, the keyboard and the command palette all go through these, so every route to an edit behaves alike.
 import type { ActionClip, Caption, CameraMove, Catalog, Layer, ReelSpec, Scene, SfxEvent } from '@/api/types'
 import { plainCopy } from '@/lib/clone'
-import { newAction, newCaption, newCharacter, newLayer, newScene, uniqueId, type Selection } from '@/lib/spec'
+import { CHAR_UNIT, entry, layerPoint, newAction, newCaption, newCharacter, newLayer, newObject, newScene, objectEntry, objectPoint, objectSizeFrac, uniqueId, type Selection } from '@/lib/spec'
 import { MIN_CLIP, clamp, ms, sceneAt, sceneSlots, type Slot } from '@/lib/timeline'
+import { newMotion } from './motions'
 
 type Draft = ReelSpec
 
@@ -21,6 +22,8 @@ export function clipOf(spec: Draft, sel: Selection): ClipTimes | null {
       return spec.scenes[sel.scene]?.captions[sel.caption] ?? null
     case 'camera':
       return spec.scenes[sel.scene]?.camera.moves[sel.move] ?? null
+    case 'motion':
+      return spec.scenes[sel.scene]?.objects?.[sel.object]?.motions?.[sel.motion] ?? null
     default:
       return null
   }
@@ -65,6 +68,12 @@ export function deleteSelection(spec: Draft, sel: Selection): Selection {
     case 'layer':
       spec.scenes[sel.scene]?.layers.splice(sel.layer, 1)
       return { kind: 'scene', scene: sel.scene }
+    case 'object':
+      spec.scenes[sel.scene]?.objects.splice(sel.object, 1)
+      return { kind: 'scene', scene: sel.scene }
+    case 'motion':
+      spec.scenes[sel.scene]?.objects[sel.object]?.motions.splice(sel.motion, 1)
+      return { kind: 'object', scene: sel.scene, object: sel.object }
     case 'transition': {
       const sc = spec.scenes[sel.scene]
       if (sc) sc.transition_out = { type: 'cut', duration: 0, params: {} }
@@ -132,6 +141,25 @@ export function duplicateSelection(spec: Draft, sel: Selection): Selection {
       sc.layers.splice(sel.layer + 1, 0, copy(l))
       return { ...sel, layer: sel.layer + 1 }
     }
+    case 'object': {
+      const sc = spec.scenes[sel.scene]
+      const o = sc?.objects[sel.object]
+      if (!sc || !o) return sel
+      const copyOf = copy(o)
+      if (Array.isArray(copyOf.position)) copyOf.position = [ms(Math.min(1.1, copyOf.position[0] + 0.08)), copyOf.position[1]]
+      sc.objects.splice(sel.object + 1, 0, copyOf)
+      return { ...sel, object: sel.object + 1 }
+    }
+    case 'motion': {
+      const sc = spec.scenes[sel.scene]
+      const list = sc?.objects[sel.object]?.motions
+      const m = list?.[sel.motion]
+      if (!sc || !list || !m) return sel
+      const len = m.t1 - m.t0
+      const t0 = Math.min(m.t1, Math.max(0, sc.duration_sec - len))
+      list.splice(sel.motion + 1, 0, { ...copy(m), t0: ms(t0), t1: ms(Math.min(sc.duration_sec, t0 + len)) })
+      return { ...sel, motion: sel.motion + 1 }
+    }
     case 'scene': {
       const sc = spec.scenes[sel.scene]
       if (!sc) return sel
@@ -189,6 +217,79 @@ export function addAction(spec: Draft, catalog: Catalog | undefined, characterId
   layer.actions.push(clip)
   layer.actions.sort((a, b) => a.t0 - b.t0)
   return { kind: 'action', scene: at.slot.index, layer: li, action: layer.actions.indexOf(clip) }
+}
+
+/** How big an object of `asset` is made when it is added: its width at most 42% of the frame and its height at most half of it. */
+function fitScale(catalog: Catalog | undefined, asset: string): number {
+  const row = objectEntry(catalog, asset)
+  const h = (row?.height ?? 300) * CHAR_UNIT
+  const w = h * (row?.aspect ?? 1)
+  return Math.round(Math.max(0.1, Math.min(1, (0.42 * 1080) / w, (0.5 * 1920) / h)) * 1000) / 1000
+}
+
+/**
+ * Where an object of `asset` goes in a scene by default: standing on the set's ground line (a thing that floats rests its bottom edge
+ * there), at a size that fits the frame, in the spot (left, right, middle ...) that is farthest from everyone already standing there,
+ * and never hanging out of the frame.
+ */
+function objectPlacement(sc: Scene, catalog: Catalog | undefined, asset: string): { position: [number, number]; scale: number } {
+  const scale = fitScale(catalog, asset)
+  const ground = entry(catalog?.backgrounds, sc.background.template)?.ground_y ?? 0.8
+  const { w, h } = objectSizeFrac(catalog, sc, newObject(asset, [0.5, ground], scale), ground)
+  const [ax, ay] = objectEntry(catalog, asset)?.anchor ?? [0.5, 1]
+  // a thing that floats (its anchor is high in the picture) is lifted so that its bottom edge, not its middle, is on the ground line
+  const y = ay < 0.75 ? Math.max(0.05, ms(ground - (1 - ay) * h)) : ground
+  const lo = ax * w + 0.02
+  const hi = 1 - (1 - ax) * w - 0.02
+  const fit = (x: number) => (lo > hi ? 0.5 : ms(clamp(x, lo, hi)))
+  const taken = [...sc.layers.map((l) => layerPoint(sc, l, catalog)[0]), ...sc.objects.map((o) => objectPoint(sc, o, catalog)[0])]
+  const gap = (x: number) => Math.min(1, ...taken.map((t) => Math.abs(x - t)))
+  const spots = [0.14, 0.86, 0.5, 0.3, 0.7].map(fit)
+  const x = spots.reduce((best, s) => (gap(s) > gap(best) ? s : best), spots[0])
+  return { position: [x, y], scale }
+}
+
+/**
+ * Put a library object in a scene (the playhead's, or `scene`). It lands in a clear spot, unless `at` says where (screen
+ * fractions of the point it stands on: a drop on the stage), and is sized to fit the frame.
+ */
+export function addObject(spec: Draft, catalog: Catalog | undefined, asset: string, playhead: number, scene?: number, at?: [number, number]): Selection | null {
+  const where = scene === undefined ? sceneAtPlayhead(spec, playhead) : localIn(spec, scene, playhead)
+  if (!where) return null
+  const sc = spec.scenes[where.slot.index]
+  const placed = objectPlacement(sc, catalog, asset)
+  const position: [number, number] = at ? [ms(clamp(at[0], -0.1, 1.1)), ms(clamp(at[1], 0, 1))] : placed.position
+  sc.objects.push(newObject(asset, position, placed.scale))
+  return { kind: 'object', scene: where.slot.index, object: sc.objects.length - 1 }
+}
+
+/** Give an object another library asset: it stays where it is, as big and as long as it was; colours the new drawing has no part for are dropped. */
+export function changeObjectAsset(spec: Draft, catalog: Catalog | undefined, scene: number, object: number, asset: string): void {
+  const o = spec.scenes[scene]?.objects[object]
+  if (!o || o.asset === asset) return
+  o.asset = asset
+  const roles = objectEntry(catalog, asset)?.roles
+  if (roles) for (const role of Object.keys(o.palette)) if (!roles.includes(role)) delete o.palette[role]
+}
+
+/** Add a motion of `type` to an object at the playhead (where it is inside the object's scene, else from the scene's start). */
+export function addMotion(spec: Draft, catalog: Catalog | undefined, scene: number, object: number, type: string, playhead: number): Selection | null {
+  const sc = spec.scenes[scene]
+  const o = sc?.objects[object]
+  const where = localIn(spec, scene, playhead)
+  if (!sc || !o || !where) return null
+  const m = newMotion(type, where.local, sc.duration_sec, objectPoint(sc, o, catalog))
+  o.motions.push(m)
+  o.motions.sort((a, b) => a.t0 - b.t0)
+  return { kind: 'motion', scene, object, motion: o.motions.indexOf(m) }
+}
+
+/** Set when an object is on screen: from `t0` until `t1` (null: the end of the scene). */
+export function setObjectSpan(spec: Draft, scene: number, object: number, t0: number, t1: number | null): void {
+  const o = spec.scenes[scene]?.objects[object]
+  if (!o) return
+  o.t0 = ms(Math.max(0, t0))
+  o.t1 = t1 === null ? null : ms(Math.max(t1, o.t0 + MIN_CLIP))
 }
 
 export function addCaption(spec: Draft, playhead: number, speaker?: string): Selection | null {
@@ -269,6 +370,19 @@ export function nudge(spec: Draft, sel: Selection, dt: number): void {
   if (sel.kind === 'sfx') {
     const x = sc.sfx[sel.sfx]
     if (x) x.t = ms(clamp(x.t + dt, 0, sc.duration_sec))
+    return
+  }
+  if (sel.kind === 'object') {
+    // the time an object is on screen: moves as a whole, or (when it stays until the end of the scene) its start alone
+    const o = sc.objects[sel.object]
+    if (!o) return
+    if (o.t1 === null || o.t1 === undefined) o.t0 = ms(clamp(o.t0 + dt, 0, Math.max(0, sc.duration_sec - MIN_CLIP)))
+    else {
+      const len = o.t1 - o.t0
+      const t0 = clamp(o.t0 + dt, 0, Math.max(0, sc.duration_sec - len))
+      o.t0 = ms(t0)
+      o.t1 = ms(t0 + len)
+    }
     return
   }
   const clip = clipOf(spec, sel)

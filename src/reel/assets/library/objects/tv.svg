@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 0 504 400">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b6fe0"/><stop offset="1" stop-color="#8fe0f2"/></linearGradient>
+  </defs>
+  <polygon data-role="accent_dark" points="40,376 68,376 64,400 44,400" fill="#8c5427"/>
+  <polygon data-role="accent_dark" points="452,376 480,376 476,400 456,400" fill="#8c5427"/>
+  <rect data-role="accent" x="24" y="308" width="472" height="76" rx="8" fill="#b9733a"/>
+  <rect data-role="accent" x="8" y="296" width="504" height="26" rx="8" fill="#b9733a"/>
+  <rect x="8" y="296" width="504" height="26" rx="8" fill="#ffffff" opacity="0.2" data-lod="1"/>
+  <rect data-role="accent_dark" x="44" y="332" width="206" height="38" rx="6" fill="#8c5427"/>
+  <rect data-role="accent_dark" x="270" y="332" width="206" height="38" rx="6" fill="#8c5427"/>
+  <path d="M147 351 h0.1 M373 351 h0.1" fill="none" stroke="#ffd23f" stroke-width="12" stroke-linecap="round" data-lod="1"/>
+  <rect data-role="body_dark" x="170" y="282" width="180" height="16" rx="7" fill="#1b1e26"/>
+  <rect data-role="body_dark" x="236" y="262" width="48" height="28" fill="#1b1e26"/>
+  <rect data-role="body" x="25" y="0" width="470" height="272" rx="16" fill="#2b303b"/>
+  <rect x="40" y="14" width="440" height="242" rx="6" fill="url(#sky)" data-lod="0" data-material="emissive"/>
+  <circle cx="392" cy="86" r="36" fill="#ffd23f" data-lod="1" data-material="emissive"/>
+  <path d="M40 256 L40 176 C100 140 160 150 220 176 C270 198 320 196 372 172 C410 156 450 160 480 176 L480 256 Z" fill="#35b86f" data-lod="1" data-material="emissive"/>
+  <path d="M40 256 L40 214 C90 196 150 204 200 222 C260 242 330 226 390 210 C430 200 460 204 480 212 L480 256 Z" fill="#23262e" opacity="0.18" data-lod="1"/>
+  <polygon points="110,176 150,96 192,176" fill="#ff5d8f" data-lod="1" data-material="emissive"/>
+  <ellipse rx="46" cx="250" cy="70" fill="#ffffff" opacity="0.9" data-lod="1" data-material="emissive" ry="16"/>
+  <ellipse rx="30" cx="280" cy="60" fill="#ffffff" opacity="0.9" data-lod="1" data-material="emissive" ry="14"/>
+  <circle cx="460" cy="264" r="3.5" fill="#ff5d8f" data-lod="1" data-material="emissive"/>
+</svg>

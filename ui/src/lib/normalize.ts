@@ -1,6 +1,6 @@
 // Spec files may leave out everything that has a default (the engine fills it in): `normalizeSpec` fills those in for editing,
 // `stripDefaults` takes them out again before saving, so a project file stays as small and readable as one written by hand.
-import type { ActionClip, Caption, CameraMove, Character, Layer, ReelSpec, Scene } from '@/api/types'
+import type { ActionClip, Caption, CameraMove, Character, Layer, ObjectMotion, ReelSpec, Scene, SceneObject } from '@/api/types'
 
 type Obj = Record<string, unknown>
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -26,6 +26,32 @@ function layer(l: unknown): Layer {
     depth: (['background', 'mid', 'foreground'].includes(str(o.depth, '')) ? o.depth : 'mid') as Layer['depth'],
     facing: (['auto', 'left', 'right'].includes(str(o.facing, '')) ? o.facing : 'auto') as Layer['facing'],
     actions: arr(o.actions, action),
+  }
+}
+
+function objectMotion(m: unknown): ObjectMotion {
+  const o = isObj(m) ? m : {}
+  return { ...o, type: str(o.type, 'float'), t0: num(o.t0, 0), t1: num(o.t1, 1), ease: str(o.ease, 'ease_in_out') } as ObjectMotion
+}
+
+function sceneObject(x: unknown): SceneObject {
+  const o = isObj(x) ? x : {}
+  const pos = o.position
+  const t1 = o.t1
+  return {
+    ...o,
+    asset: str(o.asset, ''),
+    position: typeof pos === 'string' || (Array.isArray(pos) && pos.length === 2) ? (pos as SceneObject['position']) : ([...DEFAULT_POSITION] as [number, number]),
+    scale: num(o.scale, 1),
+    depth: (['background', 'mid', 'foreground'].includes(str(o.depth, '')) ? o.depth : 'mid') as SceneObject['depth'],
+    layer: (['behind', 'front'].includes(str(o.layer, '')) ? o.layer : 'behind') as SceneObject['layer'],
+    facing: (['auto', 'left', 'right'].includes(str(o.facing, '')) ? o.facing : 'auto') as SceneObject['facing'],
+    rotation: num(o.rotation, 0),
+    alpha: num(o.alpha, 1),
+    t0: num(o.t0, 0),
+    t1: typeof t1 === 'number' && Number.isFinite(t1) ? t1 : null,
+    motions: arr(o.motions, objectMotion),
+    palette: isObj(o.palette) ? (o.palette as Record<string, string>) : {},
   }
 }
 
@@ -58,6 +84,7 @@ function scene(s: unknown, i: number): Scene {
     background: { ...bg, template: str(bg.template, 'abstract'), params: isObj(bg.params) ? bg.params : {} },
     camera: { ...cam, moves: arr(cam.moves, move) },
     layers: arr(o.layers, layer),
+    objects: arr(o.objects, sceneObject),
     captions: arr(o.captions, caption),
     sfx: arr(o.sfx, (x) => {
       const q = isObj(x) ? x : {}
@@ -76,11 +103,14 @@ export function normalizeSpec(raw: unknown): ReelSpec {
   const o = isObj(raw) ? raw : {}
   const meta = isObj(o.meta) ? o.meta : {}
   const audio = isObj(o.audio) ? o.audio : {}
+  // "nothing is missing from the library" is written as no list at all (so what is saved and what is edited stay the same)
+  const { library_gaps: gaps, ...rest } = meta
   return {
     ...o,
     version: str(o.version, '1.0'),
     meta: {
-      ...meta,
+      ...rest,
+      ...(Array.isArray(gaps) && gaps.length > 0 ? { library_gaps: gaps } : {}),
       title: str(meta.title, 'Untitled'),
       style: str(meta.style, 'paper_cutout'),
       fps: num(meta.fps, 30),
@@ -120,6 +150,7 @@ export function stripDefaults(spec: ReelSpec): Obj {
   drop(meta, 'target_duration_sec', (v) => v === 50)
   drop(meta, 'aspect', () => true)
   for (const k of Object.keys(meta)) if (meta[k] === null) delete meta[k]
+  drop(meta, 'library_gaps', (v) => Array.isArray(v) && v.length === 0)
   for (const c of out.characters as Obj[]) {
     drop(c, 'props', (v) => Array.isArray(v) && v.length === 0)
     drop(c, 'palette', emptyObj)
@@ -146,6 +177,24 @@ export function stripDefaults(spec: ReelSpec): Obj {
       drop(l, 'actions', (v) => Array.isArray(v) && v.length === 0)
     }
     drop(s, 'layers', (v) => Array.isArray(v) && v.length === 0)
+    for (const ob of (s.objects ?? []) as Obj[]) {
+      drop(ob, 'scale', (v) => v === 1)
+      drop(ob, 'depth', (v) => v === 'mid')
+      drop(ob, 'layer', (v) => v === 'behind')
+      drop(ob, 'facing', (v) => v === 'auto')
+      drop(ob, 'rotation', (v) => v === 0)
+      drop(ob, 'alpha', (v) => v === 1)
+      drop(ob, 't0', (v) => v === 0)
+      drop(ob, 't1', (v) => v === null)
+      drop(ob, 'position', (v) => same(v, DEFAULT_POSITION))
+      drop(ob, 'palette', emptyObj)
+      for (const m of (ob.motions ?? []) as Obj[]) {
+        drop(m, 'ease', (v) => v === 'ease_in_out')
+        for (const k of ['from', 'to', 'amount', 'count']) drop(m, k, (v) => v === null)
+      }
+      drop(ob, 'motions', (v) => Array.isArray(v) && v.length === 0)
+    }
+    drop(s, 'objects', (v) => Array.isArray(v) && v.length === 0)
     for (const c of s.captions as Obj[]) {
       drop(c, 'style', (v) => v === 'subtitle')
       drop(c, 'anchor', (v) => v === 'auto')

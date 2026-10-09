@@ -63,6 +63,28 @@ class SafeArea(_Strict):
     right: float = Field(0.07, ge=0, le=0.4)
 
 
+class LibraryGapSpec(_Strict):
+    """Something the script asks for that the asset library does not have, and what the spec shows instead.
+
+    Reel Studio lists these under "not in the library"; once the asset is added, ``scenes`` / ``character`` /
+    ``stand_in`` say what to swap.  The renderer ignores them.
+    """
+
+    kind: Literal["character", "object", "place"]
+    name: str = Field(
+        min_length=1,
+        max_length=60,
+        description="what the script calls it: dragon, castle, rickshaw",
+    )
+    scenes: list[str] = Field(default_factory=list, description="ids of the scenes that want it")
+    character: str | None = Field(
+        None, description="characters only: the id of the character standing in for it"
+    )
+    stand_in: str | None = Field(
+        None, description="the library name shown instead, or null when it was left out"
+    )
+
+
 class MetaSpec(_Strict):
     title: str = Field(description="Working title of the reel")
     style: str = Field(description="Style pack name, e.g. paper_cutout | stickman | flat_vector")
@@ -77,6 +99,10 @@ class MetaSpec(_Strict):
     aspect: Literal["9:16"] = "9:16"
     fx: FxSpec | None = Field(None, description="override the style's post-FX strengths")
     safe_area: SafeArea | None = Field(None, description="caption safe-area margins")
+    library_gaps: list[LibraryGapSpec] = Field(
+        default_factory=list,
+        description="characters, places and objects the script needs that the asset library lacks",
+    )
 
 
 # --------------------------------------------------------------------------- characters
@@ -140,6 +166,51 @@ class LayerSpec(_Strict):
     actions: list[ActionSpec] = Field(default_factory=list)
 
 
+class ObjectMotionSpec(_Strict):
+    """One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``shake``.
+
+    ``to`` is where a move goes ([x, y] or a slot) and the final value of a fade or grow; ``from`` is where a fade or
+    grow starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).
+    """
+
+    type: str = Field(description="move | hop | float | spin | pulse | fade | grow | shake")
+    t0: Seconds
+    t1: Seconds
+    from_: float | None = Field(None, alias="from", description="fade and grow: the start value")
+    to: float | str | Vec2 | None = Field(
+        None, description="move: [x, y] or a slot; fade and grow: the end value"
+    )
+    amount: float | None = Field(None, description="size of the effect (see the motion)")
+    count: int | None = Field(None, ge=1, le=20, description="hop and pulse: how many times")
+    ease: str = Field("ease_in_out", description="easing curve name")
+
+
+class ObjectSpec(_Strict):
+    """A thing from the asset library placed in a scene (a car, a tree, a cake)."""
+
+    asset: str = Field(description="Library object, e.g. car | tree | cake")
+    position: Vec2 | str = Field(
+        default_factory=lambda: [0.5, 0.8],
+        description="[x,y] of the point it stands on, in screen fractions, or a slot of the background",
+    )
+    scale: float = Field(1.0, gt=0, le=6)
+    depth: Literal["background", "mid", "foreground"] = "mid"
+    layer: Literal["behind", "front"] = Field(
+        "behind", description="at depth 'mid': drawn behind the characters, or in front of them"
+    )
+    facing: Literal["auto", "left", "right"] = "auto"
+    rotation: float = Field(0.0, ge=-360, le=360, description="degrees, clockwise")
+    alpha: float = Field(1.0, ge=0, le=1)
+    t0: Seconds = Field(0.0, description="visible from this time")
+    t1: Seconds | None = Field(
+        None, description="visible until this time (default: the end of the scene)"
+    )
+    motions: list[ObjectMotionSpec] = Field(default_factory=list)
+    palette: dict[str, str] = Field(
+        default_factory=dict, description="colour overrides for the recolourable parts, hex"
+    )
+
+
 class CaptionSpec(_Strict):
     text: str
     t0: Seconds
@@ -170,6 +241,9 @@ class SceneSpec(_Strict):
     background: BackgroundSpec
     camera: CameraSpec = Field(default_factory=CameraSpec)
     layers: list[LayerSpec] = Field(default_factory=list)
+    objects: list[ObjectSpec] = Field(
+        default_factory=list, description="things from the asset library placed in the scene"
+    )
     captions: list[CaptionSpec] = Field(default_factory=list)
     sfx: list[SfxSpec] = Field(default_factory=list)
     transition_out: TransitionSpec = Field(default_factory=TransitionSpec)
@@ -241,6 +315,7 @@ SCHEMA_ENUM_FIELDS: dict[str, tuple[str, str]] = {
     "BackgroundSpec": ("template", "background"),
     "CameraMoveSpec": ("type", "camera_move"),
     "ActionSpec": ("name", "action"),
+    "ObjectSpec": ("asset", "object"),
     "CaptionSpec": ("style", "caption_style"),
     "SfxSpec": ("name", "sfx"),
     "TransitionSpec": ("type", "transition"),

@@ -47,12 +47,15 @@ typecheck:
 
 check: lint typecheck test
 
+# the committed files describe what ships: never the asset folders (REEL_ASSETS) of the machine that regenerates them
+GEN := env -u REEL_ASSETS $(REEL)
+
 generated:
-	$(REEL) schema -o schema/scene_spec.schema.json
-	$(REEL) manifest -o src/reel/templates/manifest.json
-	$(REEL) reference -o docs/reference
-	$(REEL) prompt --schema -o docs/prompts/full.txt
-	$(REEL) prompt --compact --schema -o docs/prompts/compact.txt
+	$(GEN) schema -o schema/scene_spec.schema.json
+	$(GEN) manifest --builtin-only -o src/reel/templates/manifest.json
+	$(GEN) reference -o docs/reference
+	$(GEN) prompt --schema -o docs/prompts/full.txt
+	$(GEN) prompt --compact --schema -o docs/prompts/compact.txt
 
 examples:
 	$(REEL) lint examples/story_50s.json

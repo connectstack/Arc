@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 190">
+  <rect x="0" y="0" width="130" height="190" rx="15" fill="#3d4a69" data-role="body"/>
+  <rect x="8" y="60" width="114" height="122" rx="9" fill="#2c3652" data-role="body_dark" data-lod="1"/>
+  <rect x="10" y="10" width="110" height="42" rx="7" fill="#cdeac6"/>
+  <rect x="14" y="14" width="102" height="5" rx="2.5" fill="#ffffff" opacity="0.3" data-lod="1" data-shadow="false"/>
+  <path d="M53.6 21.7h3.4v10.3h-3.4ZM53.6 33.7h3.4v10.3h-3.4Z" fill="#2a3a2c" data-lod="1" data-shadow="false"/>
+  <path d="M64.7 20h9.6v3.4h-9.6ZM72.6 21.7h3.4v10.3h-3.4ZM64.7 30.3h9.6v3.4h-9.6ZM63 33.7h3.4v10.3h-3.4ZM64.7 40.6h9.6v3.4h-9.6Z" fill="#2a3a2c" data-lod="1" data-shadow="false"/>
+  <path d="M83.7 20h9.6v3.4h-9.6ZM91.6 21.7h3.4v10.3h-3.4ZM91.6 33.7h3.4v10.3h-3.4ZM83.7 40.6h9.6v3.4h-9.6ZM82 33.7h3.4v10.3h-3.4ZM82 21.7h3.4v10.3h-3.4ZM83.7 30.3h9.6v3.4h-9.6Z" fill="#2a3a2c" data-lod="1" data-shadow="false"/>
+  <path d="M101 21.7h3.4v10.3h-3.4ZM102.7 30.3h9.6v3.4h-9.6ZM110.6 21.7h3.4v10.3h-3.4ZM110.6 33.7h3.4v10.3h-3.4Z" fill="#2a3a2c" data-lod="1" data-shadow="false"/>
+  <rect x="14.5" y="68.5" width="21" height="21" rx="6" fill="#9aa6bd"/>
+  <rect x="41.5" y="68.5" width="21" height="21" rx="6" fill="#9aa6bd"/>
+  <rect x="68.5" y="68.5" width="21" height="21" rx="6" fill="#9aa6bd"/>
+  <rect x="95.5" y="68.5" width="21" height="21" rx="6" fill="#ff9f1c" data-role="accent"/>
+  <rect x="14.5" y="95.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="41.5" y="95.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="68.5" y="95.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="95.5" y="95.5" width="21" height="21" rx="6" fill="#ff9f1c" data-role="accent"/>
+  <rect x="14.5" y="122.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="41.5" y="122.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="68.5" y="122.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="95.5" y="122.5" width="21" height="21" rx="6" fill="#ff9f1c" data-role="accent"/>
+  <rect x="14.5" y="149.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="41.5" y="149.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="68.5" y="149.5" width="21" height="21" rx="6" fill="#eef1f6"/>
+  <rect x="95.5" y="149.5" width="21" height="21" rx="6" fill="#ff7a1a" data-role="accent"/>
+</svg>

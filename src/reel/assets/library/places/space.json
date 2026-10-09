@@ -1,0 +1,6 @@
+{
+  "summary": "Outer space: stars, a ringed planet, a crescent Earth, a moon and a grey lunar ridge",
+  "tags": ["outer space", "galaxy", "cosmos", "universe", "lunar", "moon surface", "अंतरिक्ष", "अन्तरिक्ष", "ब्रह्मांड", "ब्रह्माण्ड", "आकाशगंगा", "antariksh", "brahmand", "akashganga"],
+  "height": 1920,
+  "place": {"ground_y": 0.84, "horizon": 0.67, "perspective": 1.0, "slots": {"left": [0.27, 0.84], "center": [0.5, 0.86], "right": [0.73, 0.84], "crater": [0.74, 0.84], "rock": [0.84, 0.84]}}
+}

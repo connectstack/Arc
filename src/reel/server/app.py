@@ -12,11 +12,12 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
+from reel.server.assets_api import AssetStore
 from reel.server.config import ServerConfig
 from reel.server.deps import Context
 from reel.server.jobs import JobManager
 from reel.server.preview import PreviewCache, Thumbs
-from reel.server.routes import audio, projects, render, studio, system
+from reel.server.routes import assets, audio, projects, render, studio, system
 from reel.server.security import COOKIE, SecurityMiddleware, token_from_request, token_ok
 from reel.server.workspace import Workspace, WorkspaceError
 
@@ -54,11 +55,18 @@ def seed_examples(workspace: Workspace, examples_dir: Path | None) -> None:
 
 
 def create_app(
-    config: ServerConfig, *, plugins: tuple[str, ...] = (), inline_jobs: bool = False
+    config: ServerConfig,
+    *,
+    plugins: tuple[str, ...] = (),
+    asset_dirs: tuple[str, ...] = (),
+    inline_jobs: bool = False,
 ) -> FastAPI:
     workspace = Workspace(config.workspace)
     seed_examples(workspace, config.examples_dir)
     jobs = JobManager(inline=inline_jobs)
+    store = AssetStore(
+        workspace, asset_dirs
+    )  # the workspace's assets/ folder is read now and after every change
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -79,6 +87,7 @@ def create_app(
         previews=PreviewCache(),
         thumbs=Thumbs(workspace.thumbs_dir),
         plugins=plugins,
+        assets=store,
     )
     app.add_middleware(SecurityMiddleware, token=config.token, allowed_hosts=config.allowed_hosts)
 
@@ -104,7 +113,7 @@ def create_app(
             status_code=500,
         )
 
-    for module in (system, projects, studio, audio, render):
+    for module in (system, projects, studio, audio, render, assets):
         app.include_router(module.router)
 
     static = config.static_dir

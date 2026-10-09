@@ -49,7 +49,10 @@ from reel.core.spec import (
     CaptionSpec,
     CharacterSpec,
     LayerSpec,
+    LibraryGapSpec,
     MetaSpec,
+    ObjectMotionSpec,
+    ObjectSpec,
     SceneSpec,
     SfxSpec,
     TransitionSpec,
@@ -400,6 +403,13 @@ _ALIASES: dict[str, dict[str, str]] = {
     "scene": {"duration": "duration_sec", "length": "duration_sec", "dur": "duration_sec"},
     "window": {"start": "t0", "end": "t1", "t_start": "t0", "t_end": "t1"},
     "sfx": {"time": "t", "at": "t", "start": "t"},
+    "object": {
+        "name": "asset",
+        "id": "asset",
+        "object": "asset",
+        "pos": "position",
+        "size": "scale",
+    },
 }
 #: containers whose unknown keys are dropped (their params dicts are left to the linter)
 _MODELS: dict[str, type[BaseModel]] = {
@@ -410,6 +420,9 @@ _MODELS: dict[str, type[BaseModel]] = {
     "camera": CameraSpec,
     "move": CameraMoveSpec,
     "layer": LayerSpec,
+    "object": ObjectSpec,
+    "motion": ObjectMotionSpec,
+    "gap": LibraryGapSpec,
     "action": ActionSpec,
     "caption": CaptionSpec,
     "sfx": SfxSpec,
@@ -432,7 +445,11 @@ def _num(v: Any) -> float | None:
     if isinstance(v, bool):
         return None
     if isinstance(v, (int, float)):
-        return float(v) if math.isfinite(v) else None
+        try:
+            f = float(v)  # an integer too big for a float is not a time or a position either
+        except OverflowError:
+            return None
+        return f if math.isfinite(f) else None
     if isinstance(v, str):
         m = _NUMBER.match(v)
         if m:
@@ -457,9 +474,14 @@ class _Log:
 
     def __init__(self) -> None:
         self.counts: dict[str, int] = {}
+        #: things the library lacks that the pass found (an object it had to drop): merged into meta.library_gaps
+        self.gaps: list[dict[str, Any]] = []
 
     def hit(self, message: str) -> None:
         self.counts[message] = self.counts.get(message, 0) + 1
+
+    def gap(self, kind: str, name: str, scene: str | None) -> None:
+        self.gaps.append({"kind": kind, "name": name, "scenes": [scene] if scene else []})
 
     def notes(self) -> list[str]:
         return [m if n == 1 else f"{m} (x{n})" for m, n in self.counts.items()]
@@ -481,9 +503,9 @@ def _tidy_keys(d: dict[str, Any], kind: str, log: _Log, where: str) -> None:
     """Rename common slips (duration -> duration_sec, start -> t0) and drop unknown keys."""
     table = (
         "window"
-        if kind in ("action", "caption", "move")
+        if kind in ("action", "caption", "move", "motion")
         else kind
-        if kind in ("scene", "sfx")
+        if kind in ("scene", "sfx", "object")
         else ""
     )
     for wrong, right in _ALIASES.get(table, {}).items():
@@ -559,6 +581,197 @@ def _fix_meta(
             del meta[key]
             log.hit(f"dropped meta.{key} (the model must not override the style's look)")
     out["meta"] = meta
+
+
+# -- objects from the asset library -------------------------------------------------------------------
+_OBJECT_ENUMS = {
+    "depth": ("background", "mid", "foreground"),
+    "layer": ("behind", "front"),
+    "facing": ("auto", "left", "right"),
+}
+_MOTION_DEFAULT_SEC = 1.0
+
+
+def _resolve_object(name: str, cat: Catalog) -> str | None:
+    """A library object a model's word stands for: its exact name, any spelling of it, or one of its tags."""
+    from reel.assets.match import asset_index
+
+    low = name.strip().lower().replace(" ", "_").replace("-", "_")
+    if low in cat.objects:
+        return low
+    hit = asset_index(cat, ("object",)).lookup(name)
+    return hit.name if hit else None
+
+
+def _fix_motion(m: dict[str, Any], log: _Log, cat: Catalog) -> dict[str, Any] | None:
+    from reel.assets.objects import MOTIONS
+
+    _tidy_keys(m, "motion", log, "an object motion")
+    if not isinstance(m.get("type"), str) or m.get("type") not in MOTIONS:
+        log.hit(f"dropped object motions that are not in the catalog ({m.get('type')!r})")
+        return None
+    t0, t1 = _num(m.get("t0")), _num(m.get("t1"))
+    if t0 is None or t1 is None or t1 <= t0:
+        log.hit("dropped object motions with an empty or missing time window")
+        return None
+    m["t0"], m["t1"] = _r(max(0.0, t0)), _r(t1)
+    to = m.get("to")
+    if m["type"] == "move":
+        if isinstance(to, list) and len(to) == 2 and all(_num(v) is not None for v in to):
+            m["to"] = [_r(float(_num(to[0]) or 0.0)), _r(float(_num(to[1]) or 0.0))]
+        elif not (isinstance(to, str) and to.strip()):
+            log.hit("dropped object moves without a destination")
+            return None
+    elif m["type"] in ("fade", "grow"):
+        val = _num(to)
+        if val is None:
+            m.pop("to", None)
+        else:
+            m["to"] = _r(val)
+    elif "to" in m:
+        del m["to"]
+    for key in ("from", "amount"):
+        if key in m:
+            val = _num(m[key])
+            if val is None:
+                del m[key]
+            else:
+                m[key] = _r(val)
+    if "count" in m:
+        val = _num(m["count"])
+        if val is None:
+            del m["count"]
+        else:
+            m["count"] = int(min(20, max(1, round(val))))
+    if "ease" in m and (not isinstance(m["ease"], str) or m["ease"] not in cat.easings):
+        del m["ease"]
+        log.hit("dropped unknown easing names")
+    return m
+
+
+def _fix_object(
+    ob: dict[str, Any], sc: dict[str, Any], cat: Catalog, log: _Log
+) -> dict[str, Any] | None:
+    _tidy_keys(ob, "object", log, "an object")
+    name = ob.get("asset")
+    if not isinstance(name, str) or not name.strip():
+        log.hit("dropped objects without a name")
+        return None
+    if name not in cat.objects:
+        resolved = _resolve_object(name, cat)
+        if resolved is None:
+            log.hit(
+                "dropped objects that are not in the asset library (recorded in meta.library_gaps)"
+            )
+            log.gap("object", name.strip(), sc.get("id"))
+            return None
+        log.hit("matched object names to the asset library's own words")
+        ob["asset"] = resolved
+    pos = ob.get("position")
+    if isinstance(pos, list) and len(pos) == 2 and all(_num(v) is not None for v in pos):
+        x, y = float(_num(pos[0]) or 0.0), float(_num(pos[1]) or 0.0)
+        nx, ny = min(2.0, max(-1.0, x)), min(1.4, max(-0.2, y))
+        if (nx, ny) != (x, y):
+            log.hit("moved objects that were far outside the frame")
+        ob["position"] = [_r(nx), _r(ny)]
+    elif not (isinstance(pos, str) and pos.strip()):
+        ob.pop("position", None)
+    for key, lo, hi in (("scale", 0.05, 6.0), ("rotation", -360.0, 360.0), ("alpha", 0.0, 1.0)):
+        if key in ob:
+            val = _num(ob[key])
+            if val is None:
+                del ob[key]
+            else:
+                ob[key] = _r(min(hi, max(lo, val)))
+    for key, allowed in _OBJECT_ENUMS.items():
+        if key in ob and ob[key] not in allowed:
+            del ob[key]
+    t0, t1 = _num(ob.get("t0")), _num(ob.get("t1"))
+    if t0 is None:
+        ob.pop("t0", None)
+    else:
+        ob["t0"] = _r(max(0.0, t0))
+    if t1 is None or t1 <= (t0 or 0.0):
+        ob.pop("t1", None)
+    else:
+        ob["t1"] = _r(t1)
+    motions = _list_of_dicts(ob.get("motions"), log, "an object's motions")
+    ob["motions"] = [mo for mo in (_fix_motion(m, log, cat) for m in motions) if mo is not None]
+    if not ob["motions"]:
+        del ob["motions"]
+    pal = ob.get("palette")
+    if isinstance(pal, dict):
+        fixed = {str(k): c for k, v in pal.items() if (c := _fix_color(v)) is not None}
+        if len(fixed) != len(pal):
+            log.hit("dropped palette colours that are not hex")
+        if fixed:
+            ob["palette"] = fixed
+        else:
+            del ob["palette"]
+    elif "palette" in ob:
+        del ob["palette"]
+    return ob
+
+
+def _fix_objects(sc: dict[str, Any], cat: Catalog, log: _Log, where: str) -> None:
+    if "objects" not in sc:
+        return
+    items = _list_of_dicts(sc.get("objects"), log, f"{where}.objects")
+    keep = [o for o in (_fix_object(o, sc, cat, log) for o in items) if o is not None]
+    if keep:
+        sc["objects"] = keep
+    else:
+        del sc["objects"]
+
+
+def _merge_gaps(
+    meta: dict[str, Any], found: list[dict[str, Any]], cat: Catalog, log: _Log
+) -> list[tuple[dict[str, Any], str]]:
+    """Clean ``meta.library_gaps`` (what the model wrote plus what this pass had to drop): valid entries only, one per
+    thing, and none for something the library does have: those come back as ``(gap, asset name)`` to be applied."""
+    from reel.assets.gaps import resolve_gap
+
+    raw = meta.get("library_gaps")
+    entries = _list_of_dicts(raw, log, "meta.library_gaps") + [dict(g) for g in found]
+    merged: dict[tuple[str, str], dict[str, Any]] = {}
+    for g in entries:
+        _tidy_keys(g, "gap", log, "a library gap")
+        kind, name = g.get("kind"), g.get("name")
+        if kind not in ("character", "object", "place") or not isinstance(name, str):
+            log.hit("dropped malformed meta.library_gaps entries")
+            continue
+        name = " ".join(name.split())[:60]
+        if not name:
+            continue
+        scenes = (
+            [str(x) for x in g.get("scenes", []) if isinstance(x, (str, int))]
+            if isinstance(g.get("scenes"), list)
+            else []
+        )
+        clean: dict[str, Any] = {"kind": kind, "name": name, "scenes": scenes}
+        for key in ("character", "stand_in"):
+            if isinstance(g.get(key), str) and g[key].strip():
+                clean[key] = g[key].strip()
+        slot = merged.setdefault((kind, name.lower()), clean)
+        if slot is not clean:
+            slot["scenes"] = list(dict.fromkeys([*slot["scenes"], *scenes]))
+            for key in ("character", "stand_in"):
+                if key in clean and key not in slot:
+                    slot[key] = clean[key]
+    kept: list[dict[str, Any]] = []
+    resolved: list[tuple[dict[str, Any], str]] = []
+    for g in list(merged.values())[:24]:
+        have = resolve_gap(g, cat)
+        if have is not None:  # the library has it after all: the spec is fixed up by the caller
+            log.hit(f"dropped a library gap for {g['name']!r}: the library has {have.name!r}")
+            resolved.append((g, have.name))
+            continue
+        kept.append(g)
+    if kept:
+        meta["library_gaps"] = kept
+    else:
+        meta.pop("library_gaps", None)
+    return resolved
 
 
 def _guess_title(scenes: list[dict[str, Any]]) -> str:
@@ -667,9 +880,31 @@ def _define_missing_characters(
                 cp["speaker"] = canon[ref.lower()]
 
 
-def _give_palettes(chars: list[dict[str, Any]], log: _Log) -> None:
-    """Characters without colours would all look alike: hand out distinct ones."""
+def _picture_roles(cat: Catalog, archetype: Any) -> tuple[str, ...] | None:
+    """The recolourable roles of a library character (a picture), or None for the engine's own bodies."""
+    if isinstance(archetype, str) and archetype in cat.assets:
+        a = cat.assets.get(archetype)
+        if a.kind == "character":
+            return a.roles
+    return None
+
+
+def _give_palettes(chars: list[dict[str, Any]], cat: Catalog, log: _Log) -> None:
+    """Characters without colours would all look alike: hand out distinct ones.  A picture keeps its own colours
+    (only the roles its drawing marks can change), so it gets none and loses roles it does not have."""
     for i, ch in enumerate(chars):
+        roles = _picture_roles(cat, ch.get("archetype"))
+        if roles is not None:
+            pal = ch.get("palette")
+            if isinstance(pal, dict):
+                keep = {k: v for k, v in pal.items() if k in roles}
+                if keep != pal:
+                    log.hit("dropped palette roles that a picture character does not have")
+                if keep:
+                    ch["palette"] = keep
+                else:
+                    ch.pop("palette", None)
+            continue
         if ch.get("palette"):
             continue
         shirt, pants, accent = CHARACTER_PALETTES[i % len(CHARACTER_PALETTES)]
@@ -709,6 +944,28 @@ def _fix_slots(scenes: list[dict[str, Any]], cat: Catalog, log: _Log) -> None:
             if isinstance(pos, str) and pos not in valid:
                 ly["position"] = spread[min(i, len(spread) - 1)]
                 log.hit("replaced position slots the background does not have")
+        for ob in sc.get("objects", []):
+            if isinstance(ob.get("position"), str) and ob["position"] not in valid:
+                ob["position"] = "center"
+                log.hit("replaced object position slots the background does not have")
+            keep = []
+            for mo in ob.get("motions", []):
+                if isinstance(mo.get("to"), str) and mo["type"] == "move" and mo["to"] not in valid:
+                    log.hit("dropped object moves to a slot the background does not have")
+                    continue
+                keep.append(mo)
+            if "motions" in ob:
+                ob["motions"] = keep
+                if not keep:
+                    del ob["motions"]
+
+
+def _fit_pictures(spec: dict[str, Any], cat: Catalog, log: _Log) -> None:
+    """Pictures come in every width, bodies in one: narrow the pictures that would stand on one another."""
+    from reel.assets.layout import fit_spec
+
+    for _scene, _character in fit_spec(spec, cat):
+        log.hit("narrowed wide picture characters so they do not stand on one another")
 
 
 #: directions / words an action's ``target`` or ``to`` may use besides slots and character ids
@@ -799,6 +1056,7 @@ def _fix_scene(
     for layer in layers:
         _fix_layer(layer, ids, cat, log)
     sc["layers"] = layers
+    _fix_objects(sc, cat, log, where)
 
     caps = _list_of_dicts(sc.get("captions"), log, f"{where}.captions")
     sc["captions"] = [c for c in (_fix_caption(c, ids, log) for c in caps) if c is not None]
@@ -827,7 +1085,7 @@ def _fix_move(m: dict[str, Any], cat: Catalog, log: _Log) -> dict[str, Any] | No
         log.hit("dropped camera moves with an empty or missing time window")
         return None
     m["t0"], m["t1"] = _r(t0), _r(t1)
-    if "ease" in m and m["ease"] not in cat.easings:
+    if "ease" in m and (not isinstance(m["ease"], str) or m["ease"] not in cat.easings):
         del m["ease"]
         log.hit("dropped unknown camera easing names")
     if not isinstance(m.get("params", {}), dict):
@@ -976,6 +1234,13 @@ def _scale_inner(sc: dict[str, Any], f: float) -> None:
         s["t"] = _r(s["t"] * f)
     for m in sc.get("camera", {}).get("moves", []) if isinstance(sc.get("camera"), dict) else []:
         m["t0"], m["t1"] = _r(m["t0"] * f), _r(m["t1"] * f)
+    for ob in sc.get("objects", []):
+        if "t0" in ob:
+            ob["t0"] = _r(ob["t0"] * f)
+        if "t1" in ob:
+            ob["t1"] = _r(ob["t1"] * f)
+        for mo in ob.get("motions", []):
+            mo["t0"], mo["t1"] = _r(mo["t0"] * f), _r(mo["t1"] * f)
 
 
 def fit_total_duration(
@@ -1075,9 +1340,45 @@ def _fit_window(t0: float, t1: float, dur: float, min_len: float) -> tuple[float
     return _r(t0), _r(t1)
 
 
+def _clamp_object_windows(sc: dict[str, Any], dur: float, log: _Log) -> None:
+    keep: list[dict[str, Any]] = []
+    for ob in sc.get("objects", []):
+        t0 = float(ob.get("t0", 0.0))
+        if t0 >= dur - 0.05:
+            log.hit("dropped objects that appear after their scene ends")
+            continue
+        if "t1" in ob:
+            if ob["t1"] >= dur:
+                del ob["t1"]  # until the end of the scene
+            elif ob["t1"] - t0 < 0.1:
+                log.hit("dropped objects that are on screen for less than a tenth of a second")
+                continue
+        moves = []
+        for mo in ob.get("motions", []):
+            win = _fit_window(mo["t0"], mo["t1"], dur, 0.1)
+            if win is None:
+                log.hit("dropped object motions that fall outside their scene")
+                continue
+            if win != (mo["t0"], mo["t1"]):
+                log.hit("clamped time windows into their scene")
+            mo["t0"], mo["t1"] = win
+            moves.append(mo)
+        if "motions" in ob:
+            ob["motions"] = moves
+            if not moves:
+                del ob["motions"]
+        keep.append(ob)
+    if "objects" in sc:
+        if keep:
+            sc["objects"] = keep
+        else:
+            del sc["objects"]
+
+
 def _clamp_windows(scenes: list[dict[str, Any]], cat: Catalog, log: _Log) -> None:
     for sc in scenes:
         dur = float(sc["duration_sec"])
+        _clamp_object_windows(sc, dur, log)
         for layer in sc["layers"]:
             keep = []
             for a in layer["actions"]:
@@ -1157,6 +1458,11 @@ def normalize_spec(
       their minimum length, keep feet inside the safe placement band
     * tidy slips: ``duration`` -> ``duration_sec``, ``start``/``end`` -> ``t0``/``t1``, colour names
       -> hex, unknown *cosmetic* names (props, sfx, camera moves, easings) dropped
+    * objects from the asset library: names resolved through the library's own words (``automobile`` -> ``car``),
+      times and positions clamped like layers', an object the library lacks dropped and recorded in
+      ``meta.library_gaps`` (as is anything the model reports there itself)
+    * picture characters that would stand on one another get room (``reel.assets.layout``): the outer two move to the far
+      slots, and the scene is scaled down together if that is not enough
     * ``audio``: when given, replaces the model's block (models must not invent music paths)
 
     Names that carry meaning - actions, backgrounds, transitions, archetypes, caption styles - are
@@ -1183,10 +1489,15 @@ def normalize_spec(
         _fix_scene(sc, idx, used, id_map, cat, log)
     out["scenes"] = raw_scenes
     _define_missing_characters(out, raw_scenes, cat, log)
-    _give_palettes(out.get("characters", []), log)
+    _give_palettes(out.get("characters", []), cat, log)
     _fix_slots(raw_scenes, cat, log)
     _fix_targets(raw_scenes, cat, log)
     _fix_meta(out, style, seed, goal, raw_scenes, log)
+    for gap, found in _merge_gaps(out["meta"], log.gaps, cat, log):
+        from reel.assets.gaps import apply_library_gap
+
+        apply_library_gap(out, gap, found, cat)
+    _fit_pictures(out, cat, log)
     if raw_scenes:
         _fix_transitions(raw_scenes, log)
         fit_total_duration(
@@ -1461,6 +1772,7 @@ class LLMSpecGenerator(SpecGenerator):
                         f"the model corrected its JSON after {attempt - 1} repair round(s)"
                     )
                 spec, report = self._enriched(last, seed, cat, notes)
+                spec, report = self._with_gaps(spec, report, script, cat, notes)
                 return GenerationResult(
                     spec, report, attempts=calls, notes=notes, generator=f"llm:{name}"
                 )
@@ -1503,6 +1815,7 @@ class LLMSpecGenerator(SpecGenerator):
                 "a larger context window would do better)"
             )
             spec, report = self._enriched(best_partial, seed, cat, notes)
+            spec, report = self._with_gaps(spec, report, script, cat, notes)
             return GenerationResult(
                 spec, report, attempts=calls, notes=notes, generator=f"llm:{name}"
             )
@@ -1660,6 +1973,21 @@ class LLMSpecGenerator(SpecGenerator):
             return richer, report
         notes.append("enrichment skipped: it would have made the lint report worse")
         return attempt.spec, attempt.report
+
+    def _with_gaps(
+        self, spec: dict[str, Any], report: LintReport, script: str, cat: Catalog, notes: list[str]
+    ) -> tuple[dict[str, Any], LintReport]:
+        """The spec with what its script needs from the asset library and the library lacks noted in ``meta.library_gaps``
+        (what the model reported stays; the rest comes from reading the script), and its lint report brought up to date."""
+        from reel.llm.library_plan import attach_library_gaps
+
+        try:
+            if not attach_library_gaps(spec, script, cat, notes):
+                return spec, report
+            return spec, lint_data(spec, catalog=cat, options=self.lint_options)
+        except Exception as exc:  # advice about the library must never cost the spec itself
+            notes.append(f"library check skipped ({type(exc).__name__}: {exc})")
+            return spec, report
 
     @staticmethod
     def _complaint(attempt: _Attempt, *, restart: bool) -> str:

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 0 886 280">
+  <polygon points="590 130 478 130 382 52 428 44" fill="#c9d4e4" data-role="body_dark" data-lod="0" data-shadow="false"/>
+  <polygon points="256 120 184 2 108 2 104 130" fill="#2f7de1" data-role="accent" data-lod="0"/>
+  <polygon points="110 2 142 2 140 120 106 120" fill="#2459ad" data-role="accent_dark" data-lod="1" data-shadow="false"/>
+  <path d="M16 108 C50 102 110 98 190 98 L690 98 C810 98 898 118 898 152 C898 186 810 206 690 206 L270 206 C170 206 80 168 16 120 Z" fill="#f4f7fb" data-role="body"/>
+  <path d="M898 152 C898 186 810 206 690 206 L270 206 C170 206 80 168 16 120 C80 152 160 178 250 178 L690 178 C810 176 890 170 898 152 Z" fill="#c9d4e4" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M786 114 L828 114 C850 116 866 128 872 142 L786 142 Z" fill="#bfe3f2" data-lod="0" data-shadow="false"/>
+  <path d="M232 128 L237 128 M262 128 L267 128 M292 128 L297 128 M322 128 L327 128 M352 128 L357 128 M382 128 L387 128 M412 128 L417 128 M442 128 L447 128 M472 128 L477 128 M502 128 L507 128 M532 128 L537 128 M562 128 L567 128 M592 128 L597 128 M622 128 L627 128 M652 128 L657 128 M682 128 L687 128 M712 128 L717 128" fill="none" stroke="#bfe3f2" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" data-lod="1"/>
+  <rect x="744" y="112" width="36" height="76" rx="12" fill="none" stroke="#c9d4e4" stroke-width="3" data-lod="1"/>
+  <path d="M120 146 L862 146 L876 158 L112 158 Z" fill="#2f7de1" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="208 142 112 136 36 184 92 192" fill="#c9d4e4" data-role="body_dark" data-lod="0"/>
+  <polygon points="612 176 410 184 270 278 338 278" fill="#c9d4e4" data-role="body_dark" data-lod="0"/>
+  <rect x="432" y="206" width="116" height="48" rx="24" fill="#cfd5dc" data-lod="0"/>
+  <ellipse cx="544" cy="230" rx="10" ry="20" fill="#23262e" data-lod="0"/>
+  <rect x="452" y="215" width="58" height="7" rx="3.5" fill="#f4f7fb" data-lod="1" data-shadow="false"/>
+</svg>

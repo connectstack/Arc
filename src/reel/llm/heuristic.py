@@ -37,6 +37,7 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from reel.assets.model import ARMS_ONLY
 from reel.core.catalog import CATALOG, Catalog
 from reel.core.lint import LintOptions, lint_data
 from reel.core.rng import stable_int
@@ -57,6 +58,7 @@ from reel.llm.base import (
     guess_archetype,
 )
 from reel.llm.generator import normalize_spec
+from reel.llm.library_plan import LibraryPlanner, attach_library_gaps
 from reel.llm.stagecraft import (
     PLURAL_WORDS,
     SLOT_X,
@@ -220,6 +222,28 @@ _BG_KEYWORDS: dict[str, tuple[str, ...]] = {
               "band"),
 }  # fmt: skip
 _PLACE_WORDS = frozenset(w for words in _BG_KEYWORDS.values() for w in words if " " not in w)
+
+
+def engine_vocabulary() -> list[tuple[str, str, tuple[str, ...]]]:
+    """``(name, kind, words)`` for what the engine itself draws and the planner recognises by word: its backgrounds,
+    its body archetypes and its props.  (A role like "doctor" or "farmer" is drawn as an everyman, which is a stand-in,
+    not the thing: it is not listed.)"""
+    from reel.llm.base import ARCHETYPE_WORDS
+
+    out: list[tuple[str, str, tuple[str, ...]]] = [
+        (name, "place", words) for name, words in _BG_KEYWORDS.items()
+    ]
+    out += [
+        (name, "character", tuple(w for w, weight in table.items() if weight >= 2))
+        for name, table in ARCHETYPE_WORDS.items()
+    ]
+    props: dict[str, list[str]] = {}
+    for word, prop in _PROP_WORDS.items():
+        props.setdefault(prop, []).append(word)
+    out += [(name, "object", tuple(words)) for name, words in props.items()]
+    return out
+
+
 _PALETTES = CHARACTER_PALETTES
 _SKINS = SKIN_TONES
 _ABBREV = ("Mr.", "Mrs.", "Ms.", "Dr.", "Prof.", "St.", "vs.", "e.g.", "i.e.", "etc.")
@@ -558,16 +582,52 @@ def _describe(name: str, sents: list[Sent]) -> list[str]:
     copula = re.compile(
         rf"\b{n}\s+(?:is|was|looks|seems|became)\s+(?:(?:a|an|the)\s+)?([\w' -]{{1,70}}?)\s*[,.;!]"
     )
+    titled = re.compile(rf"\b{n}\s+the\s+(\w+)")  # "Max the dog", "Pixel the robot"
     for s in sents:
         for chunk in (s.text, s.attrib):
             chunk = chunk + " ."
             for m in before.finditer(chunk):
                 out += [g.lower() for g in m.groups() if g]
-            for pat in (apposition, copula):
+            for pat in (apposition, copula, titled):
                 for m in pat.finditer(chunk):
                     out += m.group(1).lower().split()
         if s.speaker_name == name:  # a "Name:" line: this character is the one talking
             out += [word for pat, word in _SPEECH_MARKERS if pat.search(s.text)]
+    return out
+
+
+#: words that end the noun group that says what a character is ("a rickshaw driver WITH a parrot")
+_GROUP_END = frozenset(
+    _w(
+        "with who whom whose that which from in on at of and but or while carrying holding wearing near by as"
+    )
+)
+
+
+def _what_is(name: str, sents: list[Sent]) -> list[str]:
+    """The words of the noun groups that say what ``name`` *is*: "Max the dog", "Pixel, the little robot,", "Pixel is a
+    robot that ...", "her dragon Ember", "Mia's dog Max".  Unlike :func:`_describe` it never reads a word that merely
+    stands near the name ("The cat scratched Mia"), so a creature next to a person does not make the person one."""
+    n = re.escape(name)
+    group = r"([\w' -]{1,70}?)"
+    patterns = (
+        re.compile(rf"\b{n}\s+the\s+(\w+)"),
+        re.compile(rf"\b{n}\s*,\s*(?:a|an|the|our|my|his|her|their)\s+{group}\s*[,.;!]"),
+        re.compile(
+            rf"\b{n}\s+(?:is|was|looks|seems|became)\s+(?:(?:a|an|the)\s+)?{group}\s*[,.;!]"
+        ),
+        re.compile(rf"\b(?:a|an|the|my|your|his|her|their|our)\s+(\w+)\s+{n}\b"),
+        re.compile(rf"\b\w+['’]s\s+(\w+)\s+{n}\b"),
+    )
+    out: list[str] = []
+    for s in sents:
+        for chunk in (s.text, s.attrib):
+            for pat in patterns:
+                for m in pat.finditer(chunk + " ."):
+                    for word in m.group(1).lower().split():
+                        if word in _GROUP_END:
+                            break
+                        out.append(word)
     return out
 
 
@@ -580,9 +640,20 @@ def _gender(words: list[str]) -> str:
     return ""
 
 
-def build_cast(parsed: Parsed, available_archetypes: set[str], seed: int) -> Cast:
-    """Up to three characters from names, ``Name:`` prefixes and role nouns; else one narrator."""
+def build_cast(
+    parsed: Parsed,
+    available_archetypes: set[str],
+    seed: int,
+    library: LibraryPlanner | None = None,
+) -> Cast:
+    """Up to three characters from names, ``Name:`` prefixes and role nouns; else one narrator.
+
+    ``library`` adds the characters of the asset library: a creature or a role it can draw ("the dog", "a farmer")
+    is a role noun like the engine's own, and a named character described as one ("Max the dog") is drawn as it.
+    A script in another language has no "the dog" for the rules to read: its words ("कुत्ता") are matched to the library's
+    tags directly, and a character it names is cast as the asset that answers to the word."""
     sents = parsed.sents
+    lib_words = library.character_words() if library else {}
     names = _find_names(sents)
     for who, said in Counter(s.speaker_name for s in sents if s.speaker_name).items():
         names[who] += 100 + said
@@ -592,8 +663,16 @@ def build_cast(parsed: Parsed, available_archetypes: set[str], seed: int) -> Cas
         for chunk in (s.text, s.attrib):
             for m in _ROLE_RE.finditer(chunk):
                 noun = m.group(1).lower()
-                if noun in _ROLE_NOUNS and noun not in lowered:
+                if (noun in _ROLE_NOUNS or noun in lib_words) and noun not in lowered:
                     roles[noun] += 1
+    foreign: Counter[str] = Counter()  # library characters named in another language, by asset name
+    foreign_first: dict[str, int] = {}
+    if library:
+        for i, s in enumerate(sents):
+            for chunk in (s.text, s.attrib):
+                for h in library.foreign_character_hits(chunk):
+                    foreign[h.asset.name] += 1
+                    foreign_first.setdefault(h.asset.name, i)
 
     def first_index(label: str) -> int:
         pat = re.compile(rf"\b{re.escape(label)}\b")
@@ -608,29 +687,52 @@ def build_cast(parsed: Parsed, available_archetypes: set[str], seed: int) -> Cas
     for noun, times in sorted(roles.items(), key=lambda kv: (-kv[1], kv[0])):
         if times >= 2 or named == 0:  # a role noun counts when it recurs, or when nothing else does
             chosen.append((noun, "role"))
+    cast_by_word = {
+        lib_words.get(n, n) for n, how in chosen if how == "role"
+    }  # what an English noun already casts
+    for asset, times in sorted(
+        foreign.items(), key=lambda kv: (-kv[1], foreign_first[kv[0]], kv[0])
+    ):
+        if asset in cast_by_word:
+            continue  # "the dog" and "कुत्ता" in one script are one dog
+        if times >= 2 or named == 0:  # the same rule for the words of another language
+            chosen.append((asset, "library"))
     if not chosen:  # nobody to point at: a narrator speaks every line on screen
         arch = guess_archetype([], available_archetypes)
         return Cast([Char("narrator", "Narrator", arch, count=1)], explainer=True)
     chars: list[Char] = []
     used: set[str] = set()
+    cast_as: dict[str, Char] = {}  # library asset name -> the character drawn as it
     for label, how in chosen[:MAX_ON_SCREEN]:
-        words = _describe(label, sents) if how == "name" else [label]
+        shown = label.replace("_", " ")
+        words = _describe(label, sents) if how == "name" else [shown]
         cid = _slug(label)
         base, k = cid, 2
         while cid in used:
             cid = f"{base}_{k}"
             k += 1
         used.add(cid)
-        arch = guess_archetype(words, available_archetypes)
-        if how == "role" and arch == "everyman" and _ROLE_NOUNS.get(label) in available_archetypes:
-            arch = _ROLE_NOUNS[label]
-        chars.append(
-            Char(
-                cid, label if how == "name" else label.capitalize(), arch, _gender(words),
-                label if how == "role" else "", names.get(label, roles.get(label, 0)),
-                first=first_index(label),
-            )
+        if how == "library":
+            arch, first, count = label, foreign_first[label], foreign[label]
+        else:
+            arch = guess_archetype(words, available_archetypes)
+            if arch == "everyman":  # a creature or role the library draws beats the generic body
+                what = _what_is(label, sents) if how == "name" else words
+                arch = next((lib_words[w] for w in what if w in lib_words), arch)
+            if (
+                how == "role"
+                and arch == "everyman"
+                and _ROLE_NOUNS.get(label) in available_archetypes
+            ):
+                arch = _ROLE_NOUNS[label]
+            first, count = first_index(label), names.get(label, roles.get(label, 0))
+        char = Char(
+            cid, label if how == "name" else shown.capitalize(), arch, _gender(words),
+            shown if how != "name" else "", count, first=first,
         )  # fmt: skip
+        chars.append(char)
+        if how == "library":
+            cast_as[label] = char
     chars.sort(key=lambda c: (c.first, -c.count))
     rng = random.Random(stable_int("palette", seed, *[c.id for c in chars]))
     offset, skin0 = rng.randrange(len(_PALETTES)), rng.randrange(len(_SKINS))
@@ -639,12 +741,19 @@ def build_cast(parsed: Parsed, available_archetypes: set[str], seed: int) -> Cas
         c.palette = {"shirt": shirt, "pants": pants, "accent": accent}
         if c.archetype != "robot":
             c.palette["skin"] = _SKINS[(skin0 + 2 * i) % len(_SKINS)]
+        roles_of = library.sprite_roles(c.archetype) if library else None
+        if (
+            roles_of is not None
+        ):  # a picture keeps its own colours: only the parts it marks can change
+            c.palette = {k: v for k, v in c.palette.items() if k in roles_of}
     cast = Cast(chars, explainer=False)
     for c in chars:
         cast.by_name[c.name.lower()] = c
         cast.by_name[c.id] = c
         if c.role:
             cast.by_name[c.role] = c
+    for asset_name, c in cast_as.items():  # so the words of another language find them again
+        cast.by_name.setdefault(asset_name, c)
     return cast
 
 
@@ -690,13 +799,30 @@ def _resolve_pronoun(word: str, cast: Cast, recent: list[str]) -> str | None:
     return pool[0]
 
 
-def build_units(parsed: Parsed, cast: Cast) -> list[Unit]:
+def _library_mentions(
+    text: str, cast: Cast, library: LibraryPlanner | None
+) -> list[tuple[int, str]]:
+    """(position, character id) of the cast's library characters that ``text`` names in another language."""
+    if library is None:
+        return []
+    found: list[tuple[int, str]] = []
+    for h in library.foreign_character_hits(text):
+        c = cast.by_name.get(h.asset.name)
+        if c is not None:
+            found.append((h.start, c.id))
+    return found
+
+
+def build_units(parsed: Parsed, cast: Cast, library: LibraryPlanner | None = None) -> list[Unit]:
     """Sentences -> units with speakers, mentions and cues (pronouns resolved by recency)."""
     units: list[Unit] = []
     recent: list[str] = []  # most recently active character first
     last_speaker: str | None = None
     prev: Sent | None = None
     narrator = cast.chars[0].id if cast.explainer else None
+
+    def named_in(text: str) -> list[tuple[int, str]]:
+        return sorted([*mentions(text, cast), *_library_mentions(text, cast, library)])
 
     def bump(cid: str | None) -> None:
         if cid is not None:
@@ -709,7 +835,7 @@ def build_units(parsed: Parsed, cast: Cast) -> list[Unit]:
         # directions.  A name inside a quote ("Grandpa, come here!") is only being called.
         seen_text = " ".join([s.attrib, *s.directions, s.text if s.kind == "narration" else ""])
         ordered: list[str] = []
-        for _, cid in mentions(seen_text, cast):
+        for _, cid in named_in(seen_text):
             if cid not in ordered:
                 ordered.append(cid)
         lead = _words(seen_text)
@@ -723,7 +849,7 @@ def build_units(parsed: Parsed, cast: Cast) -> list[Unit]:
                 c = cast.by_name.get(s.speaker_name.lower())
                 speaker = c.id if c else None
             else:
-                att = [cid for _, cid in mentions(s.attrib, cast)]
+                att = [cid for _, cid in named_in(s.attrib)]
                 if att:
                     speaker = att[0]
                 elif pronoun:
@@ -1122,13 +1248,15 @@ class HeuristicSpecGenerator(SpecGenerator):
         parsed = parse_script(script)
         if not parsed.sents:
             raise SpecGenerationError("the script has no sentences to turn into scenes")
-        cast = build_cast(parsed, set(cat.archetypes.names()), seed)
-        units = build_units(parsed, cast)
+        library = LibraryPlanner(cat)
+        cast = build_cast(parsed, set(cat.archetypes.names()), seed, library)
+        units = build_units(parsed, cast, library)
         _mark_shout(units)
         rng = random.Random(stable_int("heuristic", seed, style, clean_text(script)))
         scenes = plan_scenes(units, goal)
-        builder = _Builder(CatalogView(cat), cast, style, rng, goal, parsed.title)
+        builder = _Builder(CatalogView(cat), cast, style, rng, goal, parsed.title, library)
         spec = builder.build(scenes, seed, notes)
+        attach_library_gaps(spec, script, cat, notes)
         spec = normalize_spec(
             spec, style=style, seed=seed, target_duration=goal, audio=self.audio, notes=notes,
             catalog=cat, min_scene_sec=2.6, fit_tolerance=0.05,
@@ -1158,8 +1286,11 @@ class _Builder:
         rng: random.Random,
         goal: float,
         title: str | None,
+        library: LibraryPlanner | None = None,
     ) -> None:
         self.cat = cat
+        self.library = library
+        self.scene_texts: dict[str, str] = {}  # scene id -> what its captions say
         self.cast = cast
         self.style = style
         self.rng = rng
@@ -1325,16 +1456,24 @@ class _Builder:
             caps.insert(
                 0, {"text": title, "t0": 0.4, "t1": round(min(3.4, nat - 0.3), 2), "style": "title"}
             )
+        scene_text = " ".join(u.text for u in sc.units)
         scene: dict[str, Any] = {
             "id": f"s{i + 1:02d}",
             "duration_sec": round(nat, 2),
-            "background": self._background(tokens, i),
+            "background": self._background(tokens, i, scene_text),
         }
+        self.scene_texts[scene["id"]] = " ".join([title or "", scene_text]).strip()
         layers = self._layers(sc, sc_cast, prev_cast, spans, nat, i == 0, i)
         camera = self._camera(nat, sc)
         if camera:
             scene["camera"] = {"moves": camera}
         scene["layers"] = layers
+        if self.library is not None:
+            objects = self.library.scene_objects(
+                [(s0, e0, u.text) for s0, e0, u in spans], layers, nat
+            )
+            if objects:
+                scene["objects"] = objects
         scene["captions"] = caps
         sfx = self._sfx(layers, caps, nat, built[-1] if built else None)
         if sfx:
@@ -1345,21 +1484,27 @@ class _Builder:
         return scene
 
     # ------------------------------------------------------------------ background
-    def _background(self, tokens: list[str], index: int) -> dict[str, Any]:
+    def _background(self, tokens: list[str], index: int, scene_text: str = "") -> dict[str, Any]:
         bgs = self.cat.backgrounds()
         if not bgs:  # nothing registered: the linter will say so
             return {"template": "abstract"}
         text = set(tokens)
+        named = self.library.place_scores(scene_text) if self.library else {}
         strong: dict[str, float] = {}  # the place is named: "kitchen", "rooftop", "shop", "street"
         weak: dict[
             str, float
         ] = {}  # only a parameter's value shows up: "rain" says weather, not place
+        # a word the library can put on the set as an object (a tree, a sofa) says little about the place
+        thing_words = set(self.library.objects.single_words()) if self.library else set()
         for name, meta in bgs.items():
-            sc = float(sum(1 for kw in _BG_KEYWORDS.get(name, ()) if kw in text))
+            sc = float(
+                sum(1 for kw in _BG_KEYWORDS.get(name, ()) if kw in text and kw not in thing_words)
+            )
             sc += sum(
                 2.0 for part in re.split(r"[_\W]+", name.lower()) if len(part) >= 3 and part in text
             )
             sc += sum(1.0 for tag in meta["tags"] if len(tag) >= 3 and tag in text)
+            sc += named.get(name, 0.0)
             wk = 0.0
             for key, vals in meta["enums"].items():
                 if key not in _OWN_PARAMS:
@@ -1368,6 +1513,10 @@ class _Builder:
                 strong[name] = sc + wk
             elif wk:
                 weak[name] = wk
+            else:
+                thing_hits = sum(1 for kw in _BG_KEYWORDS.get(name, ()) if kw in text)
+                if thing_hits:
+                    weak[name] = float(thing_hits)
         if strong:
             top = max(strong.values())
             pool = sorted(n for n, s_ in strong.items() if s_ == top)
@@ -1518,6 +1667,12 @@ class _Builder:
                 reqs[who].append(flourish)
         if sc.kind == "bridge":
             self._bridge_business(reqs, sc_cast, dur)
+        for cid in sc_cast:  # a picture has no arms: a wave or a point would only take time
+            if (
+                self.library is not None
+                and self.library.sprite_roles(self._archetype(cid) or "") is not None
+            ):
+                reqs[cid] = [r for r in reqs[cid] if r.name not in ARMS_ONLY]
         layers: list[dict[str, Any]] = []
         for pos, cid in zip(slots, sc_cast):
             actions_out = self._schedule(reqs[cid], dur)

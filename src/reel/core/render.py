@@ -57,6 +57,7 @@ class RenderOptions:
     maxrate: str | None = "10M"  # x264 VBV cap (None = uncapped); previews pass None
     frame_range: tuple[int, int] | None = None  # global frames [a, b)
     plugins: tuple[str, ...] = ()
+    assets: tuple[str, ...] = ()  # folders of the user's own characters, objects and places
     seed: int | None = None
     segment_frames: int = 60
     audio: bool = True
@@ -462,12 +463,15 @@ def _worker_init(spec_json: str, opts: dict[str, Any], workdir: str) -> None:
     opts = dict(opts)
     opts["frame_range"] = tuple(opts["frame_range"]) if opts.get("frame_range") else None
     opts["plugins"] = tuple(opts.get("plugins", ()))
+    opts["assets"] = tuple(opts.get("assets", ()))
     opts["word_timings"] = {
         int(k): {int(ck): [tuple(w) for w in cv] for ck, cv in v.items()}
         for k, v in (opts.get("word_timings") or {}).items()
     }
     if opts["plugins"]:
         CATALOG.load_plugins(list(opts["plugins"]))
+    if opts["assets"]:
+        CATALOG.load_assets(list(opts["assets"]))
     spec = ReelSpec.model_validate_json(spec_json)
     _W["r"] = Renderer(spec, RenderOptions(**opts))
     _W["workdir"] = Path(workdir)

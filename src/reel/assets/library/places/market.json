@@ -1,0 +1,6 @@
+{
+  "summary": "An Indian bazaar lane: striped awnings, fruit stalls, a cart, pennants and lanterns",
+  "tags": ["bazaar", "bazar", "marketplace", "street market", "mandi", "haat", "बाज़ार", "बाजार", "मंडी", "हाट", "सब्ज़ी मंडी", "sabzi mandi"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.56, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "stall": [0.26, 0.79], "cart": [0.74, 0.79]}}
+}

@@ -1,0 +1,6 @@
+{
+  "summary": "An Indian railway platform: yellow safety line, a blue train, a clock and a canopy",
+  "tags": ["station", "train station", "railway platform", "rail station", "रेलवे स्टेशन", "रेल स्टेशन", "स्टेशन", "प्लेटफ़ॉर्म", "प्लेटफॉर्म", "रेलवे प्लेटफ़ॉर्म"],
+  "height": 1920,
+  "place": {"ground_y": 0.8, "horizon": 0.74, "perspective": 1.0, "slots": {"left": [0.27, 0.8], "center": [0.5, 0.82], "right": [0.73, 0.8], "platform": [0.5, 0.79], "bench": [0.32, 0.81], "train_door": [0.82, 0.8]}}
+}

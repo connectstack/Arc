@@ -53,12 +53,13 @@ export function Sheet({ open, onOpenChange, side, title, children }: { open: boo
   )
 }
 
-export function Popover({ trigger, children, align = 'start', className, open, onOpenChange }: { trigger: ReactNode; children: ReactNode; align?: 'start' | 'center' | 'end'; className?: string; open?: boolean; onOpenChange?: (o: boolean) => void }) {
+/** `label` names the popover for a screen reader (it is a dialog). */
+export function Popover({ trigger, children, align = 'start', className, open, onOpenChange, label }: { trigger: ReactNode; children: ReactNode; align?: 'start' | 'center' | 'end'; className?: string; open?: boolean; onOpenChange?: (o: boolean) => void; label?: string }) {
   return (
     <RPopover.Root open={open} onOpenChange={onOpenChange}>
       <RPopover.Trigger asChild>{trigger}</RPopover.Trigger>
       <RPopover.Portal>
-        <RPopover.Content align={align} sideOffset={6} collisionPadding={12} className={cn('pop z-50 rounded-card bg-panel p-3 text-fg shadow-[var(--shadow-pop)] outline-none', className)}>
+        <RPopover.Content aria-label={label} align={align} sideOffset={6} collisionPadding={12} className={cn('pop z-50 rounded-card bg-panel p-3 text-fg shadow-[var(--shadow-pop)] outline-none', className)}>
           {children}
         </RPopover.Content>
       </RPopover.Portal>
@@ -118,7 +119,7 @@ export function Menu({ trigger, entries, align = 'end' }: { trigger: ReactNode; 
     <RMenu.Root>
       <RMenu.Trigger asChild>{trigger}</RMenu.Trigger>
       <RMenu.Portal>
-        <RMenu.Content align={align} sideOffset={6} collisionPadding={12} className="pop z-50 min-w-[190px] rounded-card bg-panel p-1 text-fg shadow-[var(--shadow-pop)]">
+        <RMenu.Content align={align} sideOffset={6} collisionPadding={12} className="pop z-50 min-w-[190px] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto rounded-card bg-panel p-1 text-fg shadow-[var(--shadow-pop)]">
           {items(entries, RMenu.Item, RMenu.Separator, RMenu.Label)}
         </RMenu.Content>
       </RMenu.Portal>
@@ -131,7 +132,7 @@ export function ContextMenu({ children, entries }: { children: ReactNode; entrie
     <RContext.Root>
       <RContext.Trigger asChild>{children}</RContext.Trigger>
       <RContext.Portal>
-        <RContext.Content className="pop z-50 min-w-[190px] rounded-card bg-panel p-1 text-fg shadow-[var(--shadow-pop)]">
+        <RContext.Content className="pop z-50 min-w-[190px] max-h-[var(--radix-context-menu-content-available-height)] overflow-y-auto rounded-card bg-panel p-1 text-fg shadow-[var(--shadow-pop)]">
           {items(entries, RContext.Item as unknown as typeof RMenu.Item, RContext.Separator as unknown as typeof RMenu.Separator, RContext.Label as unknown as typeof RMenu.Label)}
         </RContext.Content>
       </RContext.Portal>

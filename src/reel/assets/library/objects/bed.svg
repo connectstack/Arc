@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 280">
+  <polygon data-role="accent_dark" points="4,236 36,236 33,280 7,280" fill="#8c5427"/>
+  <polygon data-role="accent_dark" points="614,236 646,236 643,280 617,280" fill="#8c5427"/>
+  <rect data-role="accent" x="0" y="0" width="44" height="244" rx="14" fill="#b9733a"/>
+  <rect data-role="accent" x="606" y="98" width="44" height="146" rx="14" fill="#b9733a"/>
+  <rect x="10" y="22" width="24" height="190" rx="8" fill="#ffffff" opacity="0.2" data-lod="1"/>
+  <rect data-role="accent_dark" x="24" y="190" width="602" height="50" rx="6" fill="#8c5427"/>
+  <rect x="36" y="126" width="576" height="78" rx="24" fill="#f8f2e5"/>
+  <rect x="46" y="190" width="556" height="14" rx="6" fill="#23262e" opacity="0.1" data-lod="1"/>
+  <path data-role="body" d="M190 120 C226 94 268 96 318 106 S418 120 478 106 S580 94 614 116 L614 200 Q614 216 598 216 L206 216 Q190 216 190 200 Z" fill="#2fa7a0"/>
+  <path d="M262 136 h0.1 M338 164 h0.1 M414 136 h0.1 M490 164 h0.1 M566 136 h0.1 M300 192 h0.1 M452 192 h0.1 M528 192 h0.1" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.4" data-lod="1"/>
+  <path d="M206 104 H226 V216 H206 Q190 216 190 200 V120 Q190 104 206 104 Z" fill="#ffffff" opacity="0.3" data-lod="1"/>
+  <path d="M54 132 C44 110 52 90 78 86 C100 82 112 92 130 90 C152 86 184 80 200 100 C212 116 206 132 198 140 Z" fill="#f8f2e5"/>
+  <path d="M80 114 C110 102 140 102 176 114" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" opacity="0.15" data-lod="1"/>
+</svg>

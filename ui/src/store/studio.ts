@@ -1,11 +1,15 @@
 import { create } from 'zustand'
 
-export type LeftTab = 'scenes' | 'cast' | 'script' | 'library'
+export type LeftTab = 'build' | 'scenes' | 'cast' | 'script' | 'library'
+/** The steps of the Build panel (a reel put together by hand from the library) */
+export type BuildStep = 'background' | 'cast' | 'objects' | 'actions' | 'sounds' | 'words' | 'camera'
 export type RightTab = 'inspector' | 'json'
 
 /** Studio-only view state (nothing here is saved): what is open, the timeline zoom, the transport. */
 interface StudioState {
   leftTab: LeftTab
+  /** the Build panel's open step (null: all closed) */
+  buildStep: BuildStep | null
   rightTab: RightTab
   problemsOpen: boolean
   exportOpen: boolean
@@ -28,6 +32,7 @@ interface StudioState {
 
 export const useStudio = create<StudioState>((set) => ({
   leftTab: 'scenes',
+  buildStep: 'background',
   rightTab: 'inspector',
   problemsOpen: false,
   exportOpen: false,

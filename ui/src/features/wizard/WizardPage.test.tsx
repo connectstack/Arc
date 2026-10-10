@@ -29,6 +29,14 @@ describe('the new-reel wizard', () => {
     expect(await screen.findByTestId('elsewhere', {}, { timeout: 8000 })).toBeInTheDocument()
   })
 
+  it('offers to build the reel by hand instead, from the library, with no script', async () => {
+    const user = userEvent.setup()
+    await renderScreen(<WizardPage />, { route: '/new', path: '/new' })
+    expect(await screen.findByText('No script?')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /build from scratch/i }))
+    expect(await screen.findByRole('dialog', { name: /build a reel from scratch/i })).toBeInTheDocument()
+  })
+
   it('checks the script against the library as it is typed and offers to add what is missing', async () => {
     const user = userEvent.setup()
     await renderScreen(<WizardPage />, { route: '/new', path: '/new' })

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, ArrowLeft, ArrowRight, Check, CheckCircle2, ChevronDown, Dice5, FileText, Loader2, Sparkles, XCircle } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, Check, CheckCircle2, ChevronDown, Dice5, FileText, Hammer, Loader2, Sparkles, XCircle } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApi } from '@/api/context'
@@ -10,6 +10,7 @@ import { Page, PageHeader } from '@/components/shell/PageHeader'
 import { Banner, Button, Chip, Field, IconButton, Input, NumberField, Segmented, SliderField, SwitchRow, Textarea, toast } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { plural, titleCase, words } from '@/lib/format'
+import { ScratchDialog } from '@/features/projects/ScratchDialog'
 import { useJobs } from '@/store/jobs'
 import { useUi } from '@/store/ui'
 import { CoveragePanel } from './CoveragePanel'
@@ -57,6 +58,7 @@ export function WizardPage() {
   const [enrich, setEnrich] = useState(true)
   const [verbatim, setVerbatim] = useState(true)
   const [advanced, setAdvanced] = useState(false)
+  const [scratchOpen, setScratchOpen] = useState(false)
   const [jobId, setJobId] = useState<string | null>(null)
   const job = useJobs((s) => (jobId ? s.jobs[jobId] : undefined))
   const [created, setCreated] = useState<{ id: string } | null>(null)
@@ -163,6 +165,13 @@ export function WizardPage() {
                 <Field label="Title" hint="Optional: it defaults to the first line">
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={script.trim().split('\n')[0].slice(0, 40) || 'Untitled reel'} aria-label="Title" />
                 </Field>
+                <div className="flex flex-col items-start gap-1.5 rounded-card border border-line bg-raised p-3">
+                  <div className="font-medium">No script?</div>
+                  <p className="text-[12px] leading-snug text-muted">Build the reel yourself: pick backgrounds, characters, objects, actions and sounds from the library.</p>
+                  <Button size="sm" onClick={() => setScratchOpen(true)}>
+                    <Hammer className="size-3.5" aria-hidden /> Build from scratch
+                  </Button>
+                </div>
                 <div>
                   <div className="eyebrow mb-1.5">Try an example</div>
                   <div className="flex flex-col gap-1.5">
@@ -285,6 +294,8 @@ export function WizardPage() {
           )}
         </div>
       </Page>
+
+      <ScratchDialog open={scratchOpen} onOpenChange={setScratchOpen} />
 
       {step < 2 && (
         <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-line bg-panel px-4 py-3 sm:px-6">

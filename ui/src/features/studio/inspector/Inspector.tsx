@@ -11,7 +11,7 @@ import { titleCase } from '@/lib/format'
 import { characterName, entry, pathLabel, type Selection } from '@/lib/spec'
 import { MIN_CLIP, ms } from '@/lib/timeline'
 import { useProject } from '@/store/project'
-import { addCameraMove, deleteSelection, duplicateSelection, renameCharacterId } from '../ops'
+import { addCameraMove, deleteSelection, duplicateSelection, renameCharacterId, setBackground } from '../ops'
 import { Row, Section, useLive } from './common'
 import { MotionInspector, ObjectInspector, SceneObjectsSection } from './ObjectInspector'
 import { ParamForm } from './ParamForm'
@@ -232,7 +232,7 @@ function SceneInspector({ spec, si }: { spec: ReelSpec; si: number }) {
       <Section title="Background">
         <div className="grid grid-cols-3 gap-2">
           {(catalog?.backgrounds ?? []).map((b) => (
-            <Thumb key={b.name} src={api.libraryThumbUrl('background', b.name, tod, spec.meta.style)} alt={`${b.name} background`} label={b.name} selected={sc.background.template === b.name} onClick={() => edit((d) => void (d.scenes[si].background = { template: b.name, params: { ...(tod !== 'day' ? { time_of_day: tod } : {}) } }))} />
+            <Thumb key={b.name} src={api.libraryThumbUrl('background', b.name, tod, spec.meta.style)} alt={`${b.name} background`} label={b.name} selected={sc.background.template === b.name} onClick={() => edit((d) => setBackground(d, catalog, si, b.name))} />
           ))}
         </div>
         {bgDef && <p className="text-[11.5px] leading-snug text-faint">{bgDef.summary}</p>}

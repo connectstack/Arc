@@ -150,7 +150,7 @@ reel serve --open        # or: make serve
 
 ![Reel Studio: preview, timeline and inspector](docs/img/studio.jpg)
 
-Write or paste a script, get a first cut that says what the script says, edit it on a timeline with a live preview that plays **with the voice**, export the MP4. It is a
+Write or paste a script, get a first cut that says what the script says (or skip the script and **build the reel by hand**, scene by scene, picking backgrounds, characters, objects, actions, sounds and words from the library), edit it on a timeline with a live preview that plays **with the voice**, export the MP4. It is a
 local app over the same engine (127.0.0.1, behind a per-launch access token; the built app is committed, so no Node is
 needed): projects are plain `*.reel.json` files, the preview is the real renderer, a render runs as a cancellable job.
 An online planner or voice (OpenAI, Claude, ElevenLabs) is used only when you pick it and click through a dialog that names the

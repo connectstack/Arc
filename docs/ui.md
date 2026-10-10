@@ -18,9 +18,9 @@ web app itself (see [Developing](#developing)).
 
 | Screen | What it does |
 |---|---|
-| **Projects** | Your reels as cards with a real thumbnail, length, style and a lint badge. Start from a script, from an example, or by dropping a spec file. |
+| **Projects** | Your reels as cards with a real thumbnail, length, style and a lint badge. Start from a script, **build one from scratch** (no script: you pick everything from the library), from an example, or by dropping a spec file. |
 | **New reel** | Three steps: the script, the look and the planner (offline, Ollama, OpenAI, Claude), then a generating checklist that ends in the studio. A hosted planner is only offered when its key exists, and asks before the script leaves the machine. Under the script a **Library check** lists the characters, places and objects it mentions that the [asset library](assets.md) can draw and those it cannot, each missing one with an *Add asset* button; after planning, anything still missing is shown again and adding it swaps it into the reel before the studio opens. |
-| **Studio** | Live preview (the engine's own frames, cached) that plays **with the voice**, a multi-lane timeline (scenes, camera, one lane per character, captions, sound effects, audio with the music's dip under speech), an inspector generated from the engine's catalog, a Script tab that checks the reel against your script, Problems (lint with "fix it" shortcuts) and the JSON itself. Drag characters (and the library's **objects**) on the stage, drag or Shift-select clips on the timeline, copy and paste them onto another character, `⌘K` for every command, `?` for every shortcut. Objects have their own lanes (when they appear, one clip per motion), an inspector (size, layer, recolour, motions) and an add control with a searchable picker. |
+| **Studio** | Live preview (the engine's own frames, cached) that plays **with the voice**, a multi-lane timeline (scenes, camera, one lane per character, captions, sound effects, audio with the music's dip under speech), an inspector generated from the engine's catalog, a Script tab that checks the reel against your script, Problems (lint with "fix it" shortcuts) and the JSON itself. Drag characters (and the library's **objects**) on the stage, drag or Shift-select clips on the timeline, copy and paste them onto another character, `⌘K` for every command, `?` for every shortcut. Objects have their own lanes (when they appear, one clip per motion), an inspector (size, layer, recolour, motions) and an add control with a searchable picker. The **Build** tab puts a reel together by hand, scene by scene, from the library (see below). |
 | **Voice & Audio** | Pick the speech engine (Piper, macOS Say, a placeholder, ElevenLabs), a voice per character with an audition button, the music mood and the mix. States exactly what a generation will cost before anything is sent. |
 | **Export** | Draft, Standard, Full HD or custom. Shows how many chunks are already cached, runs the render as a job with progress and Cancel (it keeps going if you reload the page), then plays the result and offers the download. Earlier renders are listed and can be deleted. |
 | **Library** | Every action, background, character, object, prop, sound, camera move, transition, caption style and easing, with thumbnails drawn by the renderer in the style you choose. Characters, objects and backgrounds include the [asset library](assets.md) (built in, and yours: a *From* filter, search that also matches Hindi words); **Add asset** (or drop a file on the page) reads a file, shows it in all three styles and next to a person at true size while you set its kind, name, words, size, anchor and facing, then keeps it in the workspace's `assets/` folder. Your assets can be edited and deleted; built-in ones are read-only. |
@@ -52,6 +52,25 @@ a pitch of their own so you can still tell who speaks.
 order", or what is missing, what is only a speaker's name, what the script does not contain), with **Make the captions follow my script**
 to fix it in one undo step. The New reel wizard keeps the script's own words unless you switch that off for a long script (see
 [llm.md](llm.md#your-script-exactly)).
+
+**Build a reel by hand.** No script needed: *Build from scratch* (on Projects, or under the script on New reel) asks for a title and a look and opens
+the studio on an empty scene with the **Build** tab ready. The tab works on one scene at a time (the one selected, else the one under the playhead;
+the arrows in its header move between scenes) and has seven steps, one open at a time:
+
+| Step | What you pick from the library | What it does |
+|---|---|---|
+| **Background** | any set (the engine's and the asset library's places, found by name or by a Hindi word) and the time of day | sets the scene's background; people and things that stood on the old set's ground line stand on the new one |
+| **Characters** | an engine body or a picture of the library, or someone already in the reel | adds them to the reel and to this scene, in the first free place (middle, left, right ...) |
+| **Objects** | the searchable object picker, or *Add your own…* | puts the object on a free spot of the scene, sized to fit the frame |
+| **Actions** | the actions by kind, for a character of the scene | each action starts when that character's last one ends |
+| **Sounds** | the sound effects, with a ▶ to listen first; and the reel's music: none, the look's own bed or a mood | an effect plays at the playhead (or at the start of the scene); the music is for the whole reel |
+| **Words** | typed lines, narration or a character's | each line follows the last, shown long enough to read |
+| **Camera** | pan, zoom, dolly, shake, rack focus | starts at the playhead |
+
+A scene grows to hold what is put in it (up to 30 s). *Scene like this* adds the next scene on the same set with the same people standing where
+they stood; *Blank scene* adds a plain one. A meter shows the reel against the 45-60 s it must be, with **Fit to 50 s** once the scenes could
+reach it. Every pick is one undo step, selects what it added (the inspector then shows its settings), and rows can be dragged onto the timeline
+instead of clicked, to land at an exact moment. The same list is in `⌘K` as *Build a scene from the library…*.
 
 **Editing**
 

@@ -18,6 +18,7 @@ import { plural } from '@/lib/format'
 import { sceneAt, sceneSlots, sceneVisibleFrom } from '@/lib/timeline'
 import { useProject } from '@/store/project'
 import { useStudio, type LeftTab } from '@/store/studio'
+import { BuildPanel } from './builder/BuildPanel'
 import { SceneObjects } from './SceneObjects'
 import { addCharacter, addScene, deleteSelection, duplicateSelection, moveScene } from './ops'
 
@@ -348,13 +349,17 @@ export function LeftPanel() {
         label="Panels"
         value={tab}
         onChange={(v) => set({ leftTab: v as LeftTab })}
+        // five tabs in a panel that can be as narrow as 264 px (StudioPage's LEFT_MIN): a little less padding in each
+        className="gap-0 [&>button]:px-1.5"
         tabs={[
+          { value: 'build', label: 'Build' },
           { value: 'scenes', label: 'Scenes' },
           { value: 'cast', label: 'Cast' },
           { value: 'script', label: 'Script' },
           { value: 'library', label: 'Library' },
         ]}
       >
+        {tab === 'build' && <BuildPanel />}
         {tab === 'scenes' && <ScenesTab spec={spec} />}
         {tab === 'cast' && <CastTab spec={spec} />}
         {tab === 'script' && <ScriptTab spec={spec} />}

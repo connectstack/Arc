@@ -80,3 +80,13 @@ describe('adding an object from the command palette', () => {
     expect(objectsOf(0).map((o) => o.asset)).toEqual(['billboard'])
   })
 })
+
+describe('building by hand', () => {
+  it('opens the Build panel of the studio, showing the left panel', async () => {
+    const user = userEvent.setup()
+    useStudio.getState().set({ leftTab: 'scenes' })
+    await open()
+    await user.click(await screen.findByRole('option', { name: /build a scene from the library/i }))
+    expect(useStudio.getState()).toMatchObject({ leftTab: 'build', paletteOpen: false })
+  })
+})

@@ -25,6 +25,7 @@ import type {
 import { ApiError } from '../types'
 import { createMockAssets } from './assets'
 import { mockFrameBlob, posterSvg } from './frames'
+import { normalizeSpec } from '@/lib/normalize'
 import { sceneSlots, totalDuration } from '@/lib/timeline'
 
 // under test the simulated latency is shrunk, so a whole render "takes" a few hundred milliseconds
@@ -38,7 +39,8 @@ interface MockJob {
   timers: number[]
 }
 
-function lint(spec: ReelSpec, catalog: Catalog): LintReport {
+function lint(saved: ReelSpec, catalog: Catalog): LintReport {
+  const spec = normalizeSpec(saved) // a saved file leaves out everything that has a default (an empty scene has no layers at all)
   const issues: LintIssue[] = []
   const add = (severity: LintIssue['severity'], code: string, path: string, message: string, hint?: string, extra: Partial<LintIssue> = {}) =>
     issues.push({ severity, code, path, message, ...(hint ? { hint } : {}), ...extra })

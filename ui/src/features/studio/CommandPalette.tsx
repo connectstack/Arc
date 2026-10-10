@@ -1,5 +1,5 @@
 import * as RDialog from '@radix-ui/react-dialog'
-import { Activity, AudioLines, Boxes, Clapperboard, ClipboardPaste, Copy, Keyboard, Library, LayoutGrid, Moon, PanelLeft, PanelRight, Plus, Redo2, Save, Scissors, Search, Sun, Undo2, UserPlus, Wand2, Type, Film, Ruler } from 'lucide-react'
+import { Activity, AudioLines, Boxes, Clapperboard, ClipboardPaste, Copy, Hammer, Keyboard, Library, LayoutGrid, Moon, PanelLeft, PanelRight, Plus, Redo2, Save, Scissors, Search, Sun, Undo2, UserPlus, Wand2, Type, Film, Ruler } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCatalog } from '@/api/hooks'
@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 import { MOD } from '@/lib/hotkeys'
 import { characterName } from '@/lib/spec'
 import { fitToDuration, sceneSlots } from '@/lib/timeline'
+import { useWide } from '@/lib/useMedia'
 import { useProject } from '@/store/project'
 import { useStudio } from '@/store/studio'
 import { useUi } from '@/store/ui'
@@ -42,6 +43,7 @@ export function CommandPalette() {
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const catalog = useCatalog().data
+  const wide = useWide()
 
   const commands = useMemo<Command[]>(() => {
     const st = useProject.getState
@@ -59,6 +61,7 @@ export function CommandPalette() {
       { id: 'cut', group: 'Edit', label: 'Cut the selected clips', icon: <Scissors />, shortcut: `${MOD}X`, run: () => (close(), void copySelection(true)) },
       { id: 'paste', group: 'Edit', label: 'Paste at the playhead', hint: 'into the selected character’s lane', icon: <ClipboardPaste />, shortcut: `${MOD}V`, run: () => (close(), void pasteAtPlayhead()) },
       { id: 'save', group: 'Edit', label: 'Save now', icon: <Save />, shortcut: `${MOD}S`, run: () => (close(), document.dispatchEvent(new CustomEvent('reel:save'))) },
+      { id: 'build', group: 'Add', label: 'Build a scene from the library…', hint: 'background, characters, objects, actions, sounds and words, step by step', icon: <Hammer />, run: () => (close(), nav(`/p/${id}`), useUi.getState().set({ leftOpen: true }), set({ leftTab: 'build', drawer: wide ? null : 'left' })) },
       { id: 'add-scene', group: 'Add', label: 'Add a scene at the end', icon: <Plus />, run: () => (close(), st().edit((d) => st().select(addScene(d)))) },
       { id: 'add-caption', group: 'Add', label: 'Add a caption at the playhead', icon: <Type />, run: () => (close(), st().edit((d) => { const s = addCaption(d, st().playhead); if (s) st().select(s) })) },
       { id: 'add-character', group: 'Add', label: 'Add a character', icon: <UserPlus />, run: () => (close(), st().edit((d) => st().select(addCharacter(d, 'everyman')))) },
@@ -118,7 +121,7 @@ export function CommandPalette() {
         })
     }
     return out
-  }, [spec, id, nav, set, catalog])
+  }, [spec, id, nav, set, catalog, wide])
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()

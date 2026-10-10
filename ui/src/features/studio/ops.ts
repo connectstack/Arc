@@ -2,7 +2,7 @@
 // The timeline, the inspector, the keyboard and the command palette all go through these, so every route to an edit behaves alike.
 import type { ActionClip, Caption, CameraMove, Catalog, Layer, ReelSpec, Scene, SfxEvent } from '@/api/types'
 import { plainCopy } from '@/lib/clone'
-import { CHAR_UNIT, entry, layerPoint, newAction, newCaption, newCharacter, newLayer, newObject, newScene, objectEntry, objectPoint, objectSizeFrac, uniqueId, type Selection } from '@/lib/spec'
+import { CHAR_UNIT, UNIVERSAL_SLOTS, entry, layerPoint, newAction, newCaption, newCharacter, newLayer, newObject, newScene, objectEntry, objectPoint, objectSizeFrac, uniqueId, type Selection } from '@/lib/spec'
 import { MIN_CLIP, clamp, ms, sceneAt, sceneSlots, type Slot } from '@/lib/timeline'
 import { newMotion } from './motions'
 
@@ -322,8 +322,9 @@ export function addCameraMove(spec: Draft, type: string, playhead: number, scene
   return { kind: 'camera', scene: at.slot.index, move: sc.camera.moves.indexOf(move) }
 }
 
-export function addSfx(spec: Draft, name: string, playhead: number): Selection | null {
-  const at = sceneAtPlayhead(spec, playhead)
+/** Add a sound at the playhead, or (with `scene`) to that scene: where the playhead is inside it, else at its start. */
+export function addSfx(spec: Draft, name: string, playhead: number, scene?: number): Selection | null {
+  const at = scene === undefined ? sceneAtPlayhead(spec, playhead) : localIn(spec, scene, playhead)
   if (!at) return null
   const sc = spec.scenes[at.slot.index]
   const x: SfxEvent = { name, t: ms(at.local), volume: 1 }
@@ -343,6 +344,123 @@ export function addCharacter(spec: Draft, archetype: string): Selection {
   const c = newCharacter(spec, archetype)
   spec.characters.push(c)
   return { kind: 'character', id: c.id }
+}
+
+// ------------------------------------------------------------------------------- building a reel by hand
+// The Build panel works on one scene at a time (named by index, never by the playhead: a scene that is fading out still holds the
+// playhead's end of it), and a scene grows to hold what is put into it, up to the longest scene the engine allows.
+
+/** The playhead's time inside `scene` in scene seconds; the scene's start when the playhead is somewhere else. */
+export function localTime(spec: Draft, scene: number, playhead: number): number {
+  return localIn(spec, scene, playhead)?.local ?? 0
+}
+
+const maxSceneSec = (catalog: Catalog | undefined): number => catalog?.limits.max_scene_sec ?? 30
+
+/** Make room in a scene for something that ends at `t` (scene seconds). */
+function growTo(sc: Scene, t: number, catalog: Catalog | undefined): void {
+  if (t > sc.duration_sec) sc.duration_sec = ms(Math.min(maxSceneSec(catalog), t))
+}
+
+/**
+ * Give a scene another set. The time of day stays; what only made sense on the old set does not: a person standing in a place the new set
+ * does not have goes to the middle, and a thing that stood on the old ground line is put on the new one.
+ */
+export function setBackground(spec: Draft, catalog: Catalog | undefined, scene: number, template: string): void {
+  const sc = spec.scenes[scene]
+  if (!sc || sc.background.template === template) return
+  const was = entry(catalog?.backgrounds, sc.background.template)
+  const now = entry(catalog?.backgrounds, template)
+  const tod = sc.background.params.time_of_day
+  sc.background = { template, params: typeof tod === 'string' && tod !== 'day' ? { time_of_day: tod } : {} }
+  if (now?.slots) {
+    const has = (place: string): boolean => place in (now.slots ?? {}) || UNIVERSAL_SLOTS.includes(place)
+    for (const l of sc.layers) if (typeof l.position === 'string' && !has(l.position)) l.position = 'center'
+    for (const o of sc.objects) if (typeof o.position === 'string' && !has(o.position)) o.position = 'center'
+  }
+  if (was?.ground_y !== undefined && now?.ground_y !== undefined) {
+    for (const o of sc.objects) if (Array.isArray(o.position) && Math.abs(o.position[1] - (was.ground_y ?? 0)) < 0.002) o.position = [o.position[0], ms(now.ground_y)]
+  }
+}
+
+/** Set the time of day of a scene's set (`day` is the default, so it is written as no setting at all). */
+export function setTimeOfDay(spec: Draft, scene: number, time: string): void {
+  const bg = spec.scenes[scene]?.background
+  if (!bg) return
+  if (time === 'day') delete bg.params.time_of_day
+  else bg.params = { ...bg.params, time_of_day: time }
+}
+
+/** The reel's music: `none`, `auto` (the bed its style picks the mood of) or the name of a mood for a generated bed. */
+export function setMusic(spec: Draft, music: string): void {
+  spec.audio.music = music === 'none' ? null : music === 'auto' ? 'procedural' : `procedural:${music}`
+}
+
+/** Where the next person of a scene stands: the first of the usual places that nobody holds, the middle first. */
+function freePlace(sc: Scene): string {
+  const held = new Set(sc.layers.map((l) => l.position))
+  return ['center', 'left', 'right', 'far_left', 'far_right'].find((p) => !held.has(p)) ?? 'center'
+}
+
+/** Put a character of the reel in a scene (a new layer where nobody stands); they stay where they are if they are there already. */
+export function castInScene(spec: Draft, scene: number, characterId: string): Selection | null {
+  const sc = spec.scenes[scene]
+  if (!sc || !spec.characters.some((c) => c.id === characterId)) return null
+  let li = sc.layers.findIndex((l) => l.character === characterId)
+  if (li < 0) {
+    sc.layers.push(newLayer(characterId, freePlace(sc)))
+    li = sc.layers.length - 1
+  }
+  return { kind: 'layer', scene, layer: li }
+}
+
+/** Add a new character to the reel and put them in `scene`. */
+export function addCharacterToScene(spec: Draft, scene: number, archetype: string): Selection {
+  const c = newCharacter(spec, archetype)
+  spec.characters.push(c)
+  return castInScene(spec, scene, c.id) ?? { kind: 'character', id: c.id }
+}
+
+/** Give a character an action in a scene that starts when their last one there ends (the first at the start); the scene grows if it must. */
+export function addActionAfter(spec: Draft, catalog: Catalog | undefined, scene: number, characterId: string, name: string): Selection | null {
+  const placed = castInScene(spec, scene, characterId)
+  if (placed?.kind !== 'layer') return null
+  const sc = spec.scenes[scene]
+  const layer = sc.layers[placed.layer]
+  const after = layer.actions.reduce((end, a) => Math.max(end, a.t1), 0)
+  const clip = newAction(catalog, name, after, Math.max(sc.duration_sec, maxSceneSec(catalog)))
+  growTo(sc, clip.t1, catalog)
+  layer.actions.push(clip)
+  layer.actions.sort((a, b) => a.t0 - b.t0)
+  return { kind: 'action', scene, layer: placed.layer, action: layer.actions.indexOf(clip) }
+}
+
+/** Seconds a line of text needs on screen to be read (a little under three words a second, which is also about how fast it is spoken). */
+export const readingSeconds = (text: string): number => ms(clamp(text.trim().split(/\s+/).filter(Boolean).length / 2.5, 1.5, 8))
+
+/** Add a caption that follows the last one of the scene (the first is at the start), shown long enough to read; the scene grows if it must. */
+export function addCaptionAfter(spec: Draft, catalog: Catalog | undefined, scene: number, text: string, speaker?: string | null): Selection | null {
+  const sc = spec.scenes[scene]
+  const line = text.trim()
+  if (!sc || !line) return null
+  const after = sc.captions.reduce((end, c) => Math.max(end, c.t1), 0)
+  const cap = newCaption(after, Math.max(sc.duration_sec, maxSceneSec(catalog)), line, speaker && spec.characters.some((c) => c.id === speaker) ? speaker : undefined)
+  cap.t1 = ms(Math.min(maxSceneSec(catalog), cap.t0 + readingSeconds(line)))
+  growTo(sc, cap.t1, catalog)
+  sc.captions.push(cap)
+  sc.captions.sort((a, b) => a.t0 - b.t0)
+  return { kind: 'caption', scene, caption: sc.captions.indexOf(cap) }
+}
+
+/** A new scene after `scene` on the same set with the same people, standing where they stood and doing nothing yet. */
+export function addSceneLike(spec: Draft, scene: number): Selection {
+  const from = spec.scenes[scene]
+  if (!from) return addScene(spec)
+  const sc: Scene = newScene(spec, from.background.template, from.duration_sec)
+  sc.background = copy(from.background)
+  sc.layers = from.layers.map((l) => ({ ...newLayer(l.character, copy(l.position)), scale: l.scale, depth: l.depth, facing: l.facing }))
+  spec.scenes.splice(scene + 1, 0, sc)
+  return { kind: 'scene', scene: scene + 1 }
 }
 
 export function moveScene(spec: Draft, from: number, to: number): void {

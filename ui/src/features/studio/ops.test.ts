@@ -1,9 +1,34 @@
 import { produce } from 'immer'
 import { describe, expect, it } from 'vitest'
 import type { Catalog, ReelSpec, Scene } from '@/api/types'
-import { newObject, objectBox } from '@/lib/spec'
+import { newObject, objectBox, scratchSpec } from '@/lib/spec'
+import { totalDuration } from '@/lib/timeline'
 import { OBJECT_FIXTURES } from './objects.fixture'
-import { addAction, addCameraMove, addMotion, addObject, changeObjectAsset, clipOf, deleteSelection, duplicateSelection, nudge, setClipTimes, setObjectSpan, splitAtPlayhead } from './ops'
+import {
+  addAction,
+  addActionAfter,
+  addCameraMove,
+  addCaptionAfter,
+  addCharacterToScene,
+  addMotion,
+  addObject,
+  addSceneLike,
+  addSfx,
+  castInScene,
+  changeObjectAsset,
+  clipOf,
+  deleteSelection,
+  duplicateSelection,
+  localTime,
+  nudge,
+  readingSeconds,
+  setBackground,
+  setClipTimes,
+  setMusic,
+  setObjectSpan,
+  setTimeOfDay,
+  splitAtPlayhead,
+} from './ops'
 
 const scene = (id: string, dur: number): Scene => ({
   id,
@@ -345,3 +370,212 @@ describe('an object and its motions', () => {
   })
 })
 
+
+// ------------------------------------------------------------------------------- building a reel by hand
+describe('a reel built from scratch', () => {
+  const catalog = {
+    backgrounds: [
+      { name: 'abstract', summary: '', ground_y: 0.74, slots: { center: [0.5, 0.74], left: [0.27, 0.74], right: [0.73, 0.74] } },
+      { name: 'cafe', summary: '', ground_y: 0.8, slots: { center: [0.5, 0.8], counter: [0.8, 0.8] } },
+      { name: 'beach', summary: '', ground_y: 0.7, slots: { center: [0.5, 0.7] } },
+    ],
+    actions: [
+      { name: 'walk', summary: '', default_duration: 2.4, min_duration: 0.5 },
+      { name: 'wave', summary: '', default_duration: 1.5, min_duration: 0.5 },
+    ],
+    objects: OBJECT_FIXTURES,
+    limits: { min_total_sec: 45, max_total_sec: 60, max_scene_sec: 30 },
+  } as unknown as Catalog
+
+  it('starts as one empty scene with nobody cast, in the style asked for', () => {
+    const s = scratchSpec('  My day  ', 'stickman')
+    expect(s.meta).toMatchObject({ title: 'My day', style: 'stickman', fps: 30, resolution: [1080, 1920], seed: 1, aspect: '9:16' })
+    expect(s.characters).toEqual([])
+    expect(s.scenes).toHaveLength(1)
+    expect(s.scenes[0]).toMatchObject({ duration_sec: 5, background: { template: 'abstract', params: {} }, layers: [], objects: [], captions: [], sfx: [] })
+    expect(s.audio).toMatchObject({ music: 'procedural', voiceover: 'none' })
+    expect(scratchSpec('', 'flat_vector').meta.title).toBe('Untitled reel')
+  })
+
+  describe('the background', () => {
+    it('keeps the time of day and drops the settings only the old set knew', () => {
+      const s = make()
+      s.scenes[0].background = { template: 'abstract', params: { time_of_day: 'dusk', mood: 'warm' } }
+      setBackground(s, catalog, 0, 'cafe')
+      expect(s.scenes[0].background).toEqual({ template: 'cafe', params: { time_of_day: 'dusk' } })
+      setBackground(s, catalog, 0, 'cafe') // the same set again changes nothing
+      expect(s.scenes[0].background.params).toEqual({ time_of_day: 'dusk' })
+      setBackground(s, catalog, 9, 'cafe') // no such scene
+    })
+
+    it('puts a person who stood in a place the new set lacks in the middle, and keeps the ones it has', () => {
+      const s = make()
+      s.scenes[0].background.template = 'cafe'
+      s.scenes[0].layers[0].position = 'counter'
+      s.scenes[0].layers.push({ character: 'pip', position: 'left', scale: 1, depth: 'mid', facing: 'auto', actions: [] }) // every set has a left
+      setBackground(s, catalog, 0, 'beach')
+      expect(s.scenes[0].layers.map((l) => l.position)).toEqual(['center', 'left'])
+    })
+
+    it('stands what was on the ground line of the old set on the ground line of the new one', () => {
+      const s = make()
+      addObject(s, catalog, 'tree', 1) // on the abstract set's ground, 0.74
+      addObject(s, catalog, 'car', 1, 0, [0.2, 0.3]) // dropped somewhere in the air
+      setBackground(s, catalog, 0, 'beach')
+      expect(s.scenes[0].objects.map((o) => (o.position as number[])[1])).toEqual([0.7, 0.3])
+    })
+
+    it('sets the time of day, writing nothing for the default', () => {
+      const s = make()
+      setTimeOfDay(s, 0, 'night')
+      expect(s.scenes[0].background.params).toEqual({ time_of_day: 'night' })
+      setTimeOfDay(s, 0, 'day')
+      expect(s.scenes[0].background.params).toEqual({})
+    })
+  })
+
+  it('sets the music: none, the look’s own bed, or a bed of a mood', () => {
+    const s = make()
+    setMusic(s, 'calm')
+    expect(s.audio.music).toBe('procedural:calm')
+    setMusic(s, 'auto')
+    expect(s.audio.music).toBe('procedural')
+    setMusic(s, 'none')
+    expect(s.audio.music).toBeNull()
+  })
+
+  describe('casting', () => {
+    it('stands the first person in the middle, the next beside them, and never twice in the same place', () => {
+      const s = scratchSpec('t', 'flat_vector')
+      addCharacterToScene(s, 0, 'hero')
+      addCharacterToScene(s, 0, 'cat')
+      addCharacterToScene(s, 0, 'robot')
+      expect(s.characters.map((c) => c.archetype)).toEqual(['hero', 'cat', 'robot'])
+      expect(s.scenes[0].layers.map((l) => l.position)).toEqual(['center', 'left', 'right'])
+    })
+
+    it('selects the new layer, and puts a character already in the reel into a scene once', () => {
+      const s = make()
+      s.scenes[1].layers = []
+      expect(castInScene(s, 1, 'pip')).toEqual({ kind: 'layer', scene: 1, layer: 0 })
+      expect(castInScene(s, 1, 'pip')).toEqual({ kind: 'layer', scene: 1, layer: 0 }) // already there: no second layer
+      expect(s.scenes[1].layers).toHaveLength(1)
+      expect(castInScene(s, 1, 'nobody')).toBeNull()
+      expect(castInScene(s, 7, 'pip')).toBeNull()
+    })
+  })
+
+  describe('actions', () => {
+    it('follow one another for a character, and each character has a time line of their own', () => {
+      const s = scratchSpec('t', 'flat_vector')
+      addCharacterToScene(s, 0, 'hero')
+      addCharacterToScene(s, 0, 'cat')
+      expect(addActionAfter(s, catalog, 0, 'hero', 'walk')).toEqual({ kind: 'action', scene: 0, layer: 0, action: 0 })
+      addActionAfter(s, catalog, 0, 'hero', 'wave')
+      addActionAfter(s, catalog, 0, 'cat', 'wave')
+      expect(s.scenes[0].layers[0].actions.map((a) => [a.name, a.t0, a.t1])).toEqual([['walk', 0, 2.4], ['wave', 2.4, 3.9]])
+      expect(s.scenes[0].layers[1].actions.map((a) => [a.name, a.t0, a.t1])).toEqual([['wave', 0, 1.5]])
+    })
+
+    it('make the scene longer when they do not fit, but not longer than a scene may be', () => {
+      const s = scratchSpec('t', 'flat_vector')
+      addCharacterToScene(s, 0, 'hero')
+      for (let i = 0; i < 3; i++) addActionAfter(s, catalog, 0, 'hero', 'walk') // 3 x 2.4 s in a 5 s scene
+      expect(s.scenes[0].duration_sec).toBe(7.2)
+      expect(s.scenes[0].layers[0].actions.at(-1)?.t1).toBe(7.2)
+      for (let i = 0; i < 20; i++) addActionAfter(s, catalog, 0, 'hero', 'walk')
+      expect(s.scenes[0].duration_sec).toBe(30)
+      expect(Math.max(...s.scenes[0].layers[0].actions.map((a) => a.t1))).toBeLessThanOrEqual(30)
+    })
+
+    it('put a character who is not in the scene into it, and refuse one who is not in the reel', () => {
+      const s = make()
+      s.scenes[1].layers = []
+      expect(addActionAfter(s, catalog, 1, 'pip', 'wave')).toEqual({ kind: 'action', scene: 1, layer: 0, action: 0 })
+      expect(s.scenes[1].layers[0]).toMatchObject({ character: 'pip', position: 'center' })
+      expect(addActionAfter(s, catalog, 1, 'ghost', 'wave')).toBeNull()
+      expect(addActionAfter(s, catalog, 5, 'pip', 'wave')).toBeNull()
+    })
+  })
+
+  describe('words', () => {
+    it('follow one another, each shown long enough to read it', () => {
+      const s = make()
+      s.scenes[1].captions = []
+      expect(addCaptionAfter(s, catalog, 1, '  Hello there  ', 'mia')).toEqual({ kind: 'caption', scene: 1, caption: 0 })
+      addCaptionAfter(s, catalog, 1, 'one two three four five six seven eight nine ten', null)
+      const [a, b] = s.scenes[1].captions
+      expect(a).toMatchObject({ text: 'Hello there', t0: 0, t1: 1.5, speaker: 'mia' })
+      expect(b).toMatchObject({ t0: 1.5, t1: 5.5 }) // ten words at 2.5 a second
+      expect(b.speaker).toBeUndefined()
+      expect(readingSeconds('')).toBe(1.5)
+      expect(readingSeconds(Array(100).fill('word').join(' '))).toBe(8)
+    })
+
+    it('make the scene longer when they do not fit, ignore an empty line and a speaker who is not in the reel', () => {
+      const s = make()
+      s.scenes[1].captions = []
+      s.scenes[1].duration_sec = 2
+      addCaptionAfter(s, catalog, 1, 'one two three four five six', 'ghost')
+      expect(s.scenes[1].duration_sec).toBe(2.4)
+      expect(s.scenes[1].captions[0].speaker).toBeUndefined()
+      expect(addCaptionAfter(s, catalog, 1, '   ')).toBeNull()
+      expect(s.scenes[1].captions).toHaveLength(1)
+    })
+  })
+
+  describe('sounds, camera and objects aimed at one scene', () => {
+    it('go to the scene asked for, at the playhead if it is inside it, else at its start', () => {
+      const s = make()
+      addSfx(s, 'pop', 4, 0) // the playhead is in scene a
+      addSfx(s, 'pop', 4, 1) // ... but this one is for scene b
+      expect(s.scenes[0].sfx[0].t).toBeCloseTo(4)
+      expect(s.scenes[1].sfx[0].t).toBe(0)
+      expect(addSfx(s, 'pop', 4, 9)).toBeNull()
+      expect(localTime(s, 0, 4)).toBeCloseTo(4)
+      expect(localTime(s, 1, 4)).toBe(0)
+    })
+  })
+
+  describe('the next scene', () => {
+    it('keeps the set and the people where they stand, and nothing else', () => {
+      const s = make()
+      s.scenes[0].background = { template: 'cafe', params: { time_of_day: 'dusk' } }
+      s.scenes[0].layers[0] = { character: 'mia', position: [0.3, 0.8], scale: 1.2, depth: 'foreground', facing: 'left', actions: [{ name: 'walk', t0: 0, t1: 2, params: {} }] }
+      s.scenes[0].objects.push(newObject('car'))
+      s.scenes[0].camera.moves.push({ type: 'zoom', from: 1, to: 1.2, t0: 0, t1: 2, ease: 'ease_in_out', params: {} })
+      expect(addSceneLike(s, 0)).toEqual({ kind: 'scene', scene: 1 })
+      const [first, next, last] = s.scenes
+      expect(last.id).toBe('b') // it goes right after scene a, not at the end
+      expect(next).toMatchObject({ duration_sec: 10, background: { template: 'cafe', params: { time_of_day: 'dusk' } }, objects: [], captions: [], sfx: [], camera: { moves: [] }, transition_out: { type: 'cut' } })
+      expect(next.layers).toEqual([{ character: 'mia', position: [0.3, 0.8], scale: 1.2, depth: 'foreground', facing: 'left', actions: [] }])
+      expect(new Set(s.scenes.map((x) => x.id)).size).toBe(3)
+      expect(next.background).not.toBe(first.background) // a copy, not the same object
+    })
+
+    it('is a plain new scene when there is nothing to copy from', () => {
+      const s = make()
+      expect(addSceneLike(s, 9)).toEqual({ kind: 'scene', scene: 2 })
+    })
+  })
+
+  it('goes through an immer draft, as the store edits, and builds a whole reel', () => {
+    const built = produce(scratchSpec('Café', 'paper_cutout'), (d) => {
+      setBackground(d, catalog, 0, 'cafe')
+      addCharacterToScene(d, 0, 'hero')
+      addActionAfter(d, catalog, 0, 'hero', 'walk')
+      addObject(d, catalog, 'cake', 0, 0)
+      addSfx(d, 'pop', 1, 0)
+      addCaptionAfter(d, catalog, 0, 'A slice of cake, please', d.characters[0].id)
+      addCameraMove(d, 'zoom', 0, 0)
+      addSceneLike(d, 0)
+    })
+    expect(built.scenes).toHaveLength(2)
+    expect(built.scenes[0]).toMatchObject({ background: { template: 'cafe' } })
+    expect(built.scenes[0].layers[0].actions).toHaveLength(1)
+    expect(built.scenes[0].objects.map((o) => o.asset)).toEqual(['cake'])
+    expect(built.scenes[0].captions[0].speaker).toBe('hero')
+    expect(built.scenes[1].layers[0].character).toBe('hero')
+    expect(totalDuration(built)).toBeGreaterThan(5)
+  })
+})

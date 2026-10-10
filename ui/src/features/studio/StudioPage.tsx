@@ -21,6 +21,9 @@ import { copySelection, deleteSelected, duplicateSelected, nudgeSelected, pasteA
 import { addCaption, splitAtPlayhead } from './ops'
 import { clamp } from '@/lib/timeline'
 
+/** The narrowest the left panel goes: its five tabs (Build, Scenes, Cast, Script, Library) need this much to be read. */
+const LEFT_MIN = 264
+
 // the JSON editor (CodeMirror) is a third of the app's code and is only opened on request
 const JsonPanel = lazy(() => import('./JsonPanel').then((m) => ({ default: m.JsonPanel })))
 
@@ -116,10 +119,10 @@ export function StudioPage() {
       <LintRunner />
       {wide && ui.leftOpen && (
         <>
-          <aside style={{ width: ui.leftW }} className="flex shrink-0 flex-col bg-panel" aria-label="Scenes, cast, script and library">
+          <aside style={{ width: Math.max(ui.leftW, LEFT_MIN) }} className="flex shrink-0 flex-col bg-panel" aria-label="Build, scenes, cast, script and library">
             {leftPanel}
           </aside>
-          <Splitter dir="x" label="Resize the left panel" value={ui.leftW} min={220} max={460} onDrag={(dx) => ui.set({ leftW: clamp(ui.leftW + dx, 220, 460) })} />
+          <Splitter dir="x" label="Resize the left panel" value={Math.max(ui.leftW, LEFT_MIN)} min={LEFT_MIN} max={460} onDrag={(dx) => ui.set({ leftW: clamp(Math.max(ui.leftW, LEFT_MIN) + dx, LEFT_MIN, 460) })} />
         </>
       )}
 
@@ -145,7 +148,7 @@ export function StudioPage() {
 
       {!wide && (
         <>
-          <Sheet open={studio.drawer === 'left'} onOpenChange={(o) => studio.set({ drawer: o ? 'left' : null })} side="left" title="Scenes, cast, script and library">
+          <Sheet open={studio.drawer === 'left'} onOpenChange={(o) => studio.set({ drawer: o ? 'left' : null })} side="left" title="Build, scenes, cast, script and library">
             {leftPanel}
           </Sheet>
           <Sheet open={studio.drawer === 'right'} onOpenChange={(o) => studio.set({ drawer: o ? 'right' : null })} side="right" title="Inspector">

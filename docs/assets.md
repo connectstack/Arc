@@ -197,6 +197,8 @@ Every planner reads the library through the assets' **tags** (and names), so wha
   (add one of yours with the same name to override it).
 * **New reel** checks the script as you type and lists what the library can draw and what it cannot, each missing item with an *Add asset* button pre-filled with its words.
   After planning, anything still missing is shown again; adding it swaps it into the reel before the studio opens.
+* **Build from scratch** (Projects, or under the script on New reel) starts an empty reel and opens the studio on its **Build** tab: pick a background, cast characters,
+  add objects, then give them actions, sounds and words, one scene at a time, all from the library (your own assets included). See [ui.md](ui.md#in-the-studio).
 * **The studio** treats objects like characters: add them from the library panel (or drag them onto the stage), drag and size them on the stage, set when they appear
   and how they move on the timeline (one lane per object, a clip per motion), and recolour the parts their drawing marks.
   A picture character is cast from the *Add a character* menu (its pictures are listed under their own heading); its inspector offers only the colours its

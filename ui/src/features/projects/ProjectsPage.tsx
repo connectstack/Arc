@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Clapperboard, Copy, Download, FileJson, Film, ImageOff, MoreHorizontal, Pencil, PenLine, Sparkles, Trash2, Wand2 } from 'lucide-react'
+import { AlertTriangle, Clapperboard, Copy, Download, FileJson, Film, Hammer, ImageOff, MoreHorizontal, Pencil, PenLine, Sparkles, Trash2, Wand2 } from 'lucide-react'
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApi } from '@/api/context'
@@ -11,6 +11,7 @@ import { Button, Chip, Dialog, EmptyState, Input, Menu, Skeleton, StatusChip, to
 import { ago, bytes, plural, seconds } from '@/lib/format'
 import { budgetState } from '@/lib/timeline'
 import { cn } from '@/lib/cn'
+import { ScratchDialog } from './ScratchDialog'
 
 function StartCard({ icon, title, text, onClick, primary }: { icon: ReactNode; title: string; text: string; onClick: () => void; primary?: boolean }) {
   return (
@@ -129,6 +130,7 @@ export function ProjectsPage() {
   const renders = useRenders()
   const examples = useExamples()
   const [exampleOpen, setExampleOpen] = useState(false)
+  const [scratchOpen, setScratchOpen] = useState(false)
   const [rename, setRename] = useState<ProjectSummary | null>(null)
   const [remove, setRemove] = useState<ProjectSummary | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -211,8 +213,9 @@ export function ProjectsPage() {
       />
       <Page>
         <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <StartCard primary icon={<PenLine />} title="From a script" text="Paste a script, pick a look, get a first cut in under a minute." onClick={() => nav('/new')} />
+            <StartCard icon={<Hammer />} title="Build from scratch" text="No script: pick backgrounds, characters, objects, actions and sounds from the library." onClick={() => setScratchOpen(true)} />
             <StartCard icon={<Sparkles />} title="From an example" text="Open a finished reel and see how it is built." onClick={() => setExampleOpen(true)} />
             <StartCard icon={<FileJson />} title="Open a spec file" text="Drop a .json spec anywhere on this page, or choose one." onClick={() => fileRef.current?.click()} />
             <input ref={fileRef} type="file" accept=".json,application/json" className="sr-only" aria-label="Choose a spec file" onChange={(e) => e.target.files?.[0] && void openFile(e.target.files[0])} />
@@ -272,6 +275,8 @@ export function ProjectsPage() {
           </div>
         </div>
       )}
+
+      <ScratchDialog open={scratchOpen} onOpenChange={setScratchOpen} />
 
       <Dialog open={exampleOpen} onOpenChange={setExampleOpen} title="Start from an example" description="A copy is added to your workspace, so you can change anything.">
         <div className="grid gap-2">

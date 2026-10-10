@@ -1,5 +1,6 @@
 // Helpers for reading and building spec pieces: ids, defaults, colours, and mapping a lint path to something selectable.
 import type { ActionClip, Caption, Catalog, Character, CatalogEntry, Layer, ReelSpec, Scene, SceneObject, Vec2 } from '@/api/types'
+import { normalizeSpec } from './normalize'
 import { clamp, ms, sceneSlots } from './timeline'
 
 export type Selection =
@@ -93,6 +94,16 @@ export function newScene(spec: ReelSpec, template = 'abstract', duration = 5): S
     sfx: [],
     transition_out: { type: 'cut', duration: 0, params: {} },
   }
+}
+
+/**
+ * The start of a reel built by hand: one empty scene on the plain "abstract" set, nobody cast, no captions. Everything in it is chosen
+ * from the library afterwards (the Studio's Build panel); the reel is short of the 45-60 s budget until scenes are added.
+ */
+export function scratchSpec(title: string, style: string): ReelSpec {
+  const spec = normalizeSpec({ meta: { title: title.trim() || 'Untitled reel', style, seed: 1 }, audio: { music: 'procedural', voiceover: 'none' } })
+  spec.scenes = [newScene(spec)]
+  return spec
 }
 
 export function newCharacter(spec: ReelSpec, archetype = 'everyman'): Character {

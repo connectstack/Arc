@@ -49,6 +49,21 @@ export interface LibraryGap {
   stand_in?: string | null
 }
 
+/** A gap as the Studio shows it: which scenes say the word, and the library asset that answers it now (null while it is still missing). */
+export interface GapStatus extends LibraryGap {
+  asset: string | null
+}
+
+/** One gap to fill: for these scenes only (`scope`), with this asset (when the gap's word does not find it) and, for a gap the spec never
+ *  recorded, the gap itself. */
+export interface FillGapRequest {
+  kind: AssetKind
+  name: string
+  scope?: string[]
+  asset?: string
+  gap?: LibraryGap
+}
+
 export interface Character {
   id: string
   archetype: string

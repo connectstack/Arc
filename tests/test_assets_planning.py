@@ -26,7 +26,7 @@ from reel.llm import (
     json_schema_for_llm,
     normalize_spec,
 )
-from reel.llm.library_plan import LibraryPlanner, attach_library_gaps, scene_texts
+from reel.llm.library_plan import LibraryPlanner, attach_library_gaps, gap_status, scene_texts
 from reel.llm.prompt import MOTION_HINTS, example_parts, render_catalog
 
 NS = 'xmlns="http://www.w3.org/2000/svg"'
@@ -300,6 +300,93 @@ class TestGaps:
         left = spec["meta"]["library_gaps"]
         assert [g["name"] for g in left] == ["castle"]
 
+    def test_a_gap_can_be_answered_for_one_scene_and_stays_for_the_others(
+        self, cat: Catalog
+    ) -> None:
+        spec = spec_with_gaps()
+        gift = next(g for g in spec["meta"]["library_gaps"] if g["name"] == "gift")
+        assert apply_library_gap(spec, gift, "gift", cat, scenes=["s2"])
+        assert [o["asset"] for o in spec["scenes"][1]["objects"]] == ["gift"]
+        assert not spec["scenes"][0].get("objects")  # s1 was not asked for
+        left = {g["name"]: g for g in spec["meta"]["library_gaps"]}
+        assert left["gift"]["scenes"] == ["s1"]  # ... and the gap still says so
+        assert apply_library_gap(spec, left["gift"], "gift", cat, scenes=["s1"])
+        assert "gift" not in {g["name"] for g in spec["meta"]["library_gaps"]}
+
+    def test_a_scene_asked_for_gets_it_even_when_the_gap_did_not_list_it(
+        self, cat: Catalog
+    ) -> None:
+        spec = spec_with_gaps()
+        gift = {"kind": "object", "name": "gift", "scenes": ["s1"]}
+        assert apply_library_gap(spec, gift, "gift", cat, scenes=["s2"])
+        assert [o["asset"] for o in spec["scenes"][1]["objects"]] == ["gift"]
+
+    def test_an_object_that_is_already_there_answers_the_gap_without_a_second_copy(
+        self, cat: Catalog
+    ) -> None:
+        spec = spec_with_gaps()
+        gift = next(g for g in spec["meta"]["library_gaps"] if g["name"] == "gift")
+        assert apply_library_gap(spec, gift, "gift", cat, scenes=["s1"])
+        again = {"kind": "object", "name": "gift", "scenes": ["s1"]}
+        spec["meta"]["library_gaps"].append(again)
+        assert apply_library_gap(
+            spec, again, "gift", cat, scenes=["s1"]
+        )  # the gap goes, nothing is added
+        assert len(spec["scenes"][0]["objects"]) == 1
+        assert not any(
+            g["name"] == "gift" and g["scenes"] == ["s1"] for g in spec["meta"]["library_gaps"]
+        )
+
+    def test_a_character_nobody_stood_in_for_joins_the_scene_asked_for(self, cat: Catalog) -> None:
+        spec = spec_with_gaps()
+        spec["meta"]["library_gaps"] = [
+            {"kind": "character", "name": "dragon", "scenes": ["s1", "s2"]}
+        ]
+        spec["characters"] = [{"id": "d", "archetype": "everyman"}]
+        gap = spec["meta"]["library_gaps"][0]
+        assert apply_library_gap(spec, gap, "dragon", cat, scenes=["s2"])
+        added = [c for c in spec["characters"] if c["archetype"] == "dragon"]
+        assert [c["id"] for c in added] == ["dragon"] and added[0]["name"] == "Dragon"
+        assert [ly["character"] for ly in spec["scenes"][1]["layers"]] == ["dragon"]
+        assert [ly["character"] for ly in spec["scenes"][0]["layers"]] == [
+            "d"
+        ]  # s1 was not asked for
+        assert spec["scenes"][1]["layers"][0]["actions"][0]["name"] == "idle"
+        assert spec["meta"]["library_gaps"] == [
+            {"kind": "character", "name": "dragon", "scenes": ["s1"]}
+        ]
+        assert apply_library_gap(
+            spec, spec["meta"]["library_gaps"][0], "dragon", cat, scenes=["s1"]
+        )
+        assert (
+            len([c for c in spec["characters"] if c["archetype"] == "dragon"]) == 1
+        )  # one dragon, in both scenes
+        assert [ly["character"] for ly in spec["scenes"][0]["layers"]] == ["d", "dragon"]
+        assert "library_gaps" not in spec["meta"]
+        report = lint_data(spec, catalog=cat, options=LintOptions(check_duration=False))
+        assert report.ok, [i.message for i in report.errors]
+
+    def test_a_scene_with_a_full_stage_is_left_alone(self, cat: Catalog) -> None:
+        spec = spec_with_gaps()
+        spec["characters"] = [{"id": c, "archetype": "everyman"} for c in "abc"]
+        spec["scenes"][0]["layers"] = [
+            {"character": c, "position": p, "actions": []}
+            for c, p in zip("abc", ("left", "center", "right"))
+        ]
+        gap = {"kind": "character", "name": "dragon", "scenes": ["s1"]}
+        spec["meta"]["library_gaps"] = [gap]
+        assert not apply_library_gap(spec, gap, "dragon", cat)
+        assert len(spec["scenes"][0]["layers"]) == 3 and spec["meta"]["library_gaps"] == [gap]
+
+    def test_a_place_is_swapped_in_for_the_scene_asked_for_only(self, cat: Catalog) -> None:
+        spec = spec_with_gaps()
+        spec["scenes"][1]["background"] = {"template": "forest"}
+        village = {"kind": "place", "name": "village", "scenes": ["s1", "s2"], "stand_in": "forest"}
+        spec["meta"]["library_gaps"] = [village]
+        assert apply_library_gap(spec, village, "village", cat, scenes=["s2"])
+        assert [s["background"]["template"] for s in spec["scenes"]] == ["forest", "village"]
+        assert spec["meta"]["library_gaps"][0]["scenes"] == ["s1"]
+
     def test_the_result_is_a_valid_spec(self, cat: Catalog) -> None:
         spec = spec_with_gaps()
         for g in list(spec["meta"]["library_gaps"])[:3]:
@@ -321,6 +408,41 @@ class TestGaps:
         )  # a gift is not a character
         assert not apply_library_gap(spec, spec["meta"]["library_gaps"][0], "nothing", cat)
         assert spec == before
+
+
+class TestGapStatus:
+    def test_each_gap_says_what_answers_it_now(self, cat: Catalog) -> None:
+        spec = spec_with_gaps()
+        got = {g["name"]: g for g in gap_status(spec, catalog=cat)}
+        assert got["castle"]["asset"] is None and got["castle"]["scenes"] == ["s1"]
+        assert got["gift"]["asset"] == "gift" and got["gift"]["scenes"] == [
+            "s1",
+            "s2",
+        ]  # the library has it now
+        assert got["dragon"]["character"] == "d" and got["dragon"]["stand_in"] == "everyman"
+
+    def test_a_gap_lists_only_the_scenes_the_spec_still_has(self, cat: Catalog) -> None:
+        spec = spec_with_gaps()
+        spec["scenes"] = spec["scenes"][:1]  # s2 was deleted
+        got = {g["name"]: g for g in gap_status(spec, catalog=cat)}
+        assert got["gift"]["scenes"] == ["s1"]
+
+    def test_the_script_adds_what_the_spec_did_not_record(
+        self, cat: Catalog, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("reel.assets.coverage.load_lexicon", lambda: LEX)
+        spec = spec_with_gaps()
+        spec["meta"].pop("library_gaps")
+        spec["scenes"][1]["captions"] = [
+            {"text": "A sword lay by the road.", "t0": 0.5, "t1": 3, "style": "subtitle"}
+        ]
+        got = {g["name"]: g for g in gap_status(spec, "A sword lay by the road.", cat)}
+        assert got["sword"]["scenes"] == ["s2"] and got["sword"]["asset"] is None
+        assert "library_gaps" not in spec["meta"]  # the spec was only read
+
+    def test_nothing_to_report_is_an_empty_list(self, cat: Catalog) -> None:
+        assert gap_status({"meta": {}, "scenes": []}, "Hello there.", cat) == []
+        assert gap_status({}, None, cat) == []
 
 
 # ======================================================================= what a model writes is repaired

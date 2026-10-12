@@ -1,7 +1,7 @@
 // The asset library in memory for the mock adapter: the same calls as `reel serve` (list, upload -> draft -> keep, edit, delete,
 // script coverage, filling gaps), over the mock catalog. A small stand-in for the engine; the real answers come from reel.
 import type { Api } from '../client'
-import type { AssetDraft, AssetFields, AssetInfo, AssetKind, AssetList, Catalog, CatalogEntry, Coverage, FillGapsResult, LibraryGap, ReelSpec } from '../types'
+import type { AssetDraft, AssetFields, AssetInfo, AssetKind, AssetList, Catalog, CatalogEntry, Coverage, FillGapRequest, FillGapsResult, GapStatus, LibraryGap, ReelSpec } from '../types'
 import { ApiError } from '../types'
 
 const clone = <T>(v: T): T => structuredClone(v)
@@ -107,6 +107,7 @@ export function createMockAssets(catalog: Catalog): Pick<
   | 'assetArtUrl'
   | 'scriptAssets'
   | 'fillGaps'
+  | 'libraryGaps'
 > {
   catalog.objects ??= []
   const kindOf = (list: 'objects' | 'archetypes' | 'backgrounds'): AssetKind => (list === 'objects' ? 'object' : list === 'archetypes' ? 'character' : 'place')
@@ -293,28 +294,76 @@ export function createMockAssets(catalog: Catalog): Pick<
     },
     fillGaps: async (spec: ReelSpec, only): Promise<FillGapsResult> => {
       const out = clone(spec)
-      const gaps: LibraryGap[] = out.meta.library_gaps ?? []
+      const key = (kind: string, name: string) => `${kind}:${name.toLowerCase()}`
+      const answers = (g: LibraryGap) => assets.find((a) => a.kind === g.kind && (a.name === slug(g.name) || a.tags.some((t) => t.toLowerCase() === g.name.toLowerCase())))
+      const requests: FillGapRequest[] = only ?? (out.meta.library_gaps ?? []).map((g) => ({ kind: g.kind, name: g.name }))
       const filled: FillGapsResult['filled'] = []
-      const pending: LibraryGap[] = []
-      for (const g of gaps) {
-        const asked = !only || only.some((o) => o.kind === g.kind && o.name.toLowerCase() === g.name.toLowerCase())
-        const have = asked ? assets.find((a) => a.kind === g.kind && (a.name === slug(g.name) || a.tags.some((t) => t.toLowerCase() === g.name.toLowerCase()))) : undefined
-        if (!have) {
-          pending.push(g)
-          continue
+      for (const ref of requests) {
+        let g = (out.meta.library_gaps ?? []).find((x) => key(x.kind, x.name) === key(ref.kind, ref.name))
+        if (!g) {
+          g = { kind: ref.kind, name: ref.name, scenes: [...(ref.gap?.scenes ?? [])], ...(ref.gap?.character ? { character: ref.gap.character } : {}), ...(ref.gap?.stand_in ? { stand_in: ref.gap.stand_in } : {}) }
+          out.meta.library_gaps = [...(out.meta.library_gaps ?? []), g]
         }
-        if (g.kind === 'character') out.characters.forEach((c) => c.id === g.character && (c.archetype = have.name))
-        else if (g.kind === 'place') out.scenes.forEach((s) => (g.scenes.includes(s.id) || (!g.scenes.length && s.background.template === g.stand_in)) && (s.background = { template: have.name, params: {} }))
+        const have = (ref.asset ? assets.find((a) => a.name === ref.asset && a.kind === g.kind) : undefined) ?? answers(g)
+        if (!have) continue
+        const scope = ref.scope ? new Set(ref.scope) : null
+        const targets = scope ?? new Set(g.scenes)
+        const done = new Set<string>()
+        if (g.kind === 'character' && out.characters.some((c) => c.id === g.character)) out.characters.forEach((c) => c.id === g.character && (c.archetype = have.name))
+        else if (g.kind === 'character') {
+          // nobody stood in for it: it joins the scenes asked for, as a character of its own
+          let who = out.characters.find((c) => c.archetype === have.name)
+          out.scenes.forEach((s) => {
+            if (!targets.has(s.id) || s.layers.length >= 3) return
+            if (!who) {
+              who = { id: slug(g.name), archetype: have.name, name: g.name.charAt(0).toUpperCase() + g.name.slice(1), palette: {}, props: [] }
+              out.characters.push(who)
+            }
+            const slot = (['left', 'center', 'right'] as const).find((p) => !s.layers.some((l) => l.position === p)) ?? 'center'
+            if (!s.layers.some((l) => l.character === who!.id)) s.layers.push({ character: who.id, position: slot, scale: 1, depth: 'mid', facing: 'auto', actions: [{ name: 'idle', t0: 0.2, t1: 2, params: {} }] } as never)
+            done.add(s.id)
+          })
+        } else if (g.kind === 'place')
+          out.scenes.forEach((s) => {
+            if (targets.has(s.id) || (!scope && !g.scenes.length && s.background.template === g.stand_in)) {
+              s.background = { template: have.name, params: {} }
+              done.add(s.id)
+            }
+          })
         else
           out.scenes.forEach((s) => {
-            if (g.scenes.includes(s.id) && !s.objects.some((o) => o.asset === have.name))
-              s.objects.push({ asset: have.name, position: [0.86, 0.8], scale: 1, depth: 'mid', layer: 'behind', facing: 'auto', rotation: 0, alpha: 1, t0: 0, t1: null, motions: [], palette: {} })
+            if (!targets.has(s.id)) return
+            done.add(s.id)
+            if (!s.objects.some((o) => o.asset === have.name)) s.objects.push({ asset: have.name, position: [0.86, 0.8], scale: 1, depth: 'mid', layer: 'behind', facing: 'auto', rotation: 0, alpha: 1, t0: 0, t1: null, motions: [], palette: {} })
           })
+        const everywhere = g.kind === 'character' && out.characters.some((c) => c.id === g.character)
+        const left = everywhere || !scope ? [] : g.scenes.filter((id) => !scope.has(id))
+        out.meta.library_gaps = (out.meta.library_gaps ?? []).flatMap((x) => (x === g ? (left.length ? [{ ...x, scenes: left }] : []) : [x]))
         filled.push({ ...g, asset: have.name })
       }
+      const pending = out.meta.library_gaps ?? []
       if (pending.length) out.meta.library_gaps = pending
       else delete out.meta.library_gaps
       return { spec: out, filled, pending, lint: { ok: true, total_sec: null, n_scenes: out.scenes.length, counts: { errors: 0, warnings: 0, infos: 0 }, missing: {}, issues: [] } }
+    },
+    libraryGaps: async (spec, script): Promise<GapStatus[]> => {
+      const ids = new Set(spec.scenes.map((s) => s.id))
+      const recorded: LibraryGap[] = clone(spec.meta.library_gaps ?? [])
+      if (script?.trim()) {
+        // what the script mentions that nothing draws, in the scenes whose captions say it
+        const toks = words(script)
+        for (const { w } of toks) {
+          if (assets.some((a) => a.name === w || a.tags.some((t) => t.toLowerCase() === w))) continue
+          const lex = LEXICON.find((l) => l.words.includes(w))
+          if (!lex || recorded.some((g) => g.kind === lex.kind && g.name.toLowerCase() === lex.name.toLowerCase())) continue
+          const scenes = spec.scenes.filter((s) => s.captions.some((c) => words(c.text).some((x) => x.w === w))).map((s) => s.id)
+          recorded.push({ kind: lex.kind, name: lex.name, scenes })
+        }
+      }
+      return recorded.map((g) => {
+        const have = assets.find((a) => a.kind === g.kind && (a.name === slug(g.name) || a.tags.some((t) => t.toLowerCase() === g.name.toLowerCase())))
+        return { ...g, scenes: g.scenes.filter((id) => ids.has(id)), asset: have?.name ?? null }
+      })
     },
   }
   return api

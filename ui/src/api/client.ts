@@ -12,7 +12,9 @@ import type {
   DraftLook,
   EnginesStatus,
   Examples,
+  FillGapRequest,
   FillGapsResult,
+  GapStatus,
   GenerateBody,
   Health,
   JobEvent,
@@ -76,8 +78,11 @@ export interface Api {
   assetArtUrl(name: string): string
   /** The characters, places and objects a script mentions: which the library can draw and which it lacks. */
   scriptAssets(script: string): Promise<Coverage>
-  /** Make a spec use library assets it was missing when it was planned (`meta.library_gaps`); `only` limits which. */
-  fillGaps(spec: ReelSpec, only?: { kind: AssetKind; name: string }[]): Promise<FillGapsResult>
+  /** Make a spec use library assets it was missing when it was planned (`meta.library_gaps`); `only` limits which, and for which scenes. */
+  fillGaps(spec: ReelSpec, only?: FillGapRequest[]): Promise<FillGapsResult>
+  /** What the script needs that the library lacks, scene by scene, and what answers each gap in the library now. With the script,
+   *  what it mentions that the spec never recorded is found too. */
+  libraryGaps(spec: ReelSpec, script?: string): Promise<GapStatus[]>
 
   ttsEngines(): Promise<EnginesStatus>
   ttsVoices(engine: string): Promise<VoiceInfo[]>

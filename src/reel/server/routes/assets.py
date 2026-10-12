@@ -13,6 +13,7 @@ from reel.assets.gaps import apply_library_gap, resolve_gap
 from reel.assets.model import KINDS, MAX_ART_BYTES
 from reel.core.catalog import CATALOG
 from reel.core.lint import lint_data
+from reel.llm.library_plan import gap_status
 from reel.server.deps import asset_store, ctx, fail
 
 router = APIRouter(prefix="/api")
@@ -215,8 +216,38 @@ def script_assets(body: ScriptOnly, request: Request) -> dict[str, Any]:
 
 class FillBody(BaseModel):
     spec: dict[str, Any]
-    #: only these gaps (``{"kind": "object", "name": "dragon"}``); default: every gap the library can fill now
-    only: list[dict[str, str]] | None = None
+    #: only these gaps; default: every gap the library can fill now.  Each is ``{"kind": "object", "name": "dragon"}`` and may add
+    #: ``scope`` (scene ids: change only these scenes, the gap stays for the others), ``asset`` (the library asset to use, when it
+    #: is not the one the gap's word finds) and ``gap`` (the whole gap as the Studio showed it, for one the spec did not record)
+    only: list[dict[str, Any]] | None = None
+
+
+def _gap_key(kind: Any, name: Any) -> tuple[Any, str]:
+    return (kind, str(name or "").lower())
+
+
+def _gap_of(
+    ref: dict[str, Any], stored: list[dict[str, Any]], meta: dict[str, Any]
+) -> dict[str, Any]:
+    """The gap a request is about: the one the spec recorded, or (a gap the Studio worked out from the script) the one it
+    described, which the spec then records so the scenes not asked for keep it."""
+    want = _gap_key(ref.get("kind"), ref.get("name"))
+    for g in stored:
+        if _gap_key(g.get("kind"), g.get("name")) == want:
+            return g
+    raw = ref.get("gap")
+    given: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    gap: dict[str, Any] = {
+        "kind": ref.get("kind"),
+        "name": ref.get("name"),
+        "scenes": list(given.get("scenes") or []),
+    }
+    for k in ("character", "stand_in"):
+        if isinstance(given.get(k), str) and given[k]:
+            gap[k] = given[k]
+    meta["library_gaps"] = [*(meta.get("library_gaps") or []), gap]
+    stored.append(gap)
+    return gap
 
 
 @router.post("/spec/fill-gaps")
@@ -225,17 +256,40 @@ def fill_gaps(body: FillBody) -> dict[str, Any]:
     spec = body.spec
     raw_meta = spec.get("meta")
     meta: dict[str, Any] = raw_meta if isinstance(raw_meta, dict) else {}
-    gaps = [g for g in (meta.get("library_gaps") or []) if isinstance(g, dict)]
-    wanted = {(o.get("kind"), str(o.get("name", "")).lower()) for o in body.only or []}
+    if raw_meta is None:
+        spec["meta"] = meta
+    stored = [g for g in (meta.get("library_gaps") or []) if isinstance(g, dict)]
+    if body.only is None:
+        requests: list[dict[str, Any]] = [
+            {"kind": g.get("kind"), "name": g.get("name")} for g in stored
+        ]
+    else:
+        requests = [r for r in body.only if isinstance(r, dict)]
     filled: list[dict[str, Any]] = []
-    pending: list[dict[str, Any]] = []
-    for g in gaps:
-        if body.only is not None and (g.get("kind"), str(g.get("name", "")).lower()) not in wanted:
-            pending.append(g)
-            continue
-        have = resolve_gap(g)
-        if have is not None and apply_library_gap(spec, g, have):
-            filled.append({**g, "asset": have.name})
-        else:
-            pending.append(g)
+    for ref in requests:
+        gap = _gap_of(ref, stored, meta)
+        named = ref.get("asset")
+        have = (
+            CATALOG.assets.get(named)
+            if isinstance(named, str) and named in CATALOG.assets
+            else resolve_gap(gap)
+        )
+        scope = [str(x) for x in ref["scope"]] if isinstance(ref.get("scope"), list) else None
+        if have is not None and apply_library_gap(spec, gap, have, scenes=scope):
+            filled.append({**gap, "asset": have.name})
+    pending = [g for g in (meta.get("library_gaps") or []) if isinstance(g, dict)]
     return {"spec": spec, "filled": filled, "pending": pending, "lint": lint_data(spec).to_dict()}
+
+
+class GapsBody(BaseModel):
+    spec: dict[str, Any]
+    #: the script the reel was planned from: what it mentions that nothing draws is added to the gaps the spec recorded
+    script: str | None = None
+
+
+@router.post("/spec/gaps")
+def spec_gaps(body: GapsBody) -> dict[str, Any]:
+    """What the script needs that the library lacks, scene by scene, and what answers each gap in the library now."""
+    if body.script is not None and len(body.script) > 200_000:
+        raise fail(413, "the script is too long")
+    return {"gaps": gap_status(body.spec, body.script)}

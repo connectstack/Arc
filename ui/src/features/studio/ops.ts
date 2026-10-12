@@ -510,3 +510,12 @@ export function nudge(spec: Draft, sel: Selection, dt: number): void {
   clip.t0 = ms(t0)
   clip.t1 = ms(t0 + len)
 }
+
+/** Rename a scene; the library gaps that name it (the scenes that say a missing word) follow it. */
+export function renameScene(d: ReelSpec, si: number, id: string): void {
+  const sc = d.scenes[si]
+  if (!sc) return
+  const was = sc.id
+  sc.id = id
+  for (const g of d.meta.library_gaps ?? []) g.scenes = g.scenes.map((s) => (s === was ? id : s))
+}

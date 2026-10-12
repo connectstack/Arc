@@ -9,6 +9,7 @@ import { ExportDialog } from '@/features/export/ExportDialog'
 import { useAutosave } from './useAutosave'
 import { CommandPalette } from './CommandPalette'
 import { HistoryButton } from './HistoryPopover'
+import { MissingChip } from './gaps/MissingAssets'
 import { useHotkeys, MOD } from '@/lib/hotkeys'
 import { cn } from '@/lib/cn'
 import { describeChange } from '@/lib/describe'
@@ -127,6 +128,7 @@ function TopBar({ onBack, saveNow }: { onBack: () => void; saveNow: () => void }
         className="h-8 min-w-0 flex-1 border-transparent bg-transparent text-[14px] font-semibold hover:bg-raised sm:w-[min(30vw,340px)] sm:flex-none"
       />
       <SaveIndicator onRetry={saveNow} />
+      <MissingChip />
       <div className="hidden flex-1 sm:block" />
       <div className="hidden lg:flex">
         <StyleSwitcher />

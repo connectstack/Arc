@@ -11,11 +11,12 @@ import { titleCase } from '@/lib/format'
 import { characterName, entry, pathLabel, type Selection } from '@/lib/spec'
 import { MIN_CLIP, ms } from '@/lib/timeline'
 import { useProject } from '@/store/project'
-import { addCameraMove, deleteSelection, duplicateSelection, renameCharacterId, setBackground } from '../ops'
+import { addCameraMove, deleteSelection, duplicateSelection, renameCharacterId, renameScene, setBackground } from '../ops'
 import { Row, Section, useLive } from './common'
 import { MotionInspector, ObjectInspector, SceneObjectsSection } from './ObjectInspector'
 import { ParamForm } from './ParamForm'
 import { FEET, PAN, PointSliders } from './sliders'
+import { MissingAssets } from '../gaps/MissingAssets'
 
 // ------------------------------------------------------------------------------- shared bits
 /**
@@ -225,9 +226,10 @@ function SceneInspector({ spec, si }: { spec: ReelSpec; si: number }) {
   const tod = String(sc.background.params.time_of_day ?? 'day')
   return (
     <>
+      <MissingAssets scene={si} />
       <Section title="Scene">
         <Field label="Name" hint="Used in the timeline and in lint messages">
-          <Input value={sc.id} aria-label="Scene name" onChange={(e) => edit((d) => void (d.scenes[si].id = e.target.value), { live: true })} onBlur={commit} />
+          <Input value={sc.id} aria-label="Scene name" onChange={(e) => edit((d) => void renameScene(d, si, e.target.value), { live: true })} onBlur={commit} />
         </Field>
         <Field label="Length" hint={`Up to ${catalog?.limits.max_scene_sec ?? 30} s; later scenes move along`}>
           <SliderField label="Scene length" value={sc.duration_sec} min={0.5} max={catalog?.limits.max_scene_sec ?? 30} step={0.1} unit="s" onChange={(v) => live((d) => void (d.scenes[si].duration_sec = ms(v)))} onCommit={commit} />

@@ -260,4 +260,47 @@ def attach_library_gaps(
     return True
 
 
-__all__ = ["LibraryPlanner", "attach_library_gaps", "scene_texts"]
+def gap_status(
+    spec: Mapping[str, Any], script: str | None = None, catalog: Catalog | None = None
+) -> list[dict[str, Any]]:
+    """What a spec's script needs that the library lacks, as the Studio shows it: each gap with the scenes that say the word
+    and ``asset``, the library asset that answers it *now* (``None`` while it is still missing).
+
+    The gaps a planner recorded in ``meta.library_gaps`` are kept; with the script, whatever else it mentions that nothing draws is
+    added (the same reading the planners do), so a spec written by hand, or edited since, is checked too.  A gap lists only
+    scenes the spec still has.  The spec itself is not changed.
+    """
+    import copy
+
+    from reel.assets.gaps import resolve_gap
+    from reel.core.catalog import CATALOG
+
+    cat = catalog or CATALOG
+    work = copy.deepcopy(dict(spec))
+    if script and script.strip():
+        attach_library_gaps(work, script, cat)
+    meta = work.get("meta")
+    raw = meta.get("library_gaps") if isinstance(meta, dict) else None
+    ids = {str(sc.get("id")) for sc in work.get("scenes", []) or [] if isinstance(sc, Mapping)}
+    out: list[dict[str, Any]] = []
+    for g in raw if isinstance(raw, list) else []:
+        if not isinstance(g, Mapping) or g.get("kind") not in ("character", "object", "place"):
+            continue
+        name = g.get("name")
+        if not isinstance(name, str) or not name.strip():
+            continue
+        have = resolve_gap(g, cat)
+        entry: dict[str, Any] = {
+            "kind": g["kind"],
+            "name": name,
+            "scenes": [str(s) for s in g.get("scenes", []) or [] if str(s) in ids],
+            "asset": have.name if have is not None else None,
+        }
+        for key in ("character", "stand_in"):
+            if isinstance(g.get(key), str) and g[key]:
+                entry[key] = g[key]
+        out.append(entry)
+    return out[:24]
+
+
+__all__ = ["LibraryPlanner", "attach_library_gaps", "gap_status", "scene_texts"]

@@ -1,6 +1,6 @@
 import type { Api } from './client'
 import { ApiError } from './types'
-import type { JobEvent, JobSnapshot, ProjectSummary } from './types'
+import type { GapStatus, JobEvent, JobSnapshot, ProjectSummary } from './types'
 
 async function parseError(res: Response): Promise<ApiError> {
   let body: Record<string, unknown> = {}
@@ -114,6 +114,7 @@ export function createHttpApi(): Api {
     assetArtUrl: (name) => `/api/assets/${encodeURIComponent(name)}/art`,
     scriptAssets: (script) => post('/api/script/assets', { script }),
     fillGaps: (spec, only) => post('/api/spec/fill-gaps', { spec, ...(only ? { only } : {}) }),
+    libraryGaps: async (spec, script) => (await post<{ gaps: GapStatus[] }>('/api/spec/gaps', { spec, ...(script ? { script } : {}) })).gaps,
 
     ttsEngines: () => json('/api/tts/engines'),
     ttsVoices: (engine) => json(`/api/tts/voices${qs({ engine })}`),

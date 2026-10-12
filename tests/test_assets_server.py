@@ -495,6 +495,133 @@ def test_adding_the_missing_asset_fills_the_gap_in_a_spec(client: TestClient) ->
     assert only["filled"] == []  # asked for the one that is still missing
 
 
+def gap_spec(**meta: Any) -> dict[str, Any]:
+    return {
+        "version": "1.0",
+        "meta": {"title": "t", "style": "flat_vector", **meta},
+        "characters": [],
+        "scenes": [
+            {
+                "id": sid,
+                "duration_sec": 6,
+                "background": {"template": "abstract"},
+                "captions": [{"text": text, "t0": 0.5, "t1": 3, "style": "subtitle"}],
+            }
+            for sid, text in (
+                ("a", "Mia found a gadget."),
+                ("b", "She held the gadget up."),
+                ("c", "Then she left."),
+            )
+        ],
+    }
+
+
+def test_a_gap_is_filled_for_one_scene_and_stays_for_the_others(client: TestClient) -> None:
+    spec = gap_spec(library_gaps=[{"kind": "object", "name": "gadget", "scenes": ["a", "b"]}])
+    keep(client, draft(client)["id"])
+    one = client.post(
+        "/api/spec/fill-gaps",
+        json={"spec": spec, "only": [{"kind": "object", "name": "gadget", "scope": ["b"]}]},
+    ).json()
+    assert [g["name"] for g in one["filled"]] == ["gadget"]
+    assert [sc.get("objects") and sc["objects"][0]["asset"] for sc in one["spec"]["scenes"]] == [
+        None,
+        "gadget",
+        None,
+    ]
+    assert one["spec"]["meta"]["library_gaps"] == [
+        {"kind": "object", "name": "gadget", "scenes": ["a"]}
+    ]
+    assert one["pending"] == one["spec"]["meta"]["library_gaps"]
+    rest = client.post(
+        "/api/spec/fill-gaps",
+        json={"spec": one["spec"], "only": [{"kind": "object", "name": "gadget", "scope": ["a"]}]},
+    ).json()
+    assert [sc.get("objects") and sc["objects"][0]["asset"] for sc in rest["spec"]["scenes"]] == [
+        "gadget",
+        "gadget",
+        None,
+    ]
+    assert "library_gaps" not in rest["spec"]["meta"] and rest["pending"] == []
+
+
+def test_a_gap_the_spec_did_not_record_is_filled_from_the_gap_the_studio_sends(
+    client: TestClient,
+) -> None:
+    spec = gap_spec()  # nothing recorded: the Studio worked the gap out from the script
+    keep(client, draft(client)["id"])
+    body = {
+        "spec": spec,
+        "only": [
+            {
+                "kind": "object",
+                "name": "gizmo",
+                "scope": ["a"],
+                "gap": {"kind": "object", "name": "gizmo", "scenes": ["a", "b"]},
+            }
+        ],
+    }
+    out = client.post("/api/spec/fill-gaps", json=body).json()
+    assert [sc.get("objects") and sc["objects"][0]["asset"] for sc in out["spec"]["scenes"]] == [
+        "gadget",
+        None,
+        None,
+    ]
+    assert out["spec"]["meta"]["library_gaps"] == [
+        {"kind": "object", "name": "gizmo", "scenes": ["b"]}
+    ]  # b still lacks it
+
+
+def test_the_asset_the_person_just_added_is_used_even_when_the_words_do_not_find_it(
+    client: TestClient,
+) -> None:
+    spec = gap_spec(library_gaps=[{"kind": "object", "name": "thingamajig", "scenes": ["a"]}])
+    keep(client, draft(client)["id"])
+    out = client.post(
+        "/api/spec/fill-gaps",
+        json={
+            "spec": spec,
+            "only": [{"kind": "object", "name": "thingamajig", "asset": "gadget", "scope": ["a"]}],
+        },
+    ).json()
+    assert out["filled"][0]["asset"] == "gadget"
+    assert out["spec"]["scenes"][0]["objects"][0]["asset"] == "gadget"
+    assert "library_gaps" not in out["spec"]["meta"]
+
+
+def test_the_gaps_of_a_spec_say_what_the_library_has_now(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("reel.assets.coverage.load_lexicon", lambda: LEX)
+    spec = gap_spec(
+        library_gaps=[
+            {"kind": "object", "name": "gadget", "scenes": ["a", "b", "gone"]},
+            {"kind": "object", "name": "castle", "scenes": ["c"]},
+        ]
+    )
+    before = {
+        g["name"]: g for g in client.post("/api/spec/gaps", json={"spec": spec}).json()["gaps"]
+    }
+    assert before["gadget"]["asset"] is None and before["castle"]["asset"] is None
+    assert before["gadget"]["scenes"] == ["a", "b"]  # the scene that is gone is not listed
+    keep(client, draft(client)["id"])
+    after = {
+        g["name"]: g for g in client.post("/api/spec/gaps", json={"spec": spec}).json()["gaps"]
+    }
+    assert after["gadget"]["asset"] == "gadget" and after["castle"]["asset"] is None
+    # with the script, what the spec never recorded is found too
+    spec["scenes"][2]["captions"][0]["text"] = "A sword lay by the road."
+    found = client.post(
+        "/api/spec/gaps", json={"spec": spec, "script": "A sword lay by the road."}
+    ).json()["gaps"]
+    assert {g["name"] for g in found} >= {"sword", "castle", "gadget"}
+    assert next(g for g in found if g["name"] == "sword")["scenes"] == ["c"]
+    assert (
+        client.post("/api/spec/gaps", json={"spec": spec, "script": "x" * 200_001}).status_code
+        == 413
+    )
+
+
 def test_planning_and_rendering_see_the_workspace_library(
     client: TestClient, tmp_path: Path
 ) -> None:

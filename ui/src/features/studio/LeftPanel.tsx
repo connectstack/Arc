@@ -1,7 +1,7 @@
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Copy, GripVertical, MoreHorizontal, Plus, Trash2, UserPlus } from 'lucide-react'
+import { AlertTriangle, Copy, GripVertical, MoreHorizontal, Plus, Trash2, UserPlus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApi } from '@/api/context'
@@ -19,6 +19,8 @@ import { sceneAt, sceneSlots, sceneVisibleFrom } from '@/lib/timeline'
 import { useProject } from '@/store/project'
 import { useStudio, type LeftTab } from '@/store/studio'
 import { BuildPanel } from './builder/BuildPanel'
+import { MissingAssets } from './gaps/MissingAssets'
+import { gapsOfScene, useLibraryGaps } from './gaps/useLibraryGaps'
 import { SceneObjects } from './SceneObjects'
 import { addCharacter, addScene, deleteSelection, duplicateSelection, moveScene } from './ops'
 
@@ -71,7 +73,7 @@ function useSceneThumbs(spec: ReelSpec): (i: number) => string | undefined {
 }
 
 // ------------------------------------------------------------------------------- scenes tab
-function SceneCard({ spec, index, thumb }: { spec: ReelSpec; index: number; thumb?: string }) {
+function SceneCard({ spec, index, thumb, missing, ready }: { spec: ReelSpec; index: number; thumb?: string; missing: string[]; ready: string[] }) {
   const select = useProject((s) => s.select)
   const edit = useProject((s) => s.edit)
   const setPlayhead = useProject((s) => s.setPlayhead)
@@ -98,11 +100,24 @@ function SceneCard({ spec, index, thumb }: { spec: ReelSpec; index: number; thum
           <span className="relative block h-[60px] w-[34px] shrink-0 overflow-hidden rounded-[6px] bg-hover">
             {thumb ? <img src={thumb} alt="" className="size-full object-cover" /> : <span className="absolute inset-0" style={{ background: `${bgColor(sc.background.template)}33` }} />}
             {here && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" />}
+            {missing.length > 0 ? (
+              <span className="absolute left-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-warning text-[#1b1b1b]" title={`Missing from the library: ${missing.join(', ')}`}>
+                <AlertTriangle className="size-2.5" aria-hidden />
+              </span>
+            ) : (
+              ready.length > 0 && (
+                <span className="absolute left-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-accent text-white" title={`In the library now, not in this scene: ${ready.join(', ')}`}>
+                  <Plus className="size-2.5" aria-hidden />
+                </span>
+              )
+            )}
           </span>
           <span className="min-w-0">
             <span className="block truncate text-[12.5px] font-semibold">
               <span className="sr-only">Scene </span>
               {index + 1}. {sc.id}
+              {missing.length > 0 && <span className="sr-only">, missing from the library: {missing.join(', ')}</span>}
+              {ready.length > 0 && <span className="sr-only">, in the library now: {ready.join(', ')}</span>}
             </span>
             <span className="flex items-center gap-1.5 text-[11.5px] text-muted">
               <span className="size-2 rounded-full" style={{ background: bgColor(sc.background.template) }} aria-hidden />
@@ -133,6 +148,7 @@ function ScenesTab({ spec }: { spec: ReelSpec }) {
   const edit = useProject((s) => s.edit)
   const select = useProject((s) => s.select)
   const thumbs = useSceneThumbs(spec)
+  const { gaps } = useLibraryGaps()
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))
   const ids = spec.scenes.map((s, i) => `${s.id}#${i}`)
   const onEnd = (e: DragEndEvent) => {
@@ -148,7 +164,7 @@ function ScenesTab({ spec }: { spec: ReelSpec }) {
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             <ul className="m-0 flex flex-col gap-1.5 p-0">
               {spec.scenes.map((_, i) => (
-                <SceneCard key={ids[i]} spec={spec} index={i} thumb={thumbs(i)} />
+                <SceneCard key={ids[i]} spec={spec} index={i} thumb={thumbs(i)} missing={gapsOfScene(gaps, spec.scenes[i].id).filter((g) => !g.asset).map((g) => g.name.replace(/_/g, ' '))} ready={gapsOfScene(gaps, spec.scenes[i].id).filter((g) => g.asset).map((g) => g.name.replace(/_/g, ' '))} />
               ))}
             </ul>
           </SortableContext>
@@ -310,6 +326,7 @@ function ScriptTab({ spec }: { spec: ReelSpec }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <MissingAssets />
         <ScriptCheck spec={spec} script={script} />
         <p className="mb-2 text-[11.5px] leading-snug text-faint">The script this reel was planned from. Lines that became a caption link to it. Editing here changes the script; “Make the captions follow my script” applies it to the reel (one undo step).</p>
         {script.trim() ? (

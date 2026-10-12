@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, ChevronDown, CircleAlert, Info, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useCatalog } from '@/api/hooks'
-import type { LintIssue, ReelSpec } from '@/api/types'
+import type { GapStatus, LintIssue, ReelSpec } from '@/api/types'
 import { Button, Chip, IconButton } from '@/components/ui'
 import { clampMoveValues } from '@/lib/camera'
 import { cn } from '@/lib/cn'
@@ -11,6 +11,8 @@ import { useLint } from '@/store/lint'
 import { useProject } from '@/store/project'
 import { useStudio } from '@/store/studio'
 import { fitObjectTimes } from './clips'
+import { sceneNumbers, useGapFlow, type GapFlow } from './gaps/useGapFlow'
+import { useLibraryGaps } from './gaps/useLibraryGaps'
 
 const ICON = { error: CircleAlert, warning: AlertTriangle, info: Info } as const
 const TONE = { error: 'text-danger', warning: 'text-warning', info: 'text-info' } as const
@@ -78,6 +80,10 @@ function fixFor(issue: LintIssue, catalog: ReturnType<typeof useCatalog>['data']
   return null
 }
 
+/** The gap a LIBRARY_GAP note is about (the note names the missing thing, or, once the library has it, the asset that answers it). */
+const gapOfIssue = (gaps: GapStatus[], i: LintIssue): GapStatus | undefined =>
+  i.code === 'LIBRARY_GAP' || i.code === 'LIBRARY_GAP_FILLED' ? gaps.find((g) => g.kind === i.kind && (g.name.toLowerCase() === (i.name ?? '').replace(/_/g, ' ').toLowerCase() || g.asset === i.name)) : undefined
+
 function clampToScenes(d: ReelSpec, _max: number): void {
   for (const s of d.scenes) {
     for (const l of s.layers) for (const a of l.actions) ((a.t1 = Math.min(a.t1, s.duration_sec)), (a.t0 = Math.min(a.t0, Math.max(0, a.t1 - 0.1))))
@@ -87,14 +93,17 @@ function clampToScenes(d: ReelSpec, _max: number): void {
   }
 }
 
-function Row({ issue, spec }: { issue: LintIssue; spec: ReelSpec }) {
+function Row({ issue, spec, gap, flow }: { issue: LintIssue; spec: ReelSpec; gap?: GapStatus; flow: GapFlow }) {
   const catalog = useCatalog().data
   const select = useProject((s) => s.select)
   const setPlayhead = useProject((s) => s.setPlayhead)
   const edit = useProject((s) => s.edit)
   const replace = useProject((s) => s.replace)
-  const Icon = ICON[issue.severity]
-  const sel = selectionFromPath(spec, issue.path)
+  // what the script says that the library cannot draw is a warning here, with the way to add it, not a note about a command
+  const severity = gap !== undefined ? 'warning' : issue.severity
+  const Icon = ICON[severity]
+  const firstScene = gap !== undefined ? spec.scenes.findIndex((s) => gap.scenes.includes(s.id)) : -1
+  const sel = firstScene >= 0 ? ({ kind: 'scene', scene: firstScene } as const) : selectionFromPath(spec, issue.path)
   const fix = fixFor(issue, catalog)
   const goto = () => {
     if (!sel) return
@@ -107,17 +116,22 @@ function Row({ issue, spec }: { issue: LintIssue; spec: ReelSpec }) {
   }
   return (
     <li className="flex items-start gap-3 border-b border-line px-4 py-2.5 last:border-0">
-      <Icon className={cn('mt-0.5 size-4 shrink-0', TONE[issue.severity])} aria-label={issue.severity} />
+      <Icon className={cn('mt-0.5 size-4 shrink-0', TONE[severity])} aria-label={severity} />
       <div className="min-w-0 flex-1">
         <div className="text-[12.5px] leading-snug">{issue.message}</div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11.5px] text-faint">
-          <span className="font-medium text-muted">{pathLabel(spec, issue.path)}</span>
-          <code className="font-mono">{issue.path || 'spec'}</code>
+          <span className="font-medium text-muted">{gap !== undefined ? sceneNumbers(gap.scenes, spec.scenes.map((s) => s.id)) || 'the reel' : pathLabel(spec, issue.path)}</span>
+          {gap === undefined && <code className="font-mono">{issue.path || 'spec'}</code>}
           <Chip className="h-4 px-1 text-[10px]">{issue.code}</Chip>
         </div>
-        {issue.hint && <div className="mt-1 text-[12px] text-muted">{issue.hint}</div>}
+        {gap !== undefined ? <div className="mt-1 text-[12px] text-muted">{gap.asset ? `The library has “${gap.asset.replace(/_/g, ' ')}” now: use it in the scenes that say it.` : 'Add the asset and it is put to use in the scenes that say it.'}</div> : issue.hint && <div className="mt-1 text-[12px] text-muted">{issue.hint}</div>}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
+        {gap !== undefined && (
+          <Button size="sm" variant={gap.asset ? 'primary' : 'secondary'} onClick={() => (gap.asset ? void flow.use(gap, gap.scenes, gap.asset) : flow.add(gap, gap.scenes))}>
+            {gap.asset ? 'Use it' : 'Add asset…'}
+          </Button>
+        )}
         {fix && (
           <Button size="sm" onClick={() => (issue.code === 'DURATION_BUDGET' ? replace(fitToDuration(spec, 50, catalog?.limits.max_scene_sec ?? 30)) : edit(fix.run))}>
             {fix.label}
@@ -140,11 +154,22 @@ export function ProblemsDrawer() {
   const set = useStudio((s) => s.set)
   const edit = useProject((s) => s.edit)
   const catalog = useCatalog().data
+  const { all, gaps } = useLibraryGaps()
+  const flow = useGapFlow()
   const [filter, setFilter] = useState<'all' | 'error' | 'warning' | 'info'>('all')
-  const issues = useMemo(() => (report?.issues ?? []).filter((i) => filter === 'all' || i.severity === filter), [report, filter])
+  // what the script says that the library cannot draw is a warning here, whatever the linter calls it (a note about a command to run);
+  // one the person set aside, or that every scene shows now, is not shown at all
+  const shown = useMemo(() => (report?.issues ?? []).filter((i) => !(gapOfIssue(all, i) && !gapOfIssue(gaps, i))), [report, all, gaps])
+  const severityOf = (i: LintIssue): LintIssue['severity'] => (gapOfIssue(gaps, i) ? 'warning' : i.severity)
+  const issues = useMemo(() => shown.filter((i) => filter === 'all' || severityOf(i) === filter), [shown, filter, gaps]) // eslint-disable-line react-hooks/exhaustive-deps
+  const counts = useMemo(() => {
+    const n = { errors: 0, warnings: 0, infos: 0 }
+    for (const i of shown) n[({ error: 'errors', warning: 'warnings', info: 'infos' } as const)[severityOf(i)]]++
+    return n
+  }, [shown, gaps]) // eslint-disable-line react-hooks/exhaustive-deps
   // every problem that has a one-click repair, repaired together as one undo step (fitting to 50 s needs a whole-spec replace, so it stays its own button)
   const fixable = useMemo(() => (report?.issues ?? []).flatMap((i) => (i.code === 'DURATION_BUDGET' ? [] : [fixFor(i, catalog)])).filter((f): f is Fix => f !== null), [report, catalog])
-  const c = report?.counts
+  const c = counts
   return (
     <div className="pop absolute inset-x-0 bottom-0 z-30 flex max-h-[min(60%,420px)] min-h-[160px] flex-col border-t border-line-strong bg-panel shadow-[0_-12px_40px_rgb(0_0_0/0.25)]" role="region" aria-label="Problems">
       <div className="flex h-10 shrink-0 items-center gap-3 border-b border-line px-3">
@@ -153,7 +178,7 @@ export function ProblemsDrawer() {
           <div className="flex items-center gap-1.5" role="group" aria-label="Filter problems">
             {(
               [
-                ['all', `All ${issues.length === (report?.issues.length ?? 0) ? (report?.issues.length ?? 0) : ''}`.trim()],
+                ['all', `All ${shown.length}`],
                 ['error', `${c?.errors ?? 0} errors`],
                 ['warning', `${c?.warnings ?? 0} warnings`],
                 ['info', `${c?.infos ?? 0} notes`],
@@ -177,20 +202,21 @@ export function ProblemsDrawer() {
         </IconButton>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {report && report.issues.length === 0 && (
+        {report && shown.length === 0 && (
           <div className="flex items-center gap-2 px-4 py-6 text-success">
             <CheckCircle2 className="size-5" aria-hidden />
             <span className="font-medium">No problems: this reel passes every check the renderer makes.</span>
           </div>
         )}
-        {report && report.issues.length > 0 && issues.length === 0 && <p className="px-4 py-6 text-muted">Nothing in this filter.</p>}
+        {report && shown.length > 0 && issues.length === 0 && <p className="px-4 py-6 text-muted">Nothing in this filter.</p>}
         <ul className="m-0 p-0">
           {issues.map((i, n) => (
-            <Row key={`${i.code}-${i.path}-${n}`} issue={i} spec={spec} />
+            <Row key={`${i.code}-${i.path}-${n}`} issue={i} spec={spec} gap={gapOfIssue(gaps, i)} flow={flow} />
           ))}
         </ul>
         {!report && <p className="px-4 py-6 text-muted">Checking the spec…</p>}
       </div>
+      {flow.dialog}
     </div>
   )
 }

@@ -198,6 +198,13 @@ Every planner reads the library through the assets' **tags** (and names), so wha
   (add one of yours with the same name to override it).
 * **New reel** checks the script as you type and lists what the library can draw and what it cannot, each missing item with an *Add asset* button pre-filled with its words.
   After planning, anything still missing is shown again; adding it swaps it into the reel before the studio opens.
+* **Missing from the library, in the studio.** What the script says that the library cannot draw is flagged where you work: a warning in the top bar (how many things),
+  a badge on each scene that says one, a *Missing from the library* section at the top of that scene's inspector, a list in the Script tab, and a warning in Problems. *Add
+  asset...* opens the form already filled in from the script (its words in English, Hindi and Hinglish) and, once the asset is saved, puts it into **that scene**: an object stands on a
+  free spot, a place becomes the scene's set, a character joins the scene (and when something stood in for them, they are drawn as the new picture in every scene, since a
+  character looks the same throughout). The other scenes that say it keep their warning, but the library has the asset now, so each offers *Use it in this scene* (or in all of them).
+  *Not needed* sets a warning aside for that reel. The list is read again when a caption, the script or the library changes, so it also covers a reel that was written by hand or edited
+  since it was planned (`POST /api/spec/gaps`, and `/api/spec/fill-gaps` with `only: [{kind, name, scope: [scene ids]}]`).
 * **Build from scratch** (Projects, or under the script on New reel) starts an empty reel and opens the studio on its **Build** tab: pick a background, cast characters,
   add objects, then give them actions, sounds and words, one scene at a time, all from the library (your own assets included). See [ui.md](ui.md#in-the-studio).
 * **The studio** treats objects like characters: add them from the library panel (or drag them onto the stage), drag and size them on the stage, set when they appear

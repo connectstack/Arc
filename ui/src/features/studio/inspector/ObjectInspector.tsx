@@ -4,7 +4,7 @@ import { AlertTriangle, ChevronDown, ChevronRight, CircleAlert, Plus, Trash2 } f
 import { useState } from 'react'
 import { useCatalog } from '@/api/hooks'
 import type { Catalog, ObjectMotion, ReelSpec, Scene, SceneObject, Vec2 } from '@/api/types'
-import { Button, ColorField, Field, IconButton, Menu, NumberField, Segmented, SelectBox, SliderField, SwitchRow } from '@/components/ui'
+import { Button, ColorField, Field, IconButton, Menu, NumberField, RangeSlider, Segmented, SelectBox, SliderField, SwitchRow } from '@/components/ui'
 import { AddAssetDialog } from '@/features/assets/AddAssetDialog'
 import { AssetThumb } from '@/features/assets/AssetThumb'
 import { cn } from '@/lib/cn'
@@ -19,6 +19,7 @@ import { ObjectPickerPopover, sizeText, useAssetRef } from '../ObjectPicker'
 import { addMotion, addObject, changeObjectAsset, deleteSelection } from '../ops'
 import { objectName, objectProblems, staysToEnd } from '../objects'
 import { Row, Section, useLive } from './common'
+import { PointSliders } from './sliders'
 
 const round3 = (v: number): number => Math.round(v * 1000) / 1000
 
@@ -40,8 +41,11 @@ function Problems({ list }: { list: Problem[] }) {
   )
 }
 
-/** Where something stands or goes: a named place of the set, or exact screen fractions (x across, y down). */
-function PlaceField({ name, scene, catalog, value, onChange, hint }: { name: string; scene: Scene; catalog: Catalog | undefined; value: Vec2 | string; onChange: (v: Vec2 | string) => void; hint?: string }) {
+/**
+ * Where something stands or goes: a named place of the set, or a point on the stage (sliders across and down). `onLive` takes a slider's
+ * changes while it moves (one undo step for the whole drag, ended by `onCommit`); without it every change is `onChange`.
+ */
+function PlaceField({ name, scene, catalog, value, onChange, onLive, onCommit, hint }: { name: string; scene: Scene; catalog: Catalog | undefined; value: Vec2 | string; onChange: (v: Vec2 | string) => void; onLive?: (v: Vec2) => void; onCommit?: () => void; hint?: string }) {
   const slots = entry(catalog?.backgrounds, scene.background.template)?.slots ?? {}
   const names = Object.keys(slots)
   const isSlot = typeof value === 'string'
@@ -62,19 +66,19 @@ function PlaceField({ name, scene, catalog, value, onChange, hint }: { name: str
       {isSlot ? (
         <SelectBox label={`${name} place`} value={value} onChange={onChange} options={options.map((n) => ({ value: n, label: n }))} />
       ) : (
-        <Row>
-          <NumberField value={at[0]} onChange={(x) => onChange([x, at[1]])} step={0.01} min={-1} max={2} unit="x" aria-label={`${name} x`} />
-          <NumberField value={at[1]} onChange={(y) => onChange([at[0], y])} step={0.01} min={-0.2} max={1.4} unit="y" aria-label={`${name} y`} />
-        </Row>
+        <PointSliders name={name} value={at} onChange={(v) => (onLive ?? onChange)(v)} onCommit={onCommit} />
       )}
     </Field>
   )
 }
 
-/** Two times of a scene (seconds from its start): from and until, kept at least a moment apart. */
-function TimePair({ t0, t1, max, onChange, from, until }: { t0: number; t1: number; max: number; onChange: (t0: number, t1: number) => void; from: string; until: string }) {
+/** Two times of a scene (seconds from its start): from and until, kept at least a moment apart, as one slider with two thumbs and the two numbers. */
+function TimePair({ t0, t1, max, onChange, onLive, onCommit, from, until }: { t0: number; t1: number; max: number; onChange: (t0: number, t1: number) => void; onLive?: (t0: number, t1: number) => void; onCommit?: () => void; from: string; until: string }) {
   return (
     <Row>
+      <div className="col-span-2">
+        <RangeSlider start={t0} end={t1} min={0} max={max} step={0.05} minGap={MIN_CLIP} labels={[`${from} slider`, `${until} slider`]} onChange={(a, b) => (onLive ?? onChange)(ms(a), ms(b))} onCommit={onCommit} />
+      </div>
       <Field label={from}>
         <NumberField value={t0} onChange={(v) => onChange(ms(Math.min(v, t1 - MIN_CLIP)), t1)} min={0} max={max} step={0.1} unit="s" aria-label={`${from} time`} digits={2} />
       </Field>
@@ -143,7 +147,7 @@ function ObjectFields({ spec, si, oi }: { spec: ReelSpec; si: number; oi: number
     <>
       <AssetField spec={spec} si={si} oi={oi} />
       <Problems list={objectProblems(sc, o, catalog)} />
-      <PlaceField name="Position" scene={sc} catalog={catalog} value={o.position} onChange={(v) => set((x) => void (x.position = v))} hint="Where it stands: a named place on this set, or exact screen fractions. You can also drag it on the stage." />
+      <PlaceField name="Position" scene={sc} catalog={catalog} value={o.position} onChange={(v) => set((x) => void (x.position = v))} onLive={(v) => lv((x) => void (x.position = v))} onCommit={commit} hint="Where it stands: a named place on this set, or anywhere on the stage (the ticks are the edges of the frame). You can also drag it on the stage." />
       <Field label="Size" hint={persons === undefined ? undefined : `Height ≈ ${sizeText(persons)} standing at the same spot`}>
         <SliderField label="Scale" value={o.scale} min={0.05} max={6} step={0.01} onChange={(v) => lv((x) => void (x.scale = v))} onCommit={commit} defaultValue={1} />
       </Field>
@@ -200,25 +204,25 @@ function ObjectFields({ spec, si, oi }: { spec: ReelSpec; si: number; oi: number
 /** When it is on screen: from a time until a time, or until the end of the scene. */
 function SpanFields({ spec, si, oi }: { spec: ReelSpec; si: number; oi: number }) {
   const edit = useProject((s) => s.edit)
+  const { live, commit } = useLive()
   const sc = spec.scenes[si]
   const o = sc?.objects[oi]
   if (!sc || !o) return null
   const dur = sc.duration_sec
   const stays = staysToEnd(o)
   const set = (fn: (x: SceneObject) => void) => edit((d) => void fn(d.scenes[si].objects[oi]))
+  const lv = (fn: (x: SceneObject) => void) => live((d) => void fn(d.scenes[si].objects[oi]))
+  const lastStart = Math.max(0, dur - MIN_CLIP)
   return (
     <>
       {stays ? (
-        <Row>
-          <Field label="Visible from">
-            <NumberField value={o.t0} onChange={(v) => set((x) => void (x.t0 = ms(Math.min(v, Math.max(0, dur - MIN_CLIP)))))} min={0} max={dur} step={0.1} unit="s" aria-label="Visible from time" digits={2} />
+        <>
+          <Field label="Visible from" hint="Seconds from the start of the scene; it stays until the scene ends">
+            <SliderField label="Visible from" valueLabel="Visible from time" value={Math.min(o.t0, lastStart)} min={0} max={lastStart} step={0.05} unit="s" onChange={(v) => lv((x) => void (x.t0 = ms(Math.min(v, lastStart))))} onCommit={commit} />
           </Field>
-          <Field label="Visible until">
-            <div className="flex h-[var(--ctl-h)] items-center rounded-ctl border border-line bg-raised px-2.5 text-[13px] text-muted">the end of the scene</div>
-          </Field>
-        </Row>
+        </>
       ) : (
-        <TimePair t0={o.t0} t1={o.t1 ?? dur} max={dur} from="Visible from" until="Visible until" onChange={(t0, t1) => set((x) => void ((x.t0 = t0), (x.t1 = t1)))} />
+        <TimePair t0={o.t0} t1={o.t1 ?? dur} max={dur} from="Visible from" until="Visible until" onChange={(t0, t1) => set((x) => void ((x.t0 = t0), (x.t1 = t1)))} onLive={(t0, t1) => lv((x) => void ((x.t0 = t0), (x.t1 = t1)))} onCommit={commit} />
       )}
       <SwitchRow label="Until the end of the scene" hint="Switch off to make it disappear at a moment of your choice" checked={stays} onChange={(on) => set((x) => void (x.t1 = on ? null : ms(dur)))} />
     </>
@@ -317,10 +321,10 @@ export function MotionEditor({ spec, si, oi, mi, onReorder }: { spec: ReelSpec; 
       </Field>
       {def?.fields.map((f) =>
         f.kind === 'destination' ? (
-          <PlaceField key="destination" name="Destination" scene={sc} catalog={catalog} value={destination} onChange={(v) => set((x) => void setMotionField(x, 'to', v))} hint="Where it ends up. It stays there when the motion is over." />
+          <PlaceField key="destination" name="Destination" scene={sc} catalog={catalog} value={destination} onChange={(v) => set((x) => void setMotionField(x, 'to', v))} onLive={(v) => lv((x) => void setMotionField(x, 'to', v))} onCommit={commit} hint="Where it ends up. It stays there when the motion is over." />
         ) : f.kind === 'count' ? (
           <Field key={f.key} label={f.label}>
-            <NumberField value={readNumber(m, f.key, f.fallback)} onChange={(v) => set((x) => void setMotionField(x, 'count', Math.round(v), f.fallback))} min={f.min} max={f.max} step={1} aria-label={f.label} />
+            <SliderField label={f.label} valueLabel={f.label} value={readNumber(m, f.key, f.fallback)} min={f.min} max={f.max} step={1} onChange={(v) => lv((x) => void setMotionField(x, 'count', Math.round(v), f.fallback))} onCommit={commit} defaultValue={f.fallback} />
           </Field>
         ) : (
           <Field key={`${f.key}-${f.label}`} label={f.label} hint={f.hint}>
@@ -328,7 +332,7 @@ export function MotionEditor({ spec, si, oi, mi, onReorder }: { spec: ReelSpec; 
           </Field>
         ),
       )}
-      <TimePair t0={m.t0} t1={m.t1} max={sc.duration_sec} from="Motion starts" until="Motion ends" onChange={setTimes} />
+      <TimePair t0={m.t0} t1={m.t1} max={sc.duration_sec} from="Motion starts" until="Motion ends" onChange={setTimes} onLive={(t0, t1) => lv((x) => void ((x.t0 = ms(t0)), (x.t1 = ms(t1))))} onCommit={() => (commit(), setTimes(m.t0, m.t1))} />
       <Field label="Easing" hint="How the motion speeds up and slows down">
         <div className="flex items-center gap-2">
           <SelectBox label="Easing" value={m.ease} onChange={(v) => set((x) => void (x.ease = v))} options={easings.map((e) => ({ value: e, label: titleCase(e) }))} className="flex-1" />

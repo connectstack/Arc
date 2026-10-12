@@ -6,12 +6,13 @@ import { Box, Mountain, PersonStanding, Type, Users, Video, Volume2 } from 'luci
 import { useEffect, useRef, type ComponentType } from 'react'
 import { useCatalog } from '@/api/hooks'
 import type { ReelSpec, Scene } from '@/api/types'
-import { Button, IconButton, NumberField } from '@/components/ui'
+import { Button, IconButton, SliderField } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { budgetState, fitToDuration, ms, sceneSlots, sceneVisibleFrom, totalDuration } from '@/lib/timeline'
 import { useProject } from '@/store/project'
 import { useStudio, type BuildStep } from '@/store/studio'
 import { outlineScene } from '../SceneObjects'
+import { useLive } from '../inspector/common'
 import { addScene, addSceneLike } from '../ops'
 import { secs, type StepProps } from './parts'
 import { ActionsStep, BackgroundStep, CameraStep, CastStep, ObjectsStep, SoundsStep, WordsStep } from './steps'
@@ -45,6 +46,7 @@ function BuildHeader({ spec, si }: { spec: ReelSpec; si: number }) {
   const replace = useProject((s) => s.replace)
   const select = useProject((s) => s.select)
   const setPlayhead = useProject((s) => s.setPlayhead)
+  const { live, commit } = useLive()
   const sc = spec.scenes[si]
   const min = catalog?.limits.min_total_sec ?? 45
   const max = catalog?.limits.max_total_sec ?? 60
@@ -76,9 +78,12 @@ function BuildHeader({ spec, si }: { spec: ReelSpec; si: number }) {
         <IconButton label="Next scene" size="icon-sm" disabled={si >= spec.scenes.length - 1} onClick={() => goTo(si + 1)}>
           <ChevronRight className="size-4" />
         </IconButton>
-        <span title="How long this scene lasts" className="ml-1">
-          <NumberField aria-label="Scene length" className="w-[72px]" value={sc.duration_sec} min={0.5} max={maxScene} step={0.5} unit="s" onChange={(v) => edit((d) => void (d.scenes[si].duration_sec = ms(v)))} />
-        </span>
+      </div>
+      <div className="flex items-center gap-2.5" title="How long this scene lasts">
+        <span className="shrink-0 text-[12px] text-muted">Scene length</span>
+        <div className="min-w-0 flex-1">
+          <SliderField label="Scene length" valueLabel="Scene length" value={sc.duration_sec} min={0.5} max={maxScene} step={0.5} unit="s" onChange={(v) => live((d) => void (d.scenes[si].duration_sec = ms(v)))} onCommit={commit} />
+        </div>
       </div>
       <div className="flex gap-1.5">
         <Button size="sm" className="flex-1" onClick={() => next(true)} title="Add a scene after this one on the same background, with the same characters standing where they stand now">

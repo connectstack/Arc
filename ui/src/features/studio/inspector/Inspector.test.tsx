@@ -171,7 +171,7 @@ describe('the inspector of an object', () => {
     const user = userEvent.setup()
     const { api } = await openWithObject()
     await renderScreen(<Inspector />, { api })
-    expect(await screen.findByText('the end of the scene')).toBeInTheDocument()
+    expect(await screen.findByRole('switch', { name: 'Until the end of the scene' })).toBeChecked()
     const from = screen.getByRole('textbox', { name: 'Visible from time' })
     await user.clear(from)
     await user.type(from, '1.5{Enter}')

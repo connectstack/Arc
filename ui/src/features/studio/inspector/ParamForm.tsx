@@ -2,6 +2,7 @@ import { useId } from 'react'
 import type { Param } from '@/api/types'
 import { Field, Input, NumberField, Segmented, SelectBox, SliderField, SwitchRow } from '@/components/ui'
 import { titleCase } from '@/lib/format'
+import { PointSliders } from './sliders'
 
 export interface ParamContext {
   /** names a target may be: background slots and character ids */
@@ -35,7 +36,7 @@ export function setParam(params: Record<string, unknown>, p: Param, v: unknown):
   return next
 }
 
-function TargetField({ p, value, onChange, names }: { p: Param; value: unknown; onChange: (v: unknown) => void; names: string[] }) {
+function TargetField({ p, value, onChange, onLive, onCommit, names }: { p: Param; value: unknown; onChange: (v: unknown) => void; onLive?: (v: unknown) => void; onCommit?: () => void; names: string[] }) {
   const listId = useId()
   const mode = Array.isArray(value) ? 'point' : typeof value === 'string' ? 'name' : 'default'
   const point = Array.isArray(value) ? (value as number[]) : [0.5, 0.74]
@@ -62,17 +63,12 @@ function TargetField({ p, value, onChange, names }: { p: Param; value: unknown; 
           </datalist>
         </>
       )}
-      {mode === 'point' && (
-        <div className="grid grid-cols-2 gap-2">
-          <NumberField value={point[0]} onChange={(x) => onChange([x, point[1]])} step={0.01} min={-1} max={2} aria-label={`${p.name} x`} unit="x" />
-          <NumberField value={point[1]} onChange={(y) => onChange([point[0], y])} step={0.01} min={-1} max={2} aria-label={`${p.name} y`} unit="y" />
-        </div>
-      )}
+      {mode === 'point' && <PointSliders name={p.name} value={[point[0], point[1]]} onChange={onLive ?? onChange} onCommit={onCommit} />}
     </div>
   )
 }
 
-export function ParamField({ p, value, onChange, ctx }: { p: Param; value: unknown; onChange: (v: unknown) => void; ctx: ParamContext }) {
+export function ParamField({ p, value, onChange, onLive, onCommit, ctx }: { p: Param; value: unknown; onChange: (v: unknown) => void; onLive?: (v: unknown) => void; onCommit?: () => void; ctx: ParamContext }) {
   const kind = kindOf(p)
   const id = useId()
   const label = titleCase(p.name)
@@ -98,7 +94,7 @@ export function ParamField({ p, value, onChange, ctx }: { p: Param; value: unkno
       const step = kind === 'integer' ? 1 : p.maximum !== undefined && p.minimum !== undefined && p.maximum - p.minimum <= 3 ? 0.05 : 0.1
       control =
         p.minimum !== undefined && p.maximum !== undefined ? (
-          <SliderField label={label} value={Number(cur ?? p.minimum)} min={p.minimum} max={p.maximum} step={step} onChange={onChange} defaultValue={typeof p.default === 'number' ? p.default : undefined} />
+          <SliderField label={label} value={Number(cur ?? p.minimum)} min={p.minimum} max={p.maximum} step={step} onChange={onLive ?? onChange} onCommit={onCommit} defaultValue={typeof p.default === 'number' ? p.default : undefined} />
         ) : (
           <NumberField id={id} value={Number(cur ?? 0)} onChange={onChange} step={step} min={p.minimum} max={p.maximum} />
         )
@@ -117,7 +113,7 @@ export function ParamField({ p, value, onChange, ctx }: { p: Param; value: unkno
       )
       break
     case 'target':
-      control = <TargetField p={p} value={cur} onChange={onChange} names={ctx.names} />
+      control = <TargetField p={p} value={cur} onChange={onChange} onLive={onLive} onCommit={onCommit} names={ctx.names} />
       break
     case 'text':
       control = <Input id={id} value={typeof cur === 'string' ? cur : ''} onChange={(e) => onChange(e.target.value || null)} placeholder={p.default === null || p.default === undefined ? 'default' : String(p.default)} />
@@ -145,13 +141,14 @@ export function ParamField({ p, value, onChange, ctx }: { p: Param; value: unkno
   )
 }
 
-export function ParamForm({ params, value, onChange, ctx }: { params: Param[]; value: Record<string, unknown>; onChange: (next: Record<string, unknown>) => void; ctx: ParamContext }) {
+/** `onLive` takes the changes a slider makes while it moves (so a drag is one undo step) and `onCommit` comes when it is let go; without them every change is `onChange`. */
+export function ParamForm({ params, value, onChange, onLive, onCommit, ctx }: { params: Param[]; value: Record<string, unknown>; onChange: (next: Record<string, unknown>) => void; onLive?: (next: Record<string, unknown>) => void; onCommit?: () => void; ctx: ParamContext }) {
   const shown = params.filter((p) => !HIDDEN.has(p.name))
   if (shown.length === 0) return <p className="text-[12px] text-faint">No settings: this one is fully automatic.</p>
   return (
     <div className="flex flex-col gap-3.5">
       {shown.map((p) => (
-        <ParamField key={p.name} p={p} value={value[p.name]} ctx={ctx} onChange={(v) => onChange(setParam(value, p, v))} />
+        <ParamField key={p.name} p={p} value={value[p.name]} ctx={ctx} onChange={(v) => onChange(setParam(value, p, v))} onLive={onLive && ((v) => onLive(setParam(value, p, v)))} onCommit={onCommit} />
       ))}
     </div>
   )

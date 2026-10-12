@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useApi } from '@/api/context'
 import { useCatalog } from '@/api/hooks'
 import type { Catalog, CatalogEntry, Character, FxSpec, Layer, ReelSpec, Scene } from '@/api/types'
-import { Banner, Button, Chip, ColorField, Field, Input, IconButton, NumberField, Segmented, SelectBox, SliderField, SwitchRow, Textarea, Toggle } from '@/components/ui'
+import { Banner, Button, Chip, ColorField, Field, Input, IconButton, NumberField, RangeSlider, Segmented, SelectBox, SliderField, SwitchRow, Textarea, Toggle } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { curvePath } from '@/lib/easing'
 import { titleCase } from '@/lib/format'
@@ -15,11 +15,19 @@ import { addCameraMove, deleteSelection, duplicateSelection, renameCharacterId, 
 import { Row, Section, useLive } from './common'
 import { MotionInspector, ObjectInspector, SceneObjectsSection } from './ObjectInspector'
 import { ParamForm } from './ParamForm'
+import { FEET, PAN, PointSliders } from './sliders'
 
 // ------------------------------------------------------------------------------- shared bits
-function TimeFields({ t0, t1, onChange, min = MIN_CLIP, max }: { t0: number; t1: number; onChange: (t0: number, t1: number) => void; min?: number; max: number }) {
+/**
+ * When something starts and ends, in seconds from the start of the scene: one slider with two thumbs, and the two numbers for an exact time.
+ * `onChange` takes `{ live: true }` while a thumb is being dragged (so the drag is one undo step) and `onCommit` comes when it is let go.
+ */
+function TimeFields({ t0, t1, onChange, onCommit, min = MIN_CLIP, max }: { t0: number; t1: number; onChange: (t0: number, t1: number, opts?: { live?: boolean }) => void; onCommit?: () => void; min?: number; max: number }) {
   return (
     <Row>
+      <div className="col-span-2">
+        <RangeSlider start={t0} end={t1} min={0} max={max} step={0.05} minGap={min} labels={['Start time slider', 'End time slider']} onChange={(a, b) => onChange(ms(a), ms(b), { live: true })} onCommit={onCommit} />
+      </div>
       <Field label="Start">
         <NumberField value={t0} onChange={(v) => onChange(ms(Math.min(v, t1 - min)), t1)} min={0} max={max} step={0.1} unit="s" aria-label="Start time" digits={2} />
       </Field>
@@ -163,13 +171,11 @@ function ReelInspector({ spec }: { spec: ReelSpec }) {
       </Section>
       <Section title="Caption safe area" defaultOpen={false}>
         <p className="-mt-1 text-[11.5px] text-faint">Fractions of the frame kept clear of captions (platform buttons cover these). Show it on the stage with the safe-area button.</p>
-        <Row>
-          {(['top', 'bottom', 'left', 'right'] as const).map((side) => (
-            <Field key={side} label={titleCase(side)}>
-              <NumberField value={sa[side]} onChange={(v) => edit((d) => void ((d.meta.safe_area = { ...(d.meta.safe_area ?? sa), [side]: v })))} min={0} max={0.4} step={0.01} aria-label={`${side} margin`} />
-            </Field>
-          ))}
-        </Row>
+        {(['top', 'bottom', 'left', 'right'] as const).map((side) => (
+          <Field key={side} label={titleCase(side)}>
+            <SliderField label={`${side} margin`} valueLabel={`${side} margin`} value={sa[side]} min={0} max={0.4} step={0.01} onChange={(v) => live((d) => void ((d.meta.safe_area = { ...(d.meta.safe_area ?? sa), [side]: v })))} onCommit={commit} />
+          </Field>
+        ))}
       </Section>
       <Section title="Sound" defaultOpen={false}>
         <p className="text-[12px] text-muted">
@@ -186,6 +192,7 @@ function ReelInspector({ spec }: { spec: ReelSpec }) {
 // ------------------------------------------------------------------------------- scene
 function TransitionFields({ spec, si, catalog }: { spec: ReelSpec; si: number; catalog: Catalog | undefined }) {
   const edit = useProject((s) => s.edit)
+  const { live, commit } = useLive()
   const sc = spec.scenes[si]
   const tr = sc.transition_out
   const def = entry(catalog?.transitions, tr.type)
@@ -198,10 +205,10 @@ function TransitionFields({ spec, si, catalog }: { spec: ReelSpec; si: number; c
       </Field>
       {tr.type !== 'cut' && (
         <Field label="Duration" hint="The next scene starts this long before this one ends, so the reel is shorter by the same amount">
-          <SliderField label="Transition duration" value={tr.duration} min={0.1} max={3} step={0.05} unit="s" onChange={(v) => edit((d) => void (d.scenes[si].transition_out.duration = v), { live: true })} onCommit={() => undefined} />
+          <SliderField label="Transition duration" value={tr.duration} min={0.1} max={3} step={0.05} unit="s" onChange={(v) => live((d) => void (d.scenes[si].transition_out.duration = v))} onCommit={commit} />
         </Field>
       )}
-      {def?.params && def.params.length > 0 && tr.type !== 'cut' && <ParamForm params={def.params} value={tr.params} ctx={{ names: [] }} onChange={(p) => edit((d) => void (d.scenes[si].transition_out.params = p))} />}
+      {def?.params && def.params.length > 0 && tr.type !== 'cut' && <ParamForm params={def.params} value={tr.params} ctx={{ names: [] }} onChange={(p) => edit((d) => void (d.scenes[si].transition_out.params = p))} onLive={(p) => live((d) => void (d.scenes[si].transition_out.params = p))} onCommit={commit} />}
     </>
   )
 }
@@ -236,7 +243,7 @@ function SceneInspector({ spec, si }: { spec: ReelSpec; si: number }) {
           ))}
         </div>
         {bgDef && <p className="text-[11.5px] leading-snug text-faint">{bgDef.summary}</p>}
-        {bgDef?.params && <ParamForm params={bgDef.params} value={sc.background.params} ctx={{ names: [] }} onChange={(p) => edit((d) => void (d.scenes[si].background.params = p))} />}
+        {bgDef?.params && <ParamForm params={bgDef.params} value={sc.background.params} ctx={{ names: [] }} onChange={(p) => edit((d) => void (d.scenes[si].background.params = p))} onLive={(p) => live((d) => void (d.scenes[si].background.params = p))} onCommit={commit} />}
       </Section>
       <Section title="Camera" action={<CameraAdder si={si} />} defaultOpen={sc.camera.moves.length > 0}>
         {sc.camera.moves.length === 0 && <p className="text-[12px] text-faint">A still camera. Add a pan, zoom, dolly, shake or rack focus.</p>}
@@ -397,15 +404,12 @@ function LayerFields({ spec, si, li }: { spec: ReelSpec; si: number; li: number 
       <Field label="Character">
         <SelectBox label="Character" value={layer.character} onChange={(v) => set((l) => void (l.character = v))} options={spec.characters.map((c) => ({ value: c.id, label: characterName(spec, c.id) }))} />
       </Field>
-      <Field label="Position" hint="Where their feet are: a named place on this set, or exact screen fractions. You can also drag them on the stage.">
+      <Field label="Position" hint="Where their feet are: a named place on this set, or anywhere on the stage (the ticks are the edges of the frame). You can also drag them on the stage.">
         <Segmented label="Position mode" size="sm" value={isSlot ? 'slot' : 'point'} onChange={(m) => set((l) => void (l.position = m === 'slot' ? (slotNames.includes('center') ? 'center' : (slotNames[0] ?? 'center')) : [point[0], point[1]]))} options={[{ value: 'slot', label: 'Named place' }, { value: 'point', label: 'Exact point' }]} />
         {isSlot ? (
           <SelectBox label="Slot" value={layer.position as string} onChange={(v) => set((l) => void (l.position = v))} options={slotNames.map((n) => ({ value: n, label: n }))} />
         ) : (
-          <Row>
-            <NumberField value={point[0]} onChange={(x) => set((l) => void (l.position = [x, point[1]]))} step={0.01} min={-1} max={2} unit="x" aria-label="Position x" />
-            <NumberField value={point[1]} onChange={(y) => set((l) => void (l.position = [point[0], y]))} step={0.01} min={0} max={1} unit="y" aria-label="Position y" />
-          </Row>
+          <PointSliders name="Position" value={[point[0], point[1]]} down={FEET} onChange={(v) => live((d) => void (d.scenes[si].layers[li].position = v))} onCommit={commit} />
         )}
       </Field>
       <Field label="Size">
@@ -470,11 +474,14 @@ function RawParams({ value, onChange }: { value: Record<string, unknown>; onChan
 function ActionInspector({ spec, sel }: { spec: ReelSpec; sel: Extract<Selection, { kind: 'action' }> }) {
   const catalog = useCatalog().data
   const edit = useProject((s) => s.edit)
+  const { live, commit } = useLive()
   const sc = spec.scenes[sel.scene]
   const a = sc?.layers[sel.layer]?.actions[sel.action]
   if (!sc || !a) return null
   const def = entry(catalog?.actions, a.name)
-  const set = (fn: (x: typeof a) => void) => edit((d) => void fn(d.scenes[sel.scene].layers[sel.layer].actions[sel.action]))
+  const at = (d: ReelSpec) => d.scenes[sel.scene].layers[sel.layer].actions[sel.action]
+  const set = (fn: (x: typeof a) => void) => edit((d) => void fn(at(d)))
+  const lv = (fn: (x: typeof a) => void) => live((d) => void fn(at(d)))
   const tooShort = def?.min_duration !== undefined && a.t1 - a.t0 < def.min_duration - 1e-6
   return (
     <>
@@ -482,13 +489,13 @@ function ActionInspector({ spec, sel }: { spec: ReelSpec; sel: Extract<Selection
         <Field label="Action" hint={def?.summary}>
           <SelectBox label="Action" value={a.name} onChange={(v) => set((x) => void ((x.name = v), (x.params = {})))} options={[...(catalog?.actions ?? []).map((x) => ({ value: x.name, label: x.name, hint: x.summary, group: titleCase(x.category ?? 'other') })), ...(def || !catalog ? [] : [{ value: a.name, label: `${a.name} (custom)`, hint: 'not in this catalog', group: 'Custom' }])]} />
         </Field>
-        <TimeFields t0={a.t0} t1={a.t1} max={sc.duration_sec} onChange={(t0, t1) => set((x) => void ((x.t0 = t0), (x.t1 = t1)))} min={Math.min(def?.min_duration ?? MIN_CLIP, MIN_CLIP)} />
+        <TimeFields t0={a.t0} t1={a.t1} max={sc.duration_sec} onChange={(t0, t1, o) => (o?.live ? lv : set)((x) => void ((x.t0 = t0), (x.t1 = t1)))} onCommit={commit} min={Math.min(def?.min_duration ?? MIN_CLIP, MIN_CLIP)} />
         {tooShort && <Chip tone="warning">This action needs at least {def?.min_duration} s to look right</Chip>}
         {def?.moves_root && <Chip tone="info">Moves the character: its path shows on the stage</Chip>}
       </Section>
       {def?.params && (
         <Section title="Settings">
-          <ParamForm params={def.params} value={a.params} ctx={{ names: namesFor(spec, sc, catalog) }} onChange={(p) => set((x) => void (x.params = p))} />
+          <ParamForm params={def.params} value={a.params} ctx={{ names: namesFor(spec, sc, catalog) }} onChange={(p) => set((x) => void (x.params = p))} onLive={(p) => lv((x) => void (x.params = p))} onCommit={commit} />
         </Section>
       )}
       {!def && catalog && (
@@ -573,7 +580,7 @@ function CaptionInspector({ spec, sel }: { spec: ReelSpec; sel: Extract<Selectio
         </Field>
       </Section>
       <Section title="Timing">
-        <TimeFields t0={c.t0} t1={c.t1} max={sc.duration_sec} onChange={(t0, t1) => set((x) => void ((x.t0 = t0), (x.t1 = t1)))} />
+        <TimeFields t0={c.t0} t1={c.t1} max={sc.duration_sec} onChange={(t0, t1, o) => (o?.live ? live((d) => void Object.assign(d.scenes[sel.scene].captions[sel.caption], { t0, t1 })) : set((x) => void ((x.t0 = t0), (x.t1 = t1))))} onCommit={commit} />
         <p className="text-[11.5px] text-faint">With a voice-over, the caption is stretched to stay up while it is spoken.</p>
       </Section>
     </>
@@ -582,15 +589,12 @@ function CaptionInspector({ spec, sel }: { spec: ReelSpec; sel: Extract<Selectio
 
 const CAMERA_FROM_TO: Record<string, 'vec2' | 'scale' | 'unit' | 'depth'> = { pan: 'vec2', zoom: 'scale', dolly: 'unit', shake: 'unit', rack_focus: 'depth' }
 
-function MoveValue({ kind, label, value, onChange }: { kind: 'vec2' | 'scale' | 'unit' | 'depth'; label: string; value: unknown; onChange: (v: unknown) => void }) {
+function MoveValue({ kind, label, value, onChange, onCommit }: { kind: 'vec2' | 'scale' | 'unit' | 'depth'; label: string; value: unknown; onChange: (v: unknown) => void; onCommit?: () => void }) {
   if (kind === 'vec2') {
     const v = Array.isArray(value) ? (value as number[]) : [0, 0]
     return (
       <Field label={label}>
-        <Row>
-          <NumberField value={v[0]} onChange={(x) => onChange([x, v[1]])} step={0.01} min={-1} max={1} unit="x" aria-label={`${label} x`} />
-          <NumberField value={v[1]} onChange={(y) => onChange([v[0], y])} step={0.01} min={-1} max={1} unit="y" aria-label={`${label} y`} />
-        </Row>
+        <PointSliders name={label} value={[v[0], v[1]]} across={PAN} down={PAN} edges={false} onChange={onChange as (v: [number, number]) => void} onCommit={onCommit} />
       </Field>
     )
   }
@@ -605,7 +609,7 @@ function MoveValue({ kind, label, value, onChange }: { kind: 'vec2' | 'scale' | 
   const num = typeof value === 'number' ? value : kind === 'scale' ? 1 : 0
   return (
     <Field label={label}>
-      <SliderField label={label} value={num} min={kind === 'scale' ? 0.5 : 0} max={kind === 'scale' ? 3 : 1} step={0.01} onChange={onChange as (v: number) => void} />
+      <SliderField label={label} value={num} min={kind === 'scale' ? 0.5 : 0} max={kind === 'scale' ? 3 : 1} step={0.01} onChange={onChange as (v: number) => void} onCommit={onCommit} />
     </Field>
   )
 }
@@ -613,20 +617,23 @@ function MoveValue({ kind, label, value, onChange }: { kind: 'vec2' | 'scale' | 
 function CameraInspector({ spec, sel }: { spec: ReelSpec; sel: Extract<Selection, { kind: 'camera' }> }) {
   const catalog = useCatalog().data
   const edit = useProject((s) => s.edit)
+  const { live, commit } = useLive()
   const sc = spec.scenes[sel.scene]
   const m = sc?.camera.moves[sel.move]
   if (!sc || !m) return null
   const def = entry(catalog?.camera_moves, m.type)
   const kind = CAMERA_FROM_TO[m.type] ?? 'unit'
-  const set = (fn: (x: typeof m) => void) => edit((d) => void fn(d.scenes[sel.scene].camera.moves[sel.move]))
+  const at = (d: ReelSpec) => d.scenes[sel.scene].camera.moves[sel.move]
+  const set = (fn: (x: typeof m) => void) => edit((d) => void fn(at(d)))
+  const lv = (fn: (x: typeof m) => void) => live((d) => void fn(at(d)))
   return (
     <>
       <Section title="Camera move">
         <Field label="Type" hint={def?.summary}>
           <SelectBox label="Move type" value={m.type} onChange={(v) => set((x) => void ((x.type = v), (x.from = null), (x.to = null)))} options={(catalog?.camera_moves ?? []).map((c) => ({ value: c.name, label: titleCase(c.name), hint: c.summary }))} />
         </Field>
-        <MoveValue kind={kind} label="From" value={m.from} onChange={(v) => set((x) => void (x.from = v as never))} />
-        <MoveValue kind={kind} label="To" value={m.to} onChange={(v) => set((x) => void (x.to = v as never))} />
+        <MoveValue kind={kind} label="From" value={m.from} onChange={(v) => lv((x) => void (x.from = v as never))} onCommit={commit} />
+        <MoveValue kind={kind} label="To" value={m.to} onChange={(v) => lv((x) => void (x.to = v as never))} onCommit={commit} />
         <Field label="Easing" hint="How the move accelerates">
           <div className="flex items-center gap-2">
             <SelectBox label="Easing" value={m.ease} onChange={(v) => set((x) => void (x.ease = v))} options={(catalog?.easings ?? []).map((e) => ({ value: e.name, label: titleCase(e.name) }))} className="flex-1" />
@@ -637,7 +644,7 @@ function CameraInspector({ spec, sel }: { spec: ReelSpec; sel: Extract<Selection
         </Field>
       </Section>
       <Section title="Timing">
-        <TimeFields t0={m.t0} t1={m.t1} max={sc.duration_sec} onChange={(t0, t1) => set((x) => void ((x.t0 = t0), (x.t1 = t1)))} />
+        <TimeFields t0={m.t0} t1={m.t1} max={sc.duration_sec} onChange={(t0, t1, o) => (o?.live ? lv : set)((x) => void ((x.t0 = t0), (x.t1 = t1)))} onCommit={commit} />
       </Section>
     </>
   )
@@ -662,8 +669,8 @@ function SfxInspector({ spec, sel }: { spec: ReelSpec; sel: Extract<Selection, {
           </IconButton>
         </div>
       </Field>
-      <Field label="When">
-        <NumberField value={x.t} onChange={(v) => set((y) => void (y.t = ms(Math.min(v, sc.duration_sec))))} min={0} max={sc.duration_sec} step={0.1} unit="s" aria-label="Time" digits={2} />
+      <Field label="When" hint="Seconds from the start of the scene">
+        <SliderField label="Time" valueLabel="Time" value={x.t} min={0} max={sc.duration_sec} step={0.05} unit="s" onChange={(v) => live((d) => void (d.scenes[sel.scene].sfx[sel.sfx].t = ms(Math.min(v, sc.duration_sec))))} onCommit={commit} />
       </Field>
       <Field label="Volume">
         <SliderField label="Volume" value={x.volume} min={0} max={2} step={0.05} onChange={(v) => live((d) => void (d.scenes[sel.scene].sfx[sel.sfx].volume = v))} onCommit={commit} defaultValue={1} />

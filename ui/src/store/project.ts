@@ -48,7 +48,8 @@ interface ProjectState {
   toggleSelect: (sel: Selection) => void
   setPlayhead: (t: number) => void
   setSaving: () => void
-  markSaved: (doc: ProjectDoc) => void
+  /** A save succeeded. `sent` is what went out: edits made since stay dirty (it is compared by identity, see below). */
+  markSaved: (doc: ProjectDoc, sent?: { spec: ReelSpec; script: string }) => void
   setSaveError: (message: string) => void
   setConflict: (doc: ProjectDoc | null) => void
   /** Resolve a conflict by keeping the disk version (dropping local edits) or the local one (taking the new etag). */
@@ -146,11 +147,14 @@ export const useProject = create<ProjectState>((set, get) => ({
   },
   setPlayhead: (playhead) => set({ playhead }),
   setSaving: () => set({ save: 'saving' }),
-  markSaved: (doc) => {
-    const { spec } = get()
+  markSaved: (doc, sent) => {
+    const { spec, script } = get()
     const onDisk = normalizeSpec(doc.spec)
-    // edits made while the save was in flight stay dirty: only what was sent is now on disk
-    set({ etag: doc.etag, savedSpec: onDisk, save: spec === onDisk || JSON.stringify(spec) === JSON.stringify(onDisk) ? 'saved' : 'dirty', saveError: null, conflict: null })
+    // edits made while the save was in flight stay dirty: only what was sent is now on disk. What was sent is compared by identity (an
+    // edit makes a new spec), never as text: the file comes back with its keys in another order (a scene made in the editor has them
+    // in its own), which as text looks like an edit, so the project saved itself again and again and never read "Saved".
+    const unchanged = sent ? spec === sent.spec && script === sent.script : spec === onDisk || JSON.stringify(spec) === JSON.stringify(onDisk)
+    set({ etag: doc.etag, savedSpec: sent?.spec ?? onDisk, save: unchanged ? 'saved' : 'dirty', saveError: null, conflict: null })
   },
   setSaveError: (message) => set({ save: 'error', saveError: message }),
   setConflict: (conflict) => set({ conflict, save: conflict ? 'conflict' : get().save }),

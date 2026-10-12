@@ -73,23 +73,32 @@ export function NumberField({ value, onChange, min, max, step = 1, unit, classNa
   )
 }
 
-export function SliderField({ value, onChange, min, max, step = 0.01, unit, label, format, defaultValue, onCommit }: { value: number; onChange: (v: number) => void; min: number; max: number; step?: number; unit?: string; label: string; format?: (v: number) => string; defaultValue?: number; onCommit?: () => void }) {
+const THUMB = 'block size-3.5 rounded-full border-2 border-accent bg-panel shadow transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+const TRACK_ROOT = 'relative flex h-5 min-w-0 flex-1 touch-none select-none items-center'
+
+/** Where a thumb sits on its track: Radix keeps a thumb inside the track, so its centre is a little off the plain percentage at the ends. */
+const thumbLeft = (value: number, min: number, max: number): string => {
+  const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100))
+  return `calc(${pct}% + ${(7 - 0.14 * pct).toFixed(2)}px)`
+}
+
+/**
+ * A slider with its number beside it (and a reset to `defaultValue`). `min`/`max` are what the slider covers; `inputMin`/`inputMax`
+ * let the number go further than that when a value outside the track still makes sense (a character parked just off the stage).
+ * `marks` draws a tick at values worth finding by eye (the edges of the frame).
+ */
+export function SliderField({ value, onChange, min, max, step = 0.01, unit, label, valueLabel, format, defaultValue, onCommit, inputMin, inputMax, marks }: { value: number; onChange: (v: number) => void; min: number; max: number; step?: number; unit?: string; label: string; valueLabel?: string; format?: (v: number) => string; defaultValue?: number; onCommit?: () => void; inputMin?: number; inputMax?: number; marks?: number[] }) {
   const id = useId()
   return (
     <div className="flex items-center gap-2.5">
-      <RSlider.Root
-        value={[value]}
-        min={min}
-        max={max}
-        step={step}
-        onValueChange={([v]) => onChange(v)}
-        onValueCommit={() => onCommit?.()}
-        className="relative flex h-5 min-w-0 flex-1 touch-none select-none items-center"
-      >
+      <RSlider.Root value={[value]} min={min} max={max} step={step} onValueChange={([v]) => onChange(v)} onValueCommit={() => onCommit?.()} className={TRACK_ROOT}>
         <RSlider.Track className="relative h-1 grow rounded-full bg-line-strong">
+          {marks?.map((m) => (
+            <span key={m} aria-hidden className="absolute top-1/2 h-2.5 w-px -translate-y-1/2 bg-faint" style={{ left: thumbLeft(m, min, max) }} />
+          ))}
           <RSlider.Range className="absolute h-full rounded-full bg-accent" />
         </RSlider.Track>
-        <RSlider.Thumb id={id} aria-label={label} className="block size-3.5 rounded-full border-2 border-accent bg-panel shadow transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" />
+        <RSlider.Thumb id={id} aria-label={label} className={THUMB} />
       </RSlider.Root>
       {/* a number typed into the box, or a reset, is a finished edit: the caller's commit (the end of an undo step) comes with it, as it does when a slider is let go */}
       <NumberField
@@ -98,12 +107,12 @@ export function SliderField({ value, onChange, min, max, step = 0.01, unit, labe
           onChange(v)
           onCommit?.()
         }}
-        min={min}
-        max={max}
+        min={inputMin ?? min}
+        max={inputMax ?? max}
         step={step}
         unit={unit}
         className="w-[72px]"
-        aria-label={`${label} value`}
+        aria-label={valueLabel ?? `${label} value`}
       />
       {defaultValue !== undefined && value !== defaultValue && (
         <button
@@ -121,6 +130,28 @@ export function SliderField({ value, onChange, min, max, step = 0.01, unit, labe
       )}
       <span className="sr-only">{format ? format(value) : value}</span>
     </div>
+  )
+}
+
+/** A slider with two thumbs for a span (a start and an end), kept `minGap` apart; `onCommit` comes when a thumb is let go. */
+export function RangeSlider({ start, end, min, max, step = 0.05, minGap = 0, onChange, onCommit, labels = ['Start', 'End'] }: { start: number; end: number; min: number; max: number; step?: number; minGap?: number; onChange: (start: number, end: number) => void; onCommit?: () => void; labels?: [string, string] }) {
+  return (
+    <RSlider.Root
+      value={[start, end]}
+      min={min}
+      max={max}
+      step={step}
+      minStepsBetweenThumbs={Math.max(0, Math.round(minGap / step))}
+      onValueChange={([a, b]) => onChange(a, b)}
+      onValueCommit={() => onCommit?.()}
+      className={TRACK_ROOT}
+    >
+      <RSlider.Track className="relative h-1 grow rounded-full bg-line-strong">
+        <RSlider.Range className="absolute h-full rounded-full bg-accent" />
+      </RSlider.Track>
+      <RSlider.Thumb aria-label={labels[0]} className={THUMB} />
+      <RSlider.Thumb aria-label={labels[1]} className={THUMB} />
+    </RSlider.Root>
   )
 }
 

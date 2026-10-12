@@ -18,9 +18,10 @@ export function useAutosave(): { saveNow: () => Promise<void> } {
     const st = useProject.getState()
     if (!st.id || !st.spec || !st.etag || st.save === 'saving' || st.save === 'conflict') return
     st.setSaving()
+    const sent = { spec: st.spec, script: st.script }
     try {
-      const doc = await api.saveProject(st.id, stripDefaults(st.spec) as unknown as typeof st.spec, st.script, st.etag)
-      useProject.getState().markSaved(doc)
+      const doc = await api.saveProject(st.id, stripDefaults(sent.spec) as unknown as typeof sent.spec, sent.script, st.etag)
+      useProject.getState().markSaved(doc, sent)
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) useProject.getState().setConflict((e.extra.current as ProjectDoc) ?? null)
       else useProject.getState().setSaveError(e instanceof ApiError ? `${e.detail}${e.hint ? ` — ${e.hint}` : ''}` : String(e))

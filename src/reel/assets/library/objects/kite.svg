@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 400">
+  <polygon points="110,10 200,120 110,120" fill="#ffc83d" data-role="accent"/>
+  <polygon points="110,10 110,120 20,120" fill="#e63946" data-role="body"/>
+  <polygon points="20,120 110,120 110,250" fill="#ffc83d" data-role="accent"/>
+  <polygon points="110,120 200,120 110,250" fill="#e63946" data-role="body"/>
+  <path d="M110 12 L110 250" fill="none" stroke="#8a5a2b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M22 120 L198 120" fill="none" stroke="#8a5a2b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M110 250 C88 282 132 304 110 336 C88 366 128 380 110 396" fill="none" stroke="#23262e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" data-lod="0"/>
+  <polygon points="106,288 86,278 86,298" fill="#ffc83d" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="106,288 126,278 126,298" fill="#ffc83d" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="112,334 92,324 92,344" fill="#e63946" data-role="body" data-lod="1" data-shadow="false"/>
+  <polygon points="112,334 132,324 132,344" fill="#e63946" data-role="body" data-lod="1" data-shadow="false"/>
+  <polygon points="106,376 86,366 86,386" fill="#ffc83d" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="106,376 126,366 126,386" fill="#ffc83d" data-role="accent" data-lod="1" data-shadow="false"/>
+</svg>

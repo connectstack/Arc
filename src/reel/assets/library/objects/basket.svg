@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <path d="M52 80 C52 -10 188 -10 188 80" fill="none" stroke="#a8672d" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="body_dark"/>
+  <path d="M28 84 L212 84 L190 178 Q188 188 176 188 L64 188 Q52 188 50 178 Z" fill="#c98a4b" data-role="body"/>
+  <polygon points="31.74468085106383,100 208.25531914893617,100 205.91489361702128,110 34.08510638297872,110" fill="#a8672d" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <polygon points="38.29787234042553,128 201.70212765957447,128 199.36170212765958,138 40.638297872340424,138" fill="#a8672d" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <polygon points="44.851063829787236,156 195.14893617021278,156 192.80851063829786,166 47.191489361702125,166" fill="#a8672d" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M168 84 L212 84 L190 178 Q188 188 176 188 L150 188 Q166 130 168 84 Z" fill="#a8672d" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M40 84 Q70 52 100 78 Q130 48 160 78 Q182 60 202 84 Z" fill="#e63946" data-role="accent"/>
+  <rect x="22" y="76" width="196" height="16" rx="8" fill="#a8672d" data-role="body_dark"/>
+  <path d="M44 150 L48 172" fill="none" stroke="#e0aa72" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+</svg>

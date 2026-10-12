@@ -137,6 +137,7 @@ class Char:
     props: list[str] = field(default_factory=list)
     palette: dict[str, str] = field(default_factory=dict)
     first: int = 0  # index of the first sentence that mentions it
+    guest: bool = False  # comes in for the scene that names it ("An elephant arrived") and is gone in the next
 
 
 @dataclass

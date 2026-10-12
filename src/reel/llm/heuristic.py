@@ -58,7 +58,7 @@ from reel.llm.base import (
     guess_archetype,
 )
 from reel.llm.generator import normalize_spec
-from reel.llm.library_plan import LibraryPlanner, attach_library_gaps
+from reel.llm.library_plan import ENGINE_PLACE_WORDS, LibraryPlanner, attach_library_gaps
 from reel.llm.stagecraft import (
     PLURAL_WORDS,
     SLOT_X,
@@ -222,6 +222,26 @@ _BG_KEYWORDS: dict[str, tuple[str, ...]] = {
               "band"),
 }  # fmt: skip
 _PLACE_WORDS = frozenset(w for words in _BG_KEYWORDS.values() for w in words if " " not in w)
+#: words that turn up in any story without saying where it happens ("she sang a song", "at her desk", "an idea"): half a point of
+#: evidence for the place, so one of them never moves the story to another set
+_WEAK_BG: dict[str, frozenset[str]] = {
+    "room": frozenset(_w("desk sofa couch bed fridge living indoors")),
+    "street": frozenset(_w("shop shops store market cafe bus cars")),
+    "forest": frozenset(_w("tree trees grass bushes bush hedge hill hills garden camp picnic meadow lake river nature outdoors")),
+    "whiteboard": frozenset(_w("board explain explains graph chart idea data diagram lesson teach learn science brain math formula slide presentation notes memory memories")),
+    "stage": frozenset(_w("show sing song band microphone perform performance applause")),
+}  # fmt: skip
+#: what somebody's trade says about where the story is, when no scene names a place: archetype -> background
+_ROLE_SETTING: dict[str, str] = {
+    "farmer": "farm", "teacher": "classroom", "student_boy": "classroom", "student_girl": "classroom",
+    "doctor": "hospital", "chef": "cafe", "shopkeeper": "market", "boss": "office",
+}  # fmt: skip
+#: how many scenes after the one that names it a thing stays on the set (a laptop does not vanish the moment the next sentence starts)
+OBJECT_STAYS = 2
+#: a scene leaves the set it is on only for evidence worth this much (a place named once is 3 points, a word that merely hints 1)
+SWITCH_SCORE = 2.0
+#: ... and a place spoken about but not told ("I forgot my book at home") counts for this share of what the same words would in narration
+SPEECH_SHARE = 0.4
 
 
 def engine_vocabulary() -> list[tuple[str, str, tuple[str, ...]]]:
@@ -234,9 +254,13 @@ def engine_vocabulary() -> list[tuple[str, str, tuple[str, ...]]]:
         (name, "place", words) for name, words in _BG_KEYWORDS.items()
     ]
     out += [
+        (name, "place", words) for name, words in ENGINE_PLACE_WORDS.items()
+    ]  # in Hindi and Hinglish
+    out += [
         (name, "character", tuple(w for w, weight in table.items() if weight >= 2))
         for name, table in ARCHETYPE_WORDS.items()
     ]
+    out.append(("everyman", "character", _EVERYMAN_WORDS))
     props: dict[str, list[str]] = {}
     for word, prop in _PROP_WORDS.items():
         props.setdefault(prop, []).append(word)
@@ -502,13 +526,7 @@ def _find_names(sents: list[Sent]) -> Counter[str]:
                 if i == 0:
                     initial[base] += 1
                     nxt = toks[i + 1].lower() if i + 1 < len(toks) else ""
-                    if nxt.endswith(("s", "ed", "ing")) or nxt in {
-                        "is",
-                        "was",
-                        "has",
-                        "had",
-                        "did",
-                    }:
+                    if nxt.endswith(("s", "ed", "ing")) or nxt in _VERB_AFTER_NAME:
                         before_verb[base] += 1
                 elif toks[i - 1].lower() not in _PLACE_PREPOSITIONS:  # "in Paris" is a place
                     mid[base] += 1
@@ -528,6 +546,18 @@ def _find_names(sents: list[Sent]) -> Counter[str]:
     return names
 
 
+#: what can follow a name at the start of a sentence besides a regular verb ("Kabir threw", "Kabir and his sister"): a name, not "Then" or "Today"
+_VERB_AFTER_NAME = frozenset(
+    _w(
+        """
+        is was has had did does and or went ran saw took gave came found made got felt knew told said
+        sat stood held kept left met paid sent spent won wore wrote began drank ate fell flew grew hid
+        heard lost put read rode sang slept swam taught thought woke threw caught brought bought built
+        chose dug drew drove forgot hit hung lay led let lit meant rang rose shook shot shut slid spoke
+        stole stuck swept swung tore understood waved
+        """
+    )
+)
 #: titles that sit between an adjective and a name ("Old Mr. Pip"): never descriptive themselves
 _HONORIFIC = r"(?i:(?:mr|mrs|ms|miss|dr|sir|prof|professor)\.?\s+)"
 #: what a character says about themselves gives them away: (pattern, a word the archetype tables know)
@@ -565,6 +595,7 @@ _SPEECH_MARKERS: tuple[tuple[re.Pattern[str], str], ...] = (
         "robot",
     ),
     (re.compile(r"\b(?:fear not|to the rescue|i will save|justice)\b", re.I), "hero"),
+    (re.compile(r"बीप|बूप"), "robot"),
 )
 
 
@@ -632,12 +663,170 @@ def _what_is(name: str, sents: list[Sent]) -> list[str]:
 
 
 def _gender(words: list[str]) -> str:
+    """He or she from the names and kin words around a character; a pronoun in front of the name ("His friend Anita") belongs to someone else."""
     for w in words:
+        if w in _PRONOUNS:
+            continue
         if w in _FEMALE:
             return "f"
         if w in _MALE:
             return "m"
     return ""
+
+
+#: honorifics and titles that stand in front of a name
+_HON = r"(?:Mr|Mrs|Ms|Miss|Dr|Sir|Prof)\.?"
+#: words that say a character is a child (or a student) wherever they stand in the sentence that names them
+_KID_CONTEXT = frozenset(
+    _w(
+        "school homework classroom class classmate classmates playground recess kindergarten toys toy "
+        "crayons notebook pencil lunchbox exam bedtime"
+    )
+)
+#: what Hindi and Hinglish call somebody who is old, small, a robot, a boss or a hero, as the English word the archetype tables know
+_INDIC_CUES: dict[str, tuple[str, ...]] = {
+    "elderly": ("बूढ़ा", "बूढ़े", "बूढ़ी", "बुज़ुर्ग", "बुजुर्ग", "दादा", "दादी", "नाना", "नानी",
+                "boodha", "budha", "boorha", "buzurg", "dada", "dadi", "nana", "nani"),
+    "robot": ("रोबोट",),
+    "kid": ("बच्चा", "बच्ची", "बच्चे", "लड़का", "लड़की", "बालक", "बालिका",
+            "baccha", "bachcha", "bachchi", "bacchi", "ladka", "ladki", "balak", "balika"),
+    "little": ("छोटा", "छोटी", "नन्हा", "नन्ही", "chhota", "chhoti", "nanha", "nanhi"),
+    "boss": ("मालिक", "साहब", "मैनेजर", "बॉस", "malik", "sahab", "manager"),
+    "hero": ("हीरो", "नायक", "योद्धा", "वीर"),
+}  # fmt: skip
+_INDIC_CUE_OF = {w: english for english, ws in _INDIC_CUES.items() for w in ws}
+#: the plain man the engine draws when a script says nobody in particular (the library has no "man" to add: this is it)
+_EVERYMAN_WORDS = (
+    "man",
+    "men",
+    "person",
+    "guy",
+    "stranger",
+    "आदमी",
+    "आदमियों",
+    "इंसान",
+    "aadmi",
+    "insan",
+)
+#: words that say a script is Hindi written in Latin letters ("Rahul ne apni copy kholi"): its nouns come without "the" and "a"
+_HINGLISH_WORDS = frozenset(
+    _w(
+        """
+        hai hain tha thi the ka ki ke ko se mein par aur nahi nahin kya ek ne wala wali raha rahi gaya gayi gaye kiya kar
+        liye bhi toh yeh woh unke uske apne apni apna mera meri tera teri hum tum aap kuch bahut
+        """
+    )
+)
+#: capitalised words that are places and things in the sky, not somebody
+_SKY_WORDS = frozenset(
+    _w(
+        "earth moon sun mars venus jupiter saturn mercury neptune uranus pluto universe galaxy world"
+    )
+)
+#: a creature or role that comes into the story as the subject of a clause ("An elephant arrived", "... and the tiger watched"):
+#: a guest who is on screen in that scene, not someone a prepositional phrase merely mentions ("as brave as a lion")
+_GUEST_RE = re.compile(
+    r"(?:^|[.!?]\s+|[,;]\s+|\b(?:and|but|then|when|while|suddenly|soon|until|before|after|so)\s+)"
+    r"(?:the|a|an)\s+(?:(?:\w+ly|old|young|little|small|tiny|big|huge|tall|grumpy|friendly|clever|wise|kind|"
+    r"brave|shy|new|strange|mysterious|hungry|angry|sleepy|fat|thin|giant|poor|rich|red|blue|green|white|"
+    r"black|brown|yellow|lazy|noisy|gentle)\s+){0,2}(\w+)\b",
+    re.I,
+)
+MAX_CAST = MAX_ON_SCREEN + 2  # characters in a reel; no more than MAX_ON_SCREEN are in one scene
+
+
+def _role_words(name: str, sents: list[Sent], known: set[str]) -> list[str]:
+    """The words a script uses to say what ``name`` is when the role stands beside or before the name rather than after it:
+    "Chef Marco", "Dr. Meera", "a clever monkey named Chiku", "His cow, Gauri," and "Her boss, Mr. Rao,".  Only words in
+    ``known`` (the roles and creatures the engine or the library can draw) are returned, in reading order."""
+    n = re.escape(name)
+    pats = (
+        re.compile(rf"\b(\w+)\s+(?:{_HON}\s+)?{n}\b"),
+        re.compile(rf"\b(\w+)\s+named\s+(?:{_HON}\s+)?{n}\b"),
+        # "a dog called Max" names the dog, "The farmer called Mia" is the farmer calling her: only an indefinite or possessive noun group is read
+        re.compile(
+            rf"\b(?:a|an|my|your|his|her|our|their)\s+(?:\w+\s+){{0,2}}?(\w+)\s+called\s+(?:{_HON}\s+)?{n}\b"
+        ),
+        re.compile(rf"\b(\w+)\s*,\s*(?:{_HON}\s+)?{n}\b"),
+    )
+    doctor = re.compile(rf"\bDr\.?\s+{n}\b")
+    out: list[str] = []
+    for s in sents:
+        for chunk in (s.text, s.attrib):
+            found: list[tuple[int, str]] = []
+            for pat in pats:
+                found += [(m.start(), m.group(1).lower()) for m in pat.finditer(chunk)]
+            found += [(m.start(), "doctor") for m in doctor.finditer(chunk)]
+            out += [w for _pos, w in sorted(found) if w in known]
+    return out
+
+
+def _context_gender(name: str, others: set[str], sents: list[Sent]) -> str:
+    """He or she, read from the pronouns that follow ``name`` in its sentence or start the sentence after it: "Sita went to the
+    market with her bag", "Rohan opened the door. He smiled."  Sentences that name someone else as well are not read."""
+    votes: Counter[str] = Counter()
+    pat = re.compile(rf"\b{re.escape(name)}\b")
+    others = others - {name}
+    other_pats = [re.compile(rf"\b{re.escape(o)}\b") for o in others]
+
+    def alone(chunk: str) -> bool:
+        return not any(p.search(chunk) for p in other_pats)
+
+    for i, s in enumerate(sents):
+        chunk = " ".join(c for c in (s.text if s.kind == "narration" else "", s.attrib) if c)
+        m = pat.search(chunk)
+        if m is None or not alone(chunk):
+            continue
+        for w in _words(chunk[m.end() :]):
+            g = _PRONOUNS.get(w)
+            if g in ("m", "f"):
+                votes[g] += 1
+        nxt = sents[i + 1] if i + 1 < len(sents) else None
+        if nxt is not None and nxt.kind == "narration" and nxt.text:
+            first = (_words(nxt.text) or [""])[0]
+            g = _PRONOUNS.get(first)
+            if g in ("m", "f"):
+                votes[g] += 1
+    if votes["f"] != votes["m"]:
+        return "f" if votes["f"] > votes["m"] else "m"
+    return ""
+
+
+def _indic_cue_words(name: str, sents: list[Sent]) -> list[str]:
+    """What the words round ``name`` say it is when the script is in Hindi (or Hinglish): "बूढ़े पिप जी" is old, "छोटा रोबोट"
+    called Bolt is a robot.  The words within three places of the name, as the English words the archetype tables know."""
+    from reel.assets.match import tokens
+
+    want = [t for t, _s, _e in tokens(name)]
+    if not want:
+        return []
+    out: list[str] = []
+    for s in sents:
+        for chunk in (s.text, s.attrib):
+            toks = [t for t, _s, _e in tokens(chunk)]
+            for i in range(len(toks) - len(want) + 1):
+                if toks[i : i + len(want)] != want:
+                    continue
+                near = toks[max(0, i - 3) : i] + toks[i + len(want) : i + len(want) + 3]
+                out += [_INDIC_CUE_OF[w] for w in near if w in _INDIC_CUE_OF]
+    return out
+
+
+def _is_hinglish(sents: list[Sent]) -> bool:
+    """Is the script Hindi written in Latin letters?  A few of its small words are enough to tell from English."""
+    toks = [w for s in sents for w in _words(" ".join([s.text, s.attrib]))]
+    hits = sum(1 for w in toks if w in _HINGLISH_WORDS)
+    return hits >= 4 and hits / max(1, len(toks)) >= 0.12
+
+
+def _kid_context(name: str, sents: list[Sent]) -> bool:
+    """Is ``name`` met in a sentence about school, toys or bedtime: somebody young?"""
+    pat = re.compile(rf"\b{re.escape(name)}\b")
+    for s in sents:
+        for chunk in (s.text, s.attrib):
+            if pat.search(chunk) and _KID_CONTEXT & set(_words(chunk)):
+                return True
+    return False
 
 
 def build_cast(
@@ -646,24 +835,57 @@ def build_cast(
     seed: int,
     library: LibraryPlanner | None = None,
 ) -> Cast:
-    """Up to three characters from names, ``Name:`` prefixes and role nouns; else one narrator.
+    """Up to three characters from names, ``Name:`` prefixes and role nouns (and the guests a scene brings in); else one narrator.
 
-    ``library`` adds the characters of the asset library: a creature or a role it can draw ("the dog", "a farmer")
-    is a role noun like the engine's own, and a named character described as one ("Max the dog") is drawn as it.
-    A script in another language has no "the dog" for the rules to read: its words ("कुत्ता") are matched to the library's
-    tags directly, and a character it names is cast as the asset that answers to the word."""
+    ``library`` adds the characters of the asset library: a creature or a role it can draw ("the dog", "a farmer") is a role
+    noun like the engine's own, and a named character described as one ("Max the dog", "Chef Marco", "Her boss, Mr. Rao,") is
+    drawn as it, and answers to the noun as well as to the name.  A script in another language has no "the dog" for the rules to
+    read: its words ("कुत्ता") are matched to the library's tags directly, and a character it names is cast as the asset that
+    answers to the word."""
     sents = parsed.sents
     lib_words = library.character_words() if library else {}
+    known = set(_ROLE_NOUNS) | set(lib_words)
     names = _find_names(sents)
+    speakers = {s.speaker_name for s in sents if s.speaker_name}
     for who, said in Counter(s.speaker_name for s in sents if s.speaker_name).items():
         names[who] += 100 + said
+    # what each name is, when the script says so: "Chef Marco", "a monkey named Chiku", "Max the dog", "Her boss, Mr. Rao,"
+    role_of: dict[str, list[str]] = {}
+    for n in names:
+        what_n = [w for w in _what_is(n, sents) + _role_words(n, sents, known) if w in known]
+        if what_n:
+            role_of[n] = what_n
+    # a capitalised thing in the sky ("Earth") or one the library draws ("Moon") is not somebody, unless the script says what it is
+    thing_words = _SKY_WORDS | (set(library.objects.single_words()) if library else set())
+    for n in list(names):
+        low = n.lower()
+        if (
+            low in thing_words
+            and low not in _FEMALE
+            and low not in _MALE
+            and n not in role_of
+            and n not in speakers
+        ):
+            del names[n]
+    # the role nouns of named characters are their other names ("the boss" is Mr. Rao): they cast nobody else
+    aliases: dict[str, list[str]] = {}
+    for n, words in role_of.items():
+        if n in names:
+            aliases.setdefault(words[0], []).append(n)
     roles: Counter[str] = Counter()
     lowered = {n.lower() for n in names}
+    hinglish = _is_hinglish(sents)
     for s in sents:
         for chunk in (s.text, s.attrib):
-            for m in _ROLE_RE.finditer(chunk):
-                noun = m.group(1).lower()
-                if (noun in _ROLE_NOUNS or noun in lib_words) and noun not in lowered:
+            nouns = [m.group(1).lower() for m in _ROLE_RE.finditer(chunk)]
+            if hinglish:  # "teacher ne kaha": the English noun comes without "the"
+                nouns = [w for w in _words(chunk) if w in lib_words and w.isascii()]
+            for noun in nouns:
+                if (
+                    (noun in _ROLE_NOUNS or noun in lib_words)
+                    and noun not in lowered
+                    and noun not in aliases
+                ):
                     roles[noun] += 1
     foreign: Counter[str] = Counter()  # library characters named in another language, by asset name
     foreign_first: dict[str, int] = {}
@@ -703,36 +925,128 @@ def build_cast(
     chars: list[Char] = []
     used: set[str] = set()
     cast_as: dict[str, Char] = {}  # library asset name -> the character drawn as it
-    for label, how in chosen[:MAX_ON_SCREEN]:
+    main = chosen[:MAX_ON_SCREEN]
+    for label, how in main:
         shown = label.replace("_", " ")
-        words = _describe(label, sents) if how == "name" else [shown]
+        words = (
+            _describe(label, sents) + _indic_cue_words(label, sents) if how == "name" else [shown]
+        )
         cid = _slug(label)
         base, k = cid, 2
         while cid in used:
             cid = f"{base}_{k}"
             k += 1
         used.add(cid)
+        noun = ""
+        gender = _gender(words)
         if how == "library":
             arch, first, count = label, foreign_first[label], foreign[label]
         else:
+            what = role_of.get(label, []) if how == "name" else words
             arch = guess_archetype(words, available_archetypes)
-            if arch == "everyman":  # a creature or role the library draws beats the generic body
-                what = _what_is(label, sents) if how == "name" else words
-                arch = next((lib_words[w] for w in what if w in lib_words), arch)
+            lib_role = next((w for w in what if w in lib_words), None)
             if (
-                how == "role"
-                and arch == "everyman"
-                and _ROLE_NOUNS.get(label) in available_archetypes
-            ):
-                arch = _ROLE_NOUNS[label]
+                lib_role is not None
+            ):  # a creature or role the library draws beats a body picked from stray words ("little dog Max")
+                arch = lib_words[lib_role]
+            elif arch == "everyman":
+                engine = next(
+                    (_ROLE_NOUNS[w] for w in what if _ROLE_NOUNS.get(w) in available_archetypes),
+                    None,
+                )
+                arch = engine or arch
+            if how == "name":
+                noun = next((w for w in what if w in known), "")
+                gender = gender or _context_gender(label, set(names), sents)
             first, count = first_index(label), names.get(label, roles.get(label, 0))
+            if arch in (
+                "student_boy",
+                "student_girl",
+            ):  # the library has one of each: a she is the girl
+                girl = "student_girl" in available_archetypes
+                arch = (
+                    "student_girl"
+                    if gender == "f" and girl
+                    else "student_boy"
+                    if "student_boy" in available_archetypes
+                    else arch
+                )
+            elif arch == "everyman" and how == "name":
+                if _kid_context(label, sents) and "kid" in available_archetypes:
+                    arch = "kid"  # met at school or with toys: a child, whoever they are
         char = Char(
-            cid, label if how == "name" else shown.capitalize(), arch, _gender(words),
-            shown if how != "name" else "", count, first=first,
+            cid, label if how == "name" else shown.capitalize(), arch, gender,
+            noun if how == "name" and len(aliases.get(noun, [])) == 1 else shown if how != "name" else "", count, first=first,
         )  # fmt: skip
         chars.append(char)
         if how == "library":
             cast_as[label] = char
+    # a creature or role that only comes in once ("An elephant arrived", "... and the tiger watched") is a guest in that scene
+    if library and len(chars) < MAX_CAST:
+        guest_first: dict[str, int] = {}
+        guest_times: Counter[str] = Counter()
+        for i, s in enumerate(sents):
+            for chunk in (s.text if s.kind == "narration" else "", s.attrib, *s.directions):
+                found = [m.group(1).lower() for m in _GUEST_RE.finditer(chunk)]
+                if hinglish:  # no "the" or "a" to look for: a word the library draws is enough
+                    found = [w for w in _words(chunk) if w in lib_words and w.isascii()]
+                for noun in found:
+                    if noun in lib_words and noun not in aliases and noun not in lowered:
+                        guest_times[noun] += 1
+                        guest_first.setdefault(noun, i)
+        have = {c.archetype for c in chars}
+        for noun in sorted(guest_times, key=lambda w: (guest_first[w], w)):
+            arch = lib_words[noun]
+            if arch in have or len(chars) >= MAX_CAST or any(c.role == noun for c in chars):
+                continue
+            if arch in ("student_boy", "student_girl") or arch == "woman":
+                continue  # people who are about, not guests: the rules above cast them when the script names them
+            have.add(arch)
+            cid, k = _slug(arch), 2  # drawn as the asset: "puppy" and "kutta" are both the dog
+            while cid in used:
+                cid = f"{_slug(arch)}_{k}"
+                k += 1
+            used.add(cid)
+            chars.append(
+                Char(
+                    cid,
+                    arch.replace("_", " ").capitalize(),
+                    arch,
+                    "",
+                    noun,
+                    guest_times[noun],
+                    first=guest_first[noun],
+                    guest=True,
+                )
+            )
+    # ... and so is a creature a Hindi or Hinglish script names once ("एक कुत्ता", "ek chhota kutta")
+    if library and len(chars) < MAX_CAST:
+        have = {c.archetype for c in chars}
+        for asset, times in sorted(foreign.items(), key=lambda kv: (foreign_first[kv[0]], kv[0])):
+            if (
+                asset in have
+                or len(chars) >= MAX_CAST
+                or asset in ("student_boy", "student_girl", "woman")
+            ):
+                continue
+            have.add(asset)
+            cid, k = _slug(asset), 2
+            while cid in used:
+                cid = f"{_slug(asset)}_{k}"
+                k += 1
+            used.add(cid)
+            guest = Char(
+                cid,
+                asset.replace("_", " ").capitalize(),
+                asset,
+                "",
+                "",
+                times,
+                first=foreign_first[asset],
+                guest=True,
+            )
+            chars.append(guest)
+            cast_as[asset] = guest
     chars.sort(key=lambda c: (c.first, -c.count))
     rng = random.Random(stable_int("palette", seed, *[c.id for c in chars]))
     offset, skin0 = rng.randrange(len(_PALETTES)), rng.randrange(len(_SKINS))
@@ -774,6 +1088,12 @@ class Unit:
     silent: bool = False  # a stage direction without a caption
     plural: bool = False  # "they follow ...", "everyone looks ...": the whole cast acts
     line: int = -1  # the script line it came from
+    speech: list[str] = field(
+        default_factory=list
+    )  # the words of a quote: a place named in speech only says where somebody is talking about
+    narr_text: str = (
+        ""  # what is told rather than said: narration, the words around a quote, stage directions
+    )
 
     @property
     def words(self) -> int:
@@ -824,8 +1144,12 @@ def build_units(parsed: Parsed, cast: Cast, library: LibraryPlanner | None = Non
     def named_in(text: str) -> list[tuple[int, str]]:
         return sorted([*mentions(text, cast), *_library_mentions(text, cast, library)])
 
+    guest_ids = {
+        c.id for c in cast.chars if c.guest
+    }  # a guest is in its own sentence only: never "whoever it is about" later
+
     def bump(cid: str | None) -> None:
-        if cid is not None:
+        if cid is not None and cid not in guest_ids:
             if cid in recent:
                 recent.remove(cid)
             recent.insert(0, cid)
@@ -880,11 +1204,13 @@ def build_units(parsed: Parsed, cast: Cast, library: LibraryPlanner | None = Non
         if cast.explainer or not narrative.strip():
             narrative = " ".join([narrative, s.text])
         cues = extract_cues(narrative, performer, cast)
+        told = " ".join([s.attrib, *s.directions, s.text if s.kind == "narration" else ""]).strip()
         units.append(
             Unit(
                 s.text, s.kind, speaker, present, performer, cues,
                 tokens=_words(" ".join([s.text, s.attrib, *s.directions])),
                 silent=not s.text, plural=plural,
+                speech=_words(s.text) if s.kind == "dialogue" else [], narr_text=told,
             )
         )  # fmt: skip
         last_speaker = speaker or last_speaker
@@ -1299,6 +1625,12 @@ class _Builder:
         self.tod, self.mood = "day", "neutral"
         self.tod_age = self.mood_age = 99
         self.last_bg: str | None = None
+        self.prior_bg: str | None = (
+            None  # where the story as a whole happens (the set of its first scene when it names none)
+        )
+        self.carry_age: dict[
+            str, int
+        ] = {}  # library object -> scenes it has stayed since the one that named it
         self.leaving: set[str] = set()  # characters who walked off in the previous scene
         self.introduced: set[str] = set()  # characters seen so far
         self.cam_i = rng.randrange(5)
@@ -1308,6 +1640,7 @@ class _Builder:
     # ------------------------------------------------------------------ whole spec
     def build(self, scenes: list[SceneIn], seed: int, notes: list[str]) -> dict[str, Any]:
         self._assign_props(scenes)
+        self.prior_bg = self._story_setting(scenes)
         all_units = [u for s in scenes for u in s.units]
         title = self._title(all_units)
         n = len(scenes)
@@ -1315,7 +1648,9 @@ class _Builder:
         prev_cast: list[str] = []
         used: list[str] = []
         for i, sc in enumerate(scenes):
-            sc_cast = self._scene_cast(sc, prev_cast)
+            sc_cast = self._scene_cast(
+                sc, prev_cast, self._choose_background(sc, i) if i > 0 else None
+            )
             nxt_shout = i + 1 < n and scenes[i + 1].shout_index is not None
             title_i = title if i == 0 else None
             out.append(self._scene(sc, i, n, sc_cast, prev_cast, title_i, out, nxt_shout))
@@ -1390,21 +1725,40 @@ class _Builder:
                     if who is not None and not who.props:
                         who.props.append(prop)
 
-    def _scene_cast(self, sc: SceneIn, prev: list[str]) -> list[str]:
+    def _scene_cast(self, sc: SceneIn, prev: list[str], new_bg: str | None = None) -> list[str]:
         """Who is on screen: everyone the scene's text shows, plus whoever was already there
-        (people do not vanish between scenes unless they walked off).  "They" and "everyone" mean
-        the characters introduced so far, so a surprise guest is not spoiled."""
+        (people do not vanish between scenes unless they walked off, and a guest is gone after the scene that named them).
+        "They" and "everyone" mean the characters introduced so far, so a surprise guest is not spoiled.  Somebody whose
+        trade belongs to a set (the shopkeeper's market, the teacher's classroom) stays on it: when the story moves to another
+        set they do not come along unless the scene names them."""
         everyone = [c.id for c in self.cast.chars]
+        guests = {c.id for c in self.cast.chars if c.guest}
         order: list[str] = []
         for u in sc.units:
             order += [c for c in u.mentions if c not in order and self.cast.get(c) is not None]
         if any(u.plural for u in sc.units):
-            order += [c for c in everyone if c in self.introduced and c not in order]
+            order += [
+                c for c in everyone if c in self.introduced and c not in order and c not in guests
+            ]
+
+        def stays_behind(cid: str) -> bool:
+            ch = self.cast.get(cid)
+            home = _ROLE_SETTING.get(ch.archetype) if ch is not None else None
+            return bool(home and new_bg and home != new_bg and new_bg != self.last_bg)
+
         for c in prev:
-            if c not in order and c not in self.leaving and len(order) < MAX_ON_SCREEN:
+            if (
+                c not in order
+                and c not in self.leaving
+                and c not in guests
+                and not stays_behind(c)
+                and len(order) < MAX_ON_SCREEN
+            ):
                 order.append(c)
         if not order:
-            order = list(prev) or [everyone[0]]
+            order = [c for c in prev if c not in guests] or [
+                next((c for c in everyone if c not in guests), everyone[0])
+            ]
         rank = {c: i for i, c in enumerate(everyone)}
         chosen = sorted(order[:MAX_ON_SCREEN], key=lambda c: rank.get(c, 99))
         self.introduced.update(chosen)
@@ -1423,7 +1777,6 @@ class _Builder:
         next_is_shout: bool,
     ) -> dict[str, Any]:
         cats = self.cat.c.caption_styles
-        tokens = [t for u in sc.units for t in u.tokens]
         has_title = bool(title) and "title" in cats
         t = 1.1 if has_title else LEAD_SEC + 0.1
         caps: list[dict[str, Any]] = []
@@ -1460,7 +1813,7 @@ class _Builder:
         scene: dict[str, Any] = {
             "id": f"s{i + 1:02d}",
             "duration_sec": round(nat, 2),
-            "background": self._background(tokens, i, scene_text),
+            "background": self._background(sc, i),
         }
         self.scene_texts[scene["id"]] = " ".join([title or "", scene_text]).strip()
         layers = self._layers(sc, sc_cast, prev_cast, spans, nat, i == 0, i)
@@ -1471,6 +1824,9 @@ class _Builder:
         if self.library is not None:
             objects = self.library.scene_objects(
                 [(s0, e0, u.text) for s0, e0, u in spans], layers, nat
+            )
+            objects += self._carried_objects(
+                built, scene["background"]["template"], objects, layers, nat
             )
             if objects:
                 scene["objects"] = objects
@@ -1483,27 +1839,80 @@ class _Builder:
             scene["transition_out"] = tr
         return scene
 
+    def _carried_objects(
+        self,
+        built: list[dict[str, Any]],
+        template: str,
+        fresh: list[dict[str, Any]],
+        layers: list[dict[str, Any]],
+        dur: float,
+    ) -> list[dict[str, Any]]:
+        """The things of the last scene that are still there: the set is the same and there is room (the scene names at most two),
+        for :data:`OBJECT_STAYS` scenes.  What drove off or flew away is gone; each one finds a spot clear of the cast again."""
+        from reel.assets.gaps import free_spot
+
+        for ob in fresh:
+            self.carry_age[ob["asset"]] = 0
+        prev = built[-1] if built else None
+        if prev is None or prev["background"]["template"] != template:
+            self.carry_age = {ob["asset"]: 0 for ob in fresh}  # a new set starts bare
+            return []
+        out: list[dict[str, Any]] = []
+        scene: dict[str, Any] = {"layers": layers, "objects": list(fresh)}
+        names = {ob["asset"] for ob in fresh}
+        for old in prev.get("objects", []):
+            name = old["asset"]
+            age = self.carry_age.get(name, 0) + 1
+            if (
+                name in names
+                or age > OBJECT_STAYS
+                or len(fresh) + len(out) >= 2
+                or any(m.get("type") == "move" for m in old.get("motions", []))
+            ):
+                continue
+            ob = {k: v for k, v in old.items() if k not in ("position", "motions", "t0", "t1")}
+            ob["position"] = [free_spot(scene), old["position"][1]]
+            if any(m.get("type") == "float" for m in old.get("motions", [])):
+                ob["motions"] = [{"type": "float", "t0": 0.0, "t1": round(dur, 2)}]
+            out.append(ob)
+            scene["objects"].append(ob)
+            self.carry_age[name] = age
+        return out
+
     # ------------------------------------------------------------------ background
-    def _background(self, tokens: list[str], index: int, scene_text: str = "") -> dict[str, Any]:
-        bgs = self.cat.backgrounds()
-        if not bgs:  # nothing registered: the linter will say so
-            return {"template": "abstract"}
-        text = set(tokens)
-        named = self.library.place_scores(scene_text) if self.library else {}
-        strong: dict[str, float] = {}  # the place is named: "kitchen", "rooftop", "shop", "street"
-        weak: dict[
-            str, float
-        ] = {}  # only a parameter's value shows up: "rain" says weather, not place
+    def _place_scores(
+        self, bgs: dict[str, Any], text: set[str], said: set[str], named: dict[str, float]
+    ) -> tuple[dict[str, float], dict[str, float]]:
+        """``(strong, weak)`` evidence for each background from the words of one stretch of the script.
+
+        *Strong* means a place is named ("kitchen", "rooftop", "shop", "street", a library place); *weak* means only a parameter's
+        value shows up ("rain" says weather, not place).  A word only ever spoken counts for :data:`SPEECH_SHARE` of what it would in
+        narration, and the words that turn up in any story ("song", "desk", "idea") for half; the explainer set (the whiteboard)
+        is evidence only in an explainer, because a story that mentions a whiteboard is still in the office."""
+        strong: dict[str, float] = {}
+        weak: dict[str, float] = {}
         # a word the library can put on the set as an object (a tree, a sofa) says little about the place
         thing_words = set(self.library.objects.single_words()) if self.library else set()
+
+        def seen(word: str) -> float:
+            return (
+                1.0 if word in text and word not in said else SPEECH_SHARE if word in said else 0.0
+            )
+
         for name, meta in bgs.items():
-            sc = float(
-                sum(1 for kw in _BG_KEYWORDS.get(name, ()) if kw in text and kw not in thing_words)
+            dim = 0.4 if name == "whiteboard" and not self.cast.explainer else 1.0
+            soft = _WEAK_BG.get(name, frozenset())
+            sc = sum(
+                seen(kw) * (0.5 if kw in soft else 1.0) * dim
+                for kw in _BG_KEYWORDS.get(name, ())
+                if kw not in thing_words
             )
             sc += sum(
-                2.0 for part in re.split(r"[_\W]+", name.lower()) if len(part) >= 3 and part in text
+                2.0 * seen(part) * dim
+                for part in re.split(r"[_\W]+", name.lower())
+                if len(part) >= 3
             )
-            sc += sum(1.0 for tag in meta["tags"] if len(tag) >= 3 and tag in text)
+            sc += sum(1.0 * seen(tag) * dim for tag in meta["tags"] if len(tag) >= 3)
             sc += named.get(name, 0.0)
             wk = 0.0
             for key, vals in meta["enums"].items():
@@ -1517,19 +1926,95 @@ class _Builder:
                 thing_hits = sum(1 for kw in _BG_KEYWORDS.get(name, ()) if kw in text)
                 if thing_hits:
                     weak[name] = float(thing_hits)
+        return strong, weak
+
+    def _named_places(self, told: str, scene_text: str) -> dict[str, float]:
+        """The library's places a scene names: in what is told at full weight, in what is only said at :data:`SPEECH_SHARE`."""
+        if not self.library:
+            return {}
+        in_told = self.library.place_scores(told) if told.strip() else {}
+        everything = self.library.place_scores(scene_text)
+        return {
+            n: in_told.get(n, 0.0) + SPEECH_SHARE * max(0.0, v - in_told.get(n, 0.0))
+            for n, v in everything.items()
+        }
+
+    def _story_setting(self, scenes: list[SceneIn]) -> str | None:
+        """The set a story begins on when its first lines name none: the one its title names, else the first one any scene names
+        (a story starts where it first says it is), else the one a character's trade implies (a farmer's farm, a chef's kitchen).
+        ``None`` for an explainer, which has no set, or when nothing says."""
+        bgs = self.cat.backgrounds()
+        if self.cast.explainer or not bgs:
+            return None
+        if self.title_text:
+            strong, _weak = self._place_scores(
+                bgs,
+                set(_words(self.title_text)),
+                set(),
+                self._named_places(self.title_text, self.title_text),
+            )
+            top = max(strong.values(), default=0.0)
+            if top >= 1.0:
+                return sorted(n for n, v in strong.items() if v == top)[0]
+        for sc in scenes:
+            toks, text, told, said = self._background_inputs(sc)
+            strong, _weak = self._place_scores(bgs, set(toks), said, self._named_places(told, text))
+            top = max(strong.values(), default=0.0)
+            if top >= SWITCH_SCORE:
+                return sorted(n for n, v in strong.items() if v == top)[0]
+        trades = Counter(
+            _ROLE_SETTING[c.archetype]
+            for c in self.cast.chars
+            if _ROLE_SETTING.get(c.archetype) in bgs
+        )
+        if trades:
+            top_n = max(trades.values())
+            return sorted(n for n, v in trades.items() if v == top_n)[0]
+        return None
+
+    def _background_inputs(self, sc: SceneIn) -> tuple[list[str], str, str, set[str]]:
+        """What a scene says, for choosing its set: every word, its caption text, what is told rather than said, and the
+        words that are only ever said (in a quote)."""
+        tokens = [t for u in sc.units for t in u.tokens]
+        text = " ".join(u.text for u in sc.units)
+        told = " ".join(u.narr_text for u in sc.units)
+        said = {t for u in sc.units for t in u.speech} - {
+            t for u in sc.units for t in _words(u.narr_text)
+        }
+        return tokens, text, told, said
+
+    def _choose_background(self, sc: SceneIn, index: int) -> str:
+        """The set a scene is on.  Nothing is remembered here: the choice depends on the last scene's set, which it only reads."""
+        bgs = self.cat.backgrounds()
+        if not bgs:  # nothing registered: the linter will say so
+            return "abstract"
+        tokens, scene_text, told, said = self._background_inputs(sc)
+        strong, weak = self._place_scores(
+            bgs, set(tokens), said, self._named_places(told or scene_text, scene_text)
+        )
+        home = self.last_bg or (self.prior_bg if index == 0 else None)
         if strong:
             top = max(strong.values())
             pool = sorted(n for n, s_ in strong.items() if s_ == top)
-            choice = self.last_bg if self.last_bg in pool else pool[0]
-        elif self.last_bg and index > 0:
-            choice = self.last_bg  # no place named in this scene: stay where the story is
-        elif weak:
+            if home in strong and strong[home] >= top - 1.0:
+                return home  # as good as the best: stay where the story is
+            if home and top < SWITCH_SCORE:
+                return home  # only a hint of another place ("a song", "at her desk"): not a change of set
+            return home if home in pool else pool[0]
+        if home and (index > 0 or self.prior_bg):
+            return home  # no place named in this scene: stay where the story is
+        if weak:
             top = max(weak.values())
-            choice = sorted(n for n, s_ in weak.items() if s_ == top)[0]
-        else:
-            choice = "abstract" if "abstract" in bgs else sorted(bgs)[0]
+            return sorted(n for n, s_ in weak.items() if s_ == top)[0]
+        return "abstract" if "abstract" in bgs else sorted(bgs)[0]
+
+    def _background(self, sc: SceneIn, index: int) -> dict[str, Any]:
+        bgs = self.cat.backgrounds()
+        if not bgs:
+            return {"template": "abstract"}
+        choice = self._choose_background(sc, index)
         self.last_bg = choice
-        params = self._bg_params(choice, bgs[choice], text, index)
+        params = self._bg_params(choice, bgs[choice], set(self._background_inputs(sc)[0]), index)
         return {"template": choice, **({"params": params} if params else {})}
 
     def _bg_params(

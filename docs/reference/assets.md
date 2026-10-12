@@ -44,7 +44,7 @@ Used as `characters[].archetype`.
 | `woman` | A friendly woman with long hair and a bindi in a teal kurta and dupatta, front view | aurat, mahila, lady, women, maa, mother, mummy, patni, wife, औरत, महिला, माँ | 0.94 | `hair`, `shoes`, `pants`, `shirt`, `accent`, `skin` |
 | `worker` | A construction worker in a yellow hard hat and orange hi-vis vest, front view | labourer, laborer, construction worker, builder, majdoor, mazdoor, kaamgaar, mistri, मजदूर, मज़दूर, कामगार, मिस्त्री | 1 | `shoes`, `pants`, `shirt`, `skin`, `hair`, `accent` |
 
-## Objects (72)
+## Objects (96)
 
 Used as `scenes[].objects[].asset`.
 
@@ -53,20 +53,29 @@ Used as `scenes[].objects[].asset`.
 | `airplane` | A white passenger airplane with blue tail, wings and a row of windows, side view | aeroplane, plane, jet, airliner, aircraft, flight, hawai jahaz, vimaan, हवाई जहाज, हवाईजहाज, विमान, प्लेन | 0.49 | `accent`, `body` |
 | `apple` | A red apple with a stem, a green leaf and a shiny highlight | fruit, red apple, seb, phal, सेब, फल | 0.23 | `body` |
 | `auto_rickshaw` | A green and yellow Indian auto rickshaw (three-wheeler) with a canopy, side view | rickshaw, auto, autorickshaw, auto-rickshaw, tuk tuk, tuktuk, three wheeler, three-wheeler, ऑटो, आटो, ऑटोरिक्शा, रिक्शा | 0.56 | `body`, `accent` |
+| `backpack` | A blue school backpack with an orange front pocket, a top handle and straps, front view | bag, school bag, schoolbag, rucksack, basta, jhola, बैग, बस्ता, स्कूल बैग, थैला, बस्तों | 0.4 | `body`, `accent`, `trim` |
+| `ball` | A black and white football with panels and a highlight, side view | football, soccer ball, soccer, footy, gend, futbol, football ball, गेंद, फुटबॉल, फ़ुटबॉल | 0.21 | `body`, `accent` |
 | `balloon` | A round red balloon with a knot and a curly string, front view | party balloon, birthday balloon, helium balloon, gubbara, gubbare, गुब्बारा, गुब्बारे, ग़ुब्बारा, फुग्गा, फुग्गे | 0.59 | `body` |
 | `banana` | A bunch of three ripe yellow bananas | fruit, bunch of bananas, kela, kele, phal, केला, केले, फल | 0.26 | `body` |
 | `bank` | A columned bank building with a pediment, a coin emblem and front steps, front view | bank building, bank branch, finance, treasury, financial institution, बैंक, बैंक की शाखा, बैंक भवन, वित्त | 1.25 | `accent`, `body` |
 | `bar_chart` | A presentation board with four rising bars and a red upward arrow, front view | bar graph, chart, graph, growth, statistics, sales, profit, tarakki, ग्राफ, चार्ट, बार ग्राफ, ग्रोथ | 0.73 | `body`, `accent` |
+| `basket` | A woven wicker basket with a handle and a red cloth peeking out, side view | wicker basket, picnic basket, tokri, tokra, dalia, टोकरी, टोकरा, डलिया, टोकरियाँ | 0.26 | `body`, `accent` |
 | `bed` | A single bed with a pillow and a teal blanket, side view | single bed, cot, bedding, bistar, palang, bistara, बिस्तर, बेड, पलंग | 0.49 | `accent`, `body` |
+| `bell` | A golden hand bell with a wooden handle and a clapper, front view | school bell, hand bell, handbell, ghanti, ghantee, ghanta, घंटी, घण्टी, घंटा | 0.23 | `trim`, `body` |
 | `bench` | A wooden park bench with green metal legs, three-quarter view | benches, park bench, garden bench, wooden bench, बेंच, बैंच, बेन्च, पार्क बेंच | 0.5 | `accent`, `body` |
 | `bicycle` | A classic teal bicycle with spoked wheels, side view | cycle, pedal bike, push bike, saikil, साइकिल, साईकिल, सायकल | 0.49 |  |
+| `blackboard` | A green blackboard with a wooden frame, chalk writing and a chalk ledge, front view | chalkboard, board, greenboard, green board, ब्लैकबोर्ड, श्यामपट्ट, तख़्ता, तख्ता | 0.52 | `body` |
 | `boat` | A small sailing boat with a white sail and a yellow hull on a little wave, side view | sailboat, sailing boat, yacht, dinghy, small boat, naav, nauka, kashti, kishti, नाव, नौका, किश्ती | 0.7 | `accent`, `body` |
 | `book` | A closed green hardcover book with a gold star, three-quarter view, page edges showing | hardcover, textbook, novel, storybook, reading, study, learning, kitab, kitaab, pustak, किताब, पुस्तक | 0.26 | `body` |
+| `bottle` | A blue water bottle with a red cap and a label, side view | water bottle, flask, botal, botle, botel, बोतल, बोतलें | 0.3 | `body`, `accent` |
+| `bowl` | A white bowl of hot orange soup with steam, side view | soup, soup bowl, katori, katora, dal bowl, कटोरी, कटोरा, सूप | 0.16 | `body` |
+| `bucket` | A blue bucket with a metal handle, side view | pail, balti, baalti, बाल्टी, बाल्टियाँ | 0.28 | `body` |
 | `building` | A tall apartment block with rows of windows and a rooftop water tank, front view | apartment, apartment block, flat, high rise, skyscraper, office building, imarat, imaarat, इमारत, बिल्डिंग, फ्लैट, अपार्टमेंट | 2 | `body`, `accent` |
 | `bus` | An orange city bus with a row of windows and a front door, side view | buses, city bus, public bus, school bus, passenger bus, vehicle, बसें, बस से, बस में, बस स्टॉप, बस स्टैंड, बस अड्डा | 0.66 | `body`, `accent` |
 | `cake` | A pink two-layer birthday cake with white icing, cherries and three lit candles | birthday cake, birthday, celebration, dessert, janamdin, janmdin, केक, बर्थडे, जन्मदिन | 0.45 | `body`, `accent` |
 | `calculator` | A handheld calculator with a green screen and a grid of keys, front view | calc, math, mathematics, accounting, calculation, budget, hisaab, कैलकुलेटर, केल्कुलेटर, कैल्कुलेटर, गणित, हिसाब | 0.33 | `body`, `accent` |
 | `camera` | A compact camera with a big lens, front view | dslr, mirrorless, digital camera, photo camera, photography, photo shoot, कैमरा, कैमेरा, फोटोग्राफी, फोटो कैमरा | 0.33 | `accent`, `body` |
+| `candle` | A lit cream candle with melted wax on a brass dish, front view | mombatti, mombattiyan, candlelight, taper, मोमबत्ती, मोमबत्तियाँ | 0.33 | `trim`, `body` |
 | `car` | A small red car, side view | taxi, automobile, vehicle, sedan, कार, गाड़ी, गाडी | 0.52 | `body` |
 | `cash` | A neat bundle of green banknotes with a paper band, three-quarter view | money, notes, banknote, bundle of cash, rupee notes, notes ki gaddi, nakad, नोट, नोटों की गड्डी, गड्डी, नकद, नकदी | 0.21 | `body`, `accent` |
 | `chair` | A wooden chair, three-quarter side view | seat, wooden chair, dining chair, kursi, kursiyan, कुर्सी, कुरसी, कुर्सियां, कुर्सियाँ | 0.57 | `body` |
@@ -74,9 +83,13 @@ Used as `scenes[].objects[].asset`.
 | `cloud` | A fluffy white cloud with a pale blue underside | cloudy, fluffy cloud, badal, baadal, megh, बादल, बादलों, मेघ | 0.35 | `body` |
 | `coin` | A shiny gold rupee coin, front view | money, rupee, gold coin, sikka, paisa, paise, सिक्का, सिक्के, पैसा, पैसे, रुपया, रुपये | 0.17 | `body` |
 | `computer` | A desktop computer: monitor with a lit screen, keyboard and mouse, front view | desktop, desktop computer, desktop pc, pc, monitor, workstation, कंप्यूटर, कम्प्यूटर, कंप्यूटर सिस्टम, मॉनिटर | 0.59 | `body` |
+| `cookie` | A round chocolate chip cookie, top view | biscuit, chocolate chip, biskut, biscut, बिस्कुट, बिस्किट, कुकी, कुकीज़ | 0.12 | `body`, `accent` |
 | `credit_card` | A blue bank card with a gold chip, front view | card, debit card, atm card, bank card, payment card, plastic money, क्रेडिट कार्ड, डेबिट कार्ड, एटीएम कार्ड, कार्ड | 0.21 | `body` |
+| `cricket_bat` | A cricket bat with a wide wooden blade and a green rubber grip, front view | bat, balla, willow, बल्ला, बैट | 0.57 | `body`, `trim`, `accent` |
 | `crown` | A gold royal crown with three coloured jewels, front view | royal, royalty, tiara, king crown, queen crown, mukut, rajmukut, मुकुट, राजमुकुट | 0.28 | `body`, `accent` |
+| `door` | A wooden door with four panels, a brass knob and a frame, front view | doorway, entrance, darwaza, darwaja, dwar, kivad, दरवाज़ा, दरवाजा, दरवाज़े, द्वार, किवाड़ | 0.9 | `body`, `accent` |
 | `envelope` | A sealed cream letter envelope with a red wax seal and heart, front view | letter, mail, email, invitation, chitthi, khat, लिफ़ाफ़ा, लिफाफा, चिट्ठी, पत्र, खत, ख़त | 0.21 | `body`, `accent` |
+| `fence` | A white wooden picket fence, five pointed pickets and two rails, front view | picket fence, railing, garden fence, baad, bada, ghera, boundary, बाड़, बाड़ा, घेरा | 0.38 | `body` |
 | `fire` | A campfire: red, orange and yellow flames on two crossed logs | flame, campfire, bonfire, blaze, burning, aag, agni, alaav, आग, अग्नि, अलाव, लपटें | 0.49 | `body`, `accent` |
 | `flower` | A pink flower on a green stem with two leaves, front view | bloom, blossom, petal, phool, phul, pushp, फूल, फूलों, पुष्प | 0.45 | `body`, `accent` |
 | `gear` | A blue cog wheel with eight teeth and a hub hole, front view | cog, cogwheel, setting, mechanism, engineering, process, गियर, कॉग, सेटिंग, सेटिंग्स, दांतेदार पहिया | 0.35 | `body` |
@@ -89,7 +102,10 @@ Used as `scenes[].objects[].asset`.
 | `house` | A cosy cottage with a tiled red roof, chimney, door and two windows, front view | cottage, bungalow, dwelling, ghar, makaan, makan, kothi, घर, मकान, कोठी, बंगला | 1.25 | `body`, `accent` |
 | `ice_cream` | An ice cream cone with a cream scoop, a pink scoop and a cherry on top | icecream, ice-cream, ice cream cone, gelato, dessert, frozen dessert, आइसक्रीम, आइस क्रीम, आईसक्रीम | 0.4 | `accent`, `body` |
 | `indian_flag` | The Indian tricolour with its navy Ashoka Chakra, waving on a pole | india flag, flag of india, tiranga, national flag, flag, tricolour, tricolor, jhanda, तिरंगा, झंडा, झण्डा, भारत का झंडा | 1.32 |  |
+| `jar` | A glass jar of cookies with a red lid, front view | cookie jar, glass jar, maratban, jaar, dabba, dibba, मर्तबान, जार, डिब्बा, डब्बा | 0.26 | `body`, `accent` |
 | `key` | An old-fashioned golden key with a clover-shaped bow, side view | old key, skeleton key, antique key, door key, unlock, chabi, chaabi, kunji, चाबी, चाभी, कुंजी | 0.23 | `body` |
+| `kite` | A red and yellow diamond kite with sticks and a bow-tied tail, front view | patang, patangein, patangbaazi, पतंग, पतंगें, पतंगबाज़ी | 0.59 | `accent`, `body` |
+| `ladder` | A wooden ladder with two rails and seven rungs, front view | stepladder, seedhi, sidhi, seedhiyan, सीढ़ी, सीढ़ियाँ, सीढ़ियां | 0.73 | `body` |
 | `lamp` | A floor-standing lamp with a warm yellow shade and a glowing bulb, front view | floor lamp, standing lamp, lampshade, reading lamp, batti, लैंप, लैम्प, बत्ती | 1.08 | `accent`, `body` |
 | `laptop` | An open laptop, front three-quarter view, lit screen showing a dashboard | notebook computer, laptop computer, macbook, ultrabook, लैपटॉप, लैपटाप, लेपटॉप | 0.37 | `body` |
 | `light_bulb` | A glowing idea light bulb with a screw base and shining rays | bulb, lightbulb, idea, bright idea, innovation, batti, bijli ka bulb, बल्ब, बत्ती, आइडिया, विचार, बिजली का बल्ब | 0.47 | `body` |
@@ -97,14 +113,17 @@ Used as `scenes[].objects[].asset`.
 | `magnifier` | A magnifying glass with a gold rim, light blue lens and wooden handle | magnifying glass, magnify glass, loupe, search, find, zoom, detective, inspect, investigate, khoj, मैग्नीफाइंग ग्लास, आवर्धक लेंस | 0.49 | `accent`, `body` |
 | `mango` | A ripe yellow-orange mango with a red blush and a green leaf | mangoes, fruit, ripe mango, aam, phal, आम, फल | 0.26 | `body`, `accent` |
 | `medal` | A gold medal with a star on a red, white and blue ribbon, front view | gold medal, award, prize, olympic, first place, achievement, swarn padak, padak, tamga, मेडल, पदक, तमगा | 0.37 | `accent`, `body` |
+| `medicine` | A brown medicine bottle with a white cap and a red cross label, front view | tablet, pill, syrup, drug, dawa, dawai, goli, दवा, दवाई, दवाइयाँ, गोली | 0.19 | `body`, `accent` |
 | `microphone` | A studio microphone on a stand with a round pop filter, front view | mic, mike, studio mic, pop filter, podcast, podcast mic, recording, voiceover, माइक, माइक्रोफोन, माईक, रिकॉर्डिंग | 0.57 | `accent`, `body` |
 | `money_bag` | A tied cloth money sack marked with a rupee sign, front view | moneybag, bag of money, sack of money, money sack, cash bag, wealth, riches, thaili, dhan, daulat, थैली, पैसों की थैली | 0.4 | `body`, `accent` |
 | `moon` | A yellow crescent moon with two small stars | crescent, half moon, moonlight, chand, chaand, chandrama, चाँद, चांद, चंद्रमा, चन्द्रमा | 0.49 | `body`, `accent` |
 | `motorcycle` | A red commuter motorbike with tank, seat, headlamp and exhaust, side view | motorbike, bike, two wheeler, बाइक, बाईक, मोटरसाइकिल, मोटरसाईकिल, मोटरबाइक, दोपहिया | 0.54 | `body` |
 | `mountain` | A single snow-capped mountain with a shaded right side | peak, summit, snowy peak, snow mountain, himalaya, pahad, pahaad, parvat, पहाड़, पहाड, पर्वत, हिमालय | 1.36 | `body` |
+| `notebook` | A blue school notebook with a white label and a spiral edge, front view | copy, copybook, exercise book, diary, kapi, कॉपी, नोटबुक, डायरी | 0.19 | `body` |
 | `phone` | A smartphone, front view, with a lit screen and colourful app icons | mobile, mobile phone, smartphone, smart phone, cellphone, cell phone, handset, फोन, फ़ोन, मोबाइल, मोबाईल, स्मार्टफोन | 0.3 | `body` |
 | `piggy_bank` | A pink piggy bank with a coin slot and a gold coin, side view facing right | piggy, piggybank, saving, money box, coin bank, gullak, bachat, गुल्लक, बचत | 0.38 | `body` |
 | `pizza` | A whole pepperoni pizza seen from above with one slice cut and pulled out | pizza slice, pepperoni, fast food, junk food, italian food, पिज़्ज़ा, पिज्जा | 0.38 | `body`, `accent` |
+| `pot` | A copper cooking pot with a lid, two handles and steam, side view | cooking pot, saucepan, stockpot, handi, degchi, patila, bartan, हांडी, हाँडी, पतीला, देगची, बर्तन | 0.26 | `body`, `trim` |
 | `rainbow` | A rainbow arc of six colour bands with a small cloud at each end | indradhanush, indra dhanush, indradhanu, इंद्रधनुष, इन्द्रधनुष, इंद्रधनु | 0.66 | `body` |
 | `rocket` | A cartoon rocket pointing up, with fins, a porthole and a flame | spaceship, spacecraft, space rocket, launch, lift off, liftoff, blast off, startup, space, रॉकेट, राकेट, अंतरिक्ष यान | 1.25 | `body`, `accent` |
 | `samosa` | A golden fried samosa with a small bowl of green chutney beside it | snack, indian snack, street food, fried snack, samose, समोसा, समोसे | 0.23 | `body`, `accent` |
@@ -115,13 +134,18 @@ Used as `scenes[].objects[].asset`.
 | `sun` | A warm cartoon sun with short rays and a soft glow ring | sunshine, sunlight, sunny, suraj, surya, dhoop, सूरज, सूर्य, धूप | 0.59 | `body` |
 | `table` | A wooden dining table with four legs, three-quarter view | dining table, wooden table, mez, mej, मेज, मेज़, टेबल, डाइनिंग टेबल | 0.52 | `body` |
 | `tea_cup` | A blue cup of hot chai on a saucer with wavy steam, side view | chai, tea, cuppa, cup, teacup, cup of tea, hot tea, chaay, pyali, चाय, कप, प्याली | 0.28 | `body`, `accent` |
+| `teddy_bear` | A brown teddy bear with a red bow tie, front view | teddy, teddies, soft toy, stuffed toy, stuffed animal, teddy bear toy, टेडी, टेडी बियर, भालू का खिलौना | 0.35 | `body`, `accent`, `trim` |
 | `temple` | An Indian temple (mandir) with a shikhara spire, steps, a small flag and a hanging bell | mandir, hindu temple, shrine, place of worship, devalaya, shivalay, devsthan, मंदिर, मन्दिर, देवालय, शिवालय, देवस्थान | 1.48 | `body`, `accent` |
+| `tomato` | A ripe red tomato with a green star-shaped stalk, side view | tomatoes, tamatar, tamaatar, टमाटर | 0.14 | `body`, `accent` |
+| `torch` | A yellow flashlight with a black switch and a glowing lens, standing up | flashlight, torches, pocket torch, tourch, torch light, टॉर्च, टार्च | 0.26 | `body`, `trim` |
 | `tractor` | A green farm tractor with a big rear wheel, small front wheel and exhaust pipe, side view | farm tractor, farm vehicle, vehicle, traktar, trektar, ट्रैक्टर, ट्रेक्टर | 0.59 | `body`, `accent` |
 | `train` | A blue Indian railway diesel locomotive pulling one passenger coach, side view | railway, railroad, locomotive, express train, passenger train, local train, rail gaadi, railgadi, ट्रेन, रेल, रेलगाड़ी, रेलगाडी | 0.7 | `body`, `accent` |
 | `tree` | A leafy tree | oak, forest tree, पेड़, पेड | 1.43 | `trunk`, `leaves` |
 | `trophy` | A golden winner's trophy cup with two handles on a wooden base, front view | trophies, winner cup, champion, championship, award, prize, inaam, jeet, vijeta, ट्रॉफी, विजेता, चैंपियन | 0.5 | `body`, `accent` |
 | `truck` | A cargo truck with a blue cab and a canvas-covered load, side view | lorry, lorries, cargo truck, goods truck, delivery truck, vehicle, trak, ट्रक, लॉरी | 0.66 | `accent`, `body` |
 | `tv` | A flat-screen TV with a colourful picture on a small wooden stand, front view | television, telly, flat screen, flat-screen tv, टीवी, टी वी, टेलीविज़न, टेलीविजन | 0.7 | `accent`, `body` |
+| `umbrella` | A red open umbrella with a curved handle, front view | parasol, brolly, chhata, chhatri, chaata, chhaata, छाता, छतरी, छाते | 0.57 | `body`, `trim` |
+| `window` | A white window with four panes of sky-blue glass and a sill, front view | pane, window frame, khidki, khidkiyan, jharokha, खिड़की, खिड़कियाँ, झरोखा | 0.45 | `body`, `accent` |
 
 ## Places (13)
 
@@ -130,15 +154,15 @@ Used as `scenes[].background.template`.
 | name | what it is | a script can say | size | recolour |
 |---|---|---|---|---|
 | `beach` | A sunny beach with surf, sailboats, a lighthouse, palm trees, an umbrella and rocks | seaside, shore, coast, sea, ocean, sand, seashore, shoreline, coastline, palm trees, samundar, samandar |  |  |
-| `cafe` | A warm cafe: coffee counter, pendant lamps, chalkboard menu, small tables, a window | coffee shop, coffee house, restaurant, dhaba, chai shop, chai ki dukaan, café, कैफ़े, कैफे, रेस्टोरेंट, होटल, ढाबा |  |  |
-| `classroom` | An Indian school classroom: blackboard, wooden desks, a window, a clock and a door | class room, school, class, school room, kaksha, pathshala, कक्षा, स्कूल, पाठशाला, क्लासरूम, क्लास |  |  |
+| `cafe` | A warm cafe: coffee counter, pendant lamps, chalkboard menu, small tables, a window | coffee shop, coffee house, restaurant, dhaba, chai shop, chai ki dukaan, diner, canteen, eatery, tea stall, bakery, bhojanalay |  |  |
+| `classroom` | An Indian school classroom: blackboard, wooden desks, a window, a clock and a door | class room, school, class, school room, kaksha, pathshala, lecture hall, tuition, कक्षा, स्कूल, पाठशाला, क्लासरूम |  |  |
 | `desert` | A golden desert: sand dunes, cacti, a rocky outcrop and a huge low sun | dunes, sand dunes, sahara, thar, arid, registan, marusthal, ret, रेगिस्तान, मरुस्थल, रेत, थार |  |  |
-| `farm` | A sunny farm: green crop rows, a tubewell shed, a scarecrow, palms and a dirt track | field, farmland, crops, agriculture, farming, khet, kheti, fasal, खेत, खेती, फार्म, फसल |  |  |
-| `hospital` | A pale-green hospital ward: a bed, a curtain, an IV stand, a heart monitor, a door | clinic, ward, hospital ward, healthcare, infirmary, aspatal, haspatal, dawakhana, अस्पताल, हस्पताल, दवाखाना, वार्ड |  |  |
-| `market` | An Indian bazaar lane: striped awnings, fruit stalls, a cart, pennants and lanterns | bazaar, bazar, marketplace, street market, mandi, haat, sabzi mandi, बाज़ार, बाजार, मंडी, हाट, सब्ज़ी मंडी |  |  |
+| `farm` | A sunny farm: green crop rows, a tubewell shed, a scarecrow, palms and a dirt track | field, farmland, crops, agriculture, farming, khet, kheti, fasal, barn, barnyard, farmyard, cowshed |  |  |
+| `hospital` | A pale-green hospital ward: a bed, a curtain, an IV stand, a heart monitor, a door | clinic, ward, hospital ward, healthcare, infirmary, aspatal, haspatal, dawakhana, icu, emergency room, operation theatre, operating room |  |  |
+| `market` | An Indian bazaar lane: striped awnings, fruit stalls, a cart, pennants and lanterns | bazaar, bazar, marketplace, street market, mandi, haat, sabzi mandi, shopping street, stall, vegetable market, बाज़ार, बाजार |  |  |
 | `mountains` | Snow-capped mountains, pine forest, a calm lake and a rocky shore | mountain, peaks, alps, himalaya, snowy mountains, hills, pahad, pahar, parvat, पहाड़, पहाड, पहाड़ी |  |  |
-| `office` | A modern open office: glass wall, city skyline, a desk with monitors, a water cooler | workplace, workspace, open office, corporate office, daftar, karyalay, कार्यालय, दफ़्तर, दफ्तर, ऑफिस, ऑफ़िस |  |  |
-| `park` | A sunny city park: a curved path, a pond, trees, a bench, a lamp post and flower beds | garden, public park, city park, lawn, bagh, bagicha, bageecha, udyan, बाग, बगीचा, उद्यान, पार्क |  |  |
+| `office` | A modern open office: glass wall, city skyline, a desk with monitors, a water cooler | workplace, workspace, open office, corporate office, daftar, karyalay, boardroom, cubicle, meeting room, conference room, headquarters, कार्यालय |  |  |
+| `park` | A sunny city park: a curved path, a pond, trees, a bench, a lamp post and flower beds | garden, public park, city park, lawn, bagh, bagicha, bageecha, udyan, playground, jungle gym, maidan, बाग |  |  |
 | `railway_station` | An Indian railway platform: yellow safety line, a blue train, a clock and a canopy | station, train station, railway platform, rail station, रेलवे स्टेशन, रेल स्टेशन, स्टेशन, प्लेटफ़ॉर्म, प्लेटफॉर्म, रेलवे प्लेटफ़ॉर्म |  |  |
-| `space` | Outer space: stars, a ringed planet, a crescent Earth, a moon and a grey lunar ridge | outer space, galaxy, cosmos, universe, lunar, moon surface, antariksh, brahmand, akashganga, अंतरिक्ष, अन्तरिक्ष, ब्रह्मांड |  |  |
-| `village` | An Indian village: mud huts, a stone well, a banyan tree, hay and a dirt path | hamlet, rural, countryside, gaon, gaanv, gram, dehat, गाँव, गांव, ग्राम, देहात, ग्रामीण |  |  |
+| `space` | Outer space: stars, a ringed planet, a crescent Earth, a moon and a grey lunar ridge | outer space, galaxy, cosmos, universe, lunar, moon surface, antariksh, brahmand, akashganga, planet, orbit, spaceship |  |  |
+| `village` | An Indian village: mud huts, a stone well, a banyan tree, hay and a dirt path | hamlet, rural, countryside, gaon, gaanv, gram, dehat, hut, cottage, jhopdi, गाँव, गांव |  |  |

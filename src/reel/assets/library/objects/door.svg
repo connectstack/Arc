@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 420">
+  <rect x="0" y="0" width="220" height="420" rx="6" fill="#8b5a2b" data-role="body_dark"/>
+  <rect x="14" y="14" width="192" height="406" fill="#c98a4b" data-role="body"/>
+  <rect x="176" y="14" width="30" height="406" fill="#b5763a" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="36" y="40" width="66" height="150" rx="4" fill="#b5763a" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="118" y="40" width="66" height="150" rx="4" fill="#b5763a" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="36" y="214" width="66" height="170" rx="4" fill="#b5763a" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="118" y="214" width="66" height="170" rx="4" fill="#b5763a" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="44" y="48" width="8" height="134" fill="#dba066" data-lod="1" data-shadow="false"/>
+  <circle cx="176" cy="226" r="13" fill="#ffc83d" data-role="accent" data-lod="0"/>
+  <circle cx="172" cy="222" r="4" fill="#fff3b0" data-lod="1" data-shadow="false"/>
+  <rect x="14" y="90" width="10" height="24" rx="3" fill="#7a4a1d" data-lod="1" data-shadow="false"/>
+  <rect x="14" y="300" width="10" height="24" rx="3" fill="#7a4a1d" data-lod="1" data-shadow="false"/>
+</svg>

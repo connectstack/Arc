@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 220">
+  <path d="M30 62 L150 62 L150 190 Q150 212 128 212 L52 212 Q30 212 30 190 Z" fill="#cfe6f2" data-role="body"/>
+  <path d="M118 64 L150 64 L150 190 Q150 212 128 212 L100 212 Q122 150 118 64 Z" fill="#a9cfe0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <circle cx="60" cy="192" r="20" fill="#d9a35a" data-lod="0"/>
+  <circle cx="100" cy="196" r="20" fill="#c98a4b" data-lod="0"/>
+  <circle cx="122" cy="178" r="18" fill="#d9a35a" data-lod="0"/>
+  <circle cx="80" cy="166" r="18" fill="#c98a4b" data-lod="0"/>
+  <circle cx="56" cy="188" r="5" fill="#5a3417" data-lod="1" data-shadow="false"/>
+  <circle cx="104" cy="192" r="5" fill="#5a3417" data-lod="1" data-shadow="false"/>
+  <circle cx="120" cy="174" r="4" fill="#5a3417" data-lod="1" data-shadow="false"/>
+  <path d="M42 84 L42 170" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <rect x="24" y="30" width="132" height="36" rx="11" fill="#e63946" data-role="accent"/>
+  <rect x="24" y="54" width="132" height="10" rx="5" fill="#b02a38" data-role="accent" data-lod="1" data-shadow="false"/>
+</svg>

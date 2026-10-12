@@ -1705,7 +1705,12 @@ class TestCasting:
 
 
 # =============================================================================== enrichment
-def weaken(spec: dict[str, Any], actions: str = "idle", cuts: bool = True) -> dict[str, Any]:
+def weaken(
+    spec: dict[str, Any],
+    actions: str = "idle",
+    cuts: bool = True,
+    catalog: Catalog | None = None,
+) -> dict[str, Any]:
     """The kind of spec a small model writes: it lints clean and renders static - nothing but idle (or
     an entrance and a glance), no camera, no sfx, every scene change a cut (unless ``cuts`` is
     False), captions that vanish in a second."""
@@ -1733,6 +1738,7 @@ def weaken(spec: dict[str, Any], actions: str = "idle", cuts: bool = True) -> di
     meta = out["meta"]  # the scenes (less the overlaps) must add up to the target
     return normalize_spec(
         out,
+        catalog=catalog,
         style=meta["style"],
         seed=meta["seed"],
         target_duration=meta["target_duration_sec"],
@@ -2176,7 +2182,9 @@ class TestEnrich:
         base = HeuristicSpecGenerator(catalog=mini_catalog).generate(
             STORY, style="flat_vector", seed=1
         )
-        weak = weaken(base.spec)
+        weak = weaken(
+            base.spec, catalog=mini_catalog
+        )  # the library of the global catalog is not this catalog's
         notes: list[str] = []
         out = enrich_spec(weak, mini_catalog, seed=1, notes=notes)
         assert lint_data(out, catalog=mini_catalog).ok and notes

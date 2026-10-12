@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 388 170">
+  <rect x="0" y="58" width="388" height="16" fill="#d8d0c0" data-role="body_dark"/>
+  <rect x="0" y="118" width="388" height="16" fill="#d8d0c0" data-role="body_dark"/>
+  <polygon points="6,44 31,8 56,44 56,166 6,166" fill="#f4efe4" data-role="body"/>
+  <polygon points="31,8 56,44 56,166 31,166" fill="#d8d0c0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <polygon points="82,44 107,8 132,44 132,166 82,166" fill="#f4efe4" data-role="body"/>
+  <polygon points="107,8 132,44 132,166 107,166" fill="#d8d0c0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <polygon points="158,44 183,8 208,44 208,166 158,166" fill="#f4efe4" data-role="body"/>
+  <polygon points="183,8 208,44 208,166 183,166" fill="#d8d0c0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <polygon points="234,44 259,8 284,44 284,166 234,166" fill="#f4efe4" data-role="body"/>
+  <polygon points="259,8 284,44 284,166 259,166" fill="#d8d0c0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <polygon points="310,44 335,8 360,44 360,166 310,166" fill="#f4efe4" data-role="body"/>
+  <polygon points="335,8 360,44 360,166 335,166" fill="#d8d0c0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+</svg>

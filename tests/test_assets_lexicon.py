@@ -195,7 +195,7 @@ class TestWhatItReports:
                 {"king", "sword", "fort"},
             ),  # the castle is a fort here; a word before the danda is a word
             ("Mia ne kutta aur talwar dekhi.", {"sword"}),  # Hinglish
-            ("A thief took the cookie jar through the door.", {"thief", "jar", "door"}),
+            ("A thief took the sword through the gate.", {"thief", "sword", "gate"}),
         ],
     )
     def test_things_a_story_shows_that_nothing_draws_are_missing(

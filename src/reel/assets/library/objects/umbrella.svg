@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 290">
+  <path d="M10 140 C10 60 70 10 150 10 C230 10 290 60 290 140 Q266.7 116 243.4 140 Q220.0 116 196.7 140 Q173.3 116 150.0 140 Q126.7 116 103.3 140 Q80.0 116 56.7 140 Q33.3 116 10.0 140 Z" fill="#e63946" data-role="body"/>
+  <path d="M150 10 L56.7 140 Q80.0 116 103.3 140 Z" fill="#b02a38" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M150 10 L150.0 140 Q173.3 116 196.7 140 Z" fill="#b02a38" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M150 10 L243.4 140 Q266.7 116 290.0 140 Z" fill="#b02a38" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <path d="M150 12 L150 130" fill="none" stroke="#b02a38" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M52 76 C66 48 92 28 118 22" fill="none" stroke="#ff8a92" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <rect x="146" y="128" width="8" height="130" rx="3" fill="#23262e" data-role="trim"/>
+  <path d="M150 256 L150 262 Q150 280 168 280 Q186 280 186 264" fill="none" stroke="#23262e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="trim"/>
+  <circle cx="150" cy="8" r="7" fill="#23262e" data-role="trim"/>
+</svg>

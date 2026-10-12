@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 0 284 304">
+  <rect x="0" y="0" width="260" height="296" rx="12" fill="#f4efe4" data-role="body"/>
+  <rect x="176" y="0" width="84" height="296" rx="12" fill="#d8d0c0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="22" y="22" width="100" height="112" rx="4" fill="#bfe3f2" data-role="accent"/>
+  <rect x="138" y="22" width="100" height="112" rx="4" fill="#bfe3f2" data-role="accent"/>
+  <rect x="22" y="148" width="100" height="112" rx="4" fill="#bfe3f2" data-role="accent"/>
+  <rect x="138" y="148" width="100" height="112" rx="4" fill="#bfe3f2" data-role="accent"/>
+  <path d="M36 118 L66 42" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M56 120 L74 78" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M152 118 L182 42" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M172 120 L190 78" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M36 244 L66 168" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M56 246 L74 204" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M152 244 L182 168" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M172 246 L190 204" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <rect x="-12" y="280" width="284" height="24" rx="8" fill="#d8d0c0" data-role="body_dark"/>
+  <rect x="-12" y="280" width="284" height="8" rx="4" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+</svg>

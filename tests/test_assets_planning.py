@@ -697,10 +697,19 @@ class TestOfflinePlanner:
     @pytest.mark.parametrize(
         ("script", "cast"),
         [
-            # a creature or role that only stands next to a name does not make the person one
-            ("The cat scratched Mia. Mia cried. Mia ran home. Mia laughed.", {"mia": "everyman"}),
-            ("The farmer called Mia. Mia waved. Mia smiled. Mia ran.", {"mia": "everyman"}),
-            ("The lion saw Arjun. Arjun ran. Arjun hid. Arjun waved.", {"arjun": "everyman"}),
+            # a creature or role that only stands next to a name does not make the person one (it comes in as a guest of its own)
+            (
+                "The cat scratched Mia. Mia cried. Mia ran home. Mia laughed.",
+                {"mia": "everyman", "cat": "cat"},
+            ),
+            (
+                "The farmer called Mia. Mia waved. Mia smiled. Mia ran.",
+                {"mia": "everyman", "farmer": "farmer"},
+            ),
+            (
+                "The lion saw Arjun. Arjun ran. Arjun hid. Arjun waved.",
+                {"arjun": "everyman", "lion": "lion"},
+            ),
             (
                 "Ravi, a rickshaw driver with a parrot, waved. Ravi smiled. Ravi left. Ravi ran.",
                 {"ravi": "everyman"},
@@ -823,13 +832,26 @@ class TestOfflinePlanner:
         res = HeuristicSpecGenerator(catalog=cat).generate(script, style="flat_vector", seed=1)
         assert [c["id"] for c in res.spec["characters"]] == ["dog"]
 
-    def test_a_character_named_once_in_another_language_joins_only_when_nobody_else_does(
+    def test_a_character_named_once_in_another_language_is_a_guest_of_its_scene(
         self, cat: Catalog
     ) -> None:
-        # the English rule too: a role noun counts when it recurs or when nothing else is named
+        # named once, it is in the scene that names it and not after; named again, it is part of the cast
         gen = HeuristicSpecGenerator(catalog=cat)
-        once = gen.generate("Mia walked home. फिर Mia ने कुत्ते को देखा।", style="flat_vector", seed=1)
-        assert [c["id"] for c in once.spec["characters"]] == ["mia"]
+        once = gen.generate(
+            "Mia walked home. फिर Mia ने कुत्ते को देखा। Mia ran. Mia waved. Mia smiled.",
+            style="flat_vector",
+            seed=1,
+        )
+        assert [c["id"] for c in once.spec["characters"]] == ["mia", "dog"]
+        seen = [
+            i
+            for i, s in enumerate(once.spec["scenes"])
+            if any(ly["character"] == "dog" for ly in s["layers"])
+        ]
+        assert 0 < len(seen) < len(once.spec["scenes"])  # not in every scene
+        assert (
+            seen == list(range(seen[0], seen[-1] + 1)) and seen[-1] < len(once.spec["scenes"]) - 1
+        )
         twice = gen.generate(
             "Mia walked home. फिर Mia ने कुत्ते को देखा। कुत्ते ने पूँछ हिलाई।", style="flat_vector", seed=1
         )
@@ -933,20 +955,20 @@ class TestModelPlan:
     ) -> None:
         monkeypatch.setattr(
             "reel.assets.coverage.load_lexicon",
-            lambda: (*LEX, LexEntry("bag", "object", ("bag", "bags"))),
+            lambda: (*LEX, LexEntry("kettle", "object", ("kettle", "kettles"))),
         )
         spec = (
             HeuristicSpecGenerator(catalog=cat)
             .generate(
-                "Mia carried a bag. The baggage was heavy. Mia sat down.",
+                "Mia carried a kettle. The kettledrum was loud. Mia sat down.",
                 style="flat_vector",
                 seed=2,
             )
             .spec
         )
-        (gap,) = [g for g in spec["meta"]["library_gaps"] if g["name"] == "bag"]
-        said = [sid for sid, t in scene_texts(spec).items() if "a bag" in t.lower()]
-        containing = [sid for sid, t in scene_texts(spec).items() if "baggage" in t.lower()]
+        (gap,) = [g for g in spec["meta"]["library_gaps"] if g["name"] == "kettle"]
+        said = [sid for sid, t in scene_texts(spec).items() if "a kettle" in t.lower()]
+        containing = [sid for sid, t in scene_texts(spec).items() if "kettledrum" in t.lower()]
         assert said and containing and set(gap["scenes"]) == set(said) - set(containing)
 
     def test_the_script_is_read_for_what_the_model_forgot_to_report(

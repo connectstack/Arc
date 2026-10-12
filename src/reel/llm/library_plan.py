@@ -8,6 +8,7 @@ drove past" puts the car on the set and drives it across.  The same words come f
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from reel.assets.coverage import analyze_script
@@ -17,6 +18,8 @@ from reel.assets.model import AssetDef
 from reel.core.catalog import Catalog
 
 MAX_OBJECTS_PER_SCENE = 2
+#: Hinglish words of characters that are also English names or words: not read as the character
+_AMBIGUOUS_HINGLISH = frozenset({"seth", "lala", "madam", "bagh", "gai"})
 #: a place named in the scene outweighs the engine's own keyword tables
 PLACE_NAMED_SCORE = 3.0
 _TRAVEL_VERBS = frozenset(
@@ -36,6 +39,29 @@ _GROUND_Y = 0.8
 _SKY_Y = 0.3
 
 
+@dataclass(frozen=True)
+class _EnginePlace:
+    """One of the engine's own sets, with the words (English phrases, Hindi, Hinglish) a script calls it."""
+
+    name: str
+    tags: tuple[str, ...]
+    kind: str = "place"
+    origin: str = "builtin"
+
+
+#: what a script in Hindi or Hinglish calls the engine's own sets (the library's places carry their words in their tags; these
+#: have no asset to hold them).  English single words are in the planner's own keyword tables.
+ENGINE_PLACE_WORDS: dict[str, tuple[str, ...]] = {
+    "street": ("गली", "गलियों", "सड़क", "सड़कों", "रास्ता", "चौराहा", "मोहल्ला", "शहर", "फुटपाथ", "दुकान", "दुकानें",
+               "gali", "galiyon", "sadak", "sadkon", "chauraha", "mohalla", "shehar", "sheher", "footpath", "dukaan", "dukan", "city road"),
+    "rooftop": ("छत", "छतों", "टेरेस", "बालकनी", "chhat", "chhat par", "terrace", "balcony"),
+    "room": ("कमरा", "कमरे", "घर", "घर में", "रसोई", "रसोईघर", "बेडरूम", "बैठक",
+             "kamra", "kamre", "ghar", "ghar mein", "rasoi", "rasoighar", "bedroom", "living room", "drawing room"),
+    "forest": ("जंगल", "जंगलों", "वन", "झील", "नदी", "पेड़ों", "jungle", "jangal", "van", "jheel", "nadi", "woods"),
+    "stage": ("मंच", "स्टेज", "manch", "stage"),
+}  # fmt: skip
+
+
 def _inside(inner: tuple[int, int], outer: tuple[int, int]) -> bool:
     """Is the span ``inner`` of a text within the span ``outer``?"""
     return outer[0] <= inner[0] and inner[1] <= outer[1]
@@ -49,6 +75,22 @@ class LibraryPlanner:
         self.characters: TagIndex[AssetDef] = asset_index(catalog, ("character",))
         self.places: TagIndex[AssetDef] = asset_index(catalog, ("place",))
         self.objects: TagIndex[AssetDef] = asset_index(catalog, ("object",))
+        have = set(catalog.backgrounds.names())
+        self.engine_places: TagIndex[_EnginePlace] = TagIndex(
+            _EnginePlace(n, w) for n, w in ENGINE_PLACE_WORDS.items() if n in have
+        )
+        # the words a library character has in Latin letters after its first Devanagari one are Hinglish ("kutta"): not English
+        self.hinglish: set[tuple[str, ...]] = set()
+        for e in catalog.assets.entries():
+            a = e.obj
+            if a.kind != "character":
+                continue
+            seen_indic = False
+            for tag in a.tags:
+                if not tag.isascii():
+                    seen_indic = True
+                elif seen_indic and (key := phrase_key(tag)) and tag not in _AMBIGUOUS_HINGLISH:
+                    self.hinglish.add(key)
 
     # -- characters -------------------------------------------------------------------------
     def character_words(self) -> dict[str, str]:
@@ -56,11 +98,16 @@ class LibraryPlanner:
         return {w: a.name for w, a in self.characters.single_words().items()}
 
     def foreign_character_hits(self, text: str) -> list[Hit[AssetDef]]:
-        """Characters ``text`` names in words other than English ("किसान", "गाय"), in order.
+        """Characters ``text`` names in words other than English ("किसान", "गाय", "kutta"), in order.
 
         The cast builder finds English role nouns after an article ("the dog", "a farmer"); other scripts have no such
-        marker, so their words are read straight from the tags.  English words are left to the rules that already read them."""
-        return [h for h in self.characters.scan(text) if not h.phrase.isascii()]
+        marker, so their words are read straight from the tags (Hinglish too: Hindi in Latin letters).  English words are left
+        to the rules that already read them."""
+        return [
+            h
+            for h in self.characters.scan(text)
+            if not h.phrase.isascii() or phrase_key(h.phrase) in self.hinglish
+        ]
 
     def sprite_roles(self, archetype: str) -> tuple[str, ...] | None:
         """The palette roles of a library character (``None`` for the engine's own bodies)."""
@@ -77,10 +124,13 @@ class LibraryPlanner:
         A place word inside the name of a longer object ("school" in "school building") does not name the place."""
         out: dict[str, float] = {}
         things = [(h.start, h.end) for h in self.objects.scan(text)]
-        for h in self.places.scan(text):
-            if any(_inside((h.start, h.end), t) and t[1] - t[0] > h.end - h.start for t in things):
-                continue
-            out[h.asset.name] = out.get(h.asset.name, 0.0) + PLACE_NAMED_SCORE
+        for index in (self.places, self.engine_places):
+            for h in index.scan(text):
+                if any(
+                    _inside((h.start, h.end), t) and t[1] - t[0] > h.end - h.start for t in things
+                ):
+                    continue
+                out[h.asset.name] = out.get(h.asset.name, 0.0) + PLACE_NAMED_SCORE
         return out
 
     # -- objects ----------------------------------------------------------------------------

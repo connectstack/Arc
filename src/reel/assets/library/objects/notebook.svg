@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 262">
+  <rect x="20" y="18" width="172" height="240" rx="10" fill="#fffaf0"/>
+  <rect x="10" y="10" width="172" height="242" rx="10" fill="#2f6fdb" data-role="body"/>
+  <rect x="10" y="10" width="30" height="242" rx="10" fill="#2458b0" data-role="body_dark" data-lod="1" data-shadow="false"/>
+  <rect x="60" y="58" width="100" height="70" rx="6" fill="#fffaf0" data-role="body_light"/>
+  <path d="M72 80 L148 80 M72 98 L148 98 M72 116 L120 116" fill="none" stroke="#b0b8c4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M118 20 L118 246" fill="none" stroke="#4f8ae8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <circle cx="24" cy="36" r="6" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+  <circle cx="24" cy="68" r="6" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+  <circle cx="24" cy="100" r="6" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+  <circle cx="24" cy="132" r="6" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+  <circle cx="24" cy="164" r="6" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+  <circle cx="24" cy="196" r="6" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+  <circle cx="24" cy="228" r="6" fill="#fffaf0" data-lod="1" data-shadow="false"/>
+</svg>

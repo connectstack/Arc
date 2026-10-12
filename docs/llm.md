@@ -202,13 +202,20 @@ subclass of `LLMClient`; the clients take an injectable `httpx` transport, so te
 always giving the same output.
 
 1. **parse**: a title line, `Name:` dialogue lines, "quoted" speech with its attribution, `(stage directions)`, plain narration; each sentence is a unit;
-2. **cast**: characters from names, `Narrator:` prefixes and kinship/role words (at most 3), an archetype guessed from words like kid / grandma / robot /
-   boss / hero (default everyman), distinct stable colours;
+2. **cast**: characters from names, `Narrator:` prefixes and kinship/role words (at most 3 that matter, 5 in a reel, 3 on screen at once), an archetype
+   guessed from the words round the name (kid / grandma / robot / boss / hero, default everyman; somebody met at school is a kid) and drawn as what the
+   script says they are: "Max the dog", "Chef Marco", "Dr. Meera", "a monkey named Chiku", "His cow, Gauri," and "Her boss, Mr. Rao," are the dog, the chef,
+   the doctor, the monkey, the cow and the boss, and the role is then another name for them ("the boss" is Mr. Rao, not a second boss). A creature or role
+   that comes in once as the subject of a clause ("An elephant arrived", "... and the tiger watched") is a *guest*: in the scene that names it and gone in the
+   next. A capitalised thing ("Earth", "Moon") is not somebody. Distinct stable colours;
 3. **plan**: units are grouped into 8-14 scenes sized by reading time (~2.6 words/s + 1 s); short scripts get silent "bridge" scenes, long ones are condensed
    to their most salient sentences; the first scene gets a `title`, the last exclamation a `shout`;
-4. **stage**: per scene a background chosen from keywords (only templates that exist), time of day and mood, characters on slots with entrances, actions
+4. **stage**: per scene a background chosen from the text (only templates that exist), time of day and mood, characters on slots with entrances, actions
    from verbs (walked, jumped, waved, laughed, thought, pointed, fell, picked up, gasped ...), listeners look at the speaker, SFX from the actions, a slow
-   camera move, a rotating transition;
+   camera move, a rotating transition. The set holds from scene to scene: the story starts on the first set it names (its title first), and a scene leaves
+   it only for a place the text names (two points of evidence; a song, a desk or an idea is not one, and neither is a place only spoken of in a quote:
+   "I forgot my book at home"). Somebody whose trade belongs to a set (the shopkeeper's market, the teacher's classroom) stays on it when the story moves on,
+   and the things a scene names stay on the set for two more scenes;
 5. **fit**: the same `normalize_spec` rescales to the 45-60 s budget, and the linter has the last word.
 
 The asset library takes part through the assets' own words (`reel.llm.library_plan`): a place named in a scene (`village`, `गाँव`) outweighs the
@@ -216,9 +223,10 @@ engine's keyword tables, a creature or role the library draws ("Max the dog", "a
 (a tree, a car) is placed on a spot clear of the cast, sized to fit, a vehicle driving across the frame when the text says it drives. A word several things
 answer to ("fruit", "vehicle") never guesses. What the script mentions that no asset draws is recorded in `meta.library_gaps`.
 
-It understands `Name:` lines for names written in Latin script; other scripts (Hindi, Arabic, CJK ...) are treated as narration, which renders fine
-(captions are shaped, the voice follows the language) but gives one narrator instead of a cast: use a model, or write the JSON, for multi-character
-dialogue in those scripts.
+Hindi is read in Devanagari and in Latin letters (Hinglish): `Name:` lines give the cast in any script, the words round a name say what it is
+("बूढ़े पिप जी" is old, a `बीप` is a robot), the library's words find creatures and roles ("कुत्ता", "kutta", "teacher ne kaha" without a "the") and the engine's own
+sets have theirs ("गली", "छत", "ghar"). Other scripts (Arabic, CJK ...) without `Name:` lines are narration, which renders fine (captions are shaped, the
+voice follows the language) but gives one narrator instead of a cast: use a model, or write the JSON, for multi-character dialogue in those scripts.
 
 ## Writing and testing without a model
 

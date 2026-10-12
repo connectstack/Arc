@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+  <circle cx="110" cy="110" r="100" fill="#d8d0c0" data-role="body_dark"/>
+  <circle cx="104" cy="104" r="91" fill="#f4efe4" data-role="body"/>
+  <polygon points="104.0,74.0 132.5,94.7 121.6,128.3 86.4,128.3 75.5,94.7" fill="#23262e" data-role="accent"/>
+  <path d="M104.0 74.0 L104.0 48.0" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M132.5 94.7 L157.3 86.7" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M121.6 128.3 L136.9 149.3" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M86.4 128.3 L71.1 149.3" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <path d="M75.5 94.7 L50.7 86.7" fill="none" stroke="#23262e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" data-lod="1" data-shadow="false"/>
+  <polygon points="104.0,50.0 87.8,38.3 94.0,19.2 114.0,19.2 120.2,38.3" fill="#23262e" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="155.4,87.3 161.5,68.3 181.5,68.3 187.7,87.3 171.5,99.1" fill="#23262e" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="135.7,147.7 155.7,147.7 161.9,166.7 145.7,178.4 129.6,166.7" fill="#23262e" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="72.3,147.7 78.4,166.7 62.3,178.4 46.1,166.7 52.3,147.7" fill="#23262e" data-role="accent" data-lod="1" data-shadow="false"/>
+  <polygon points="52.6,87.3 36.5,99.1 20.3,87.3 26.5,68.3 46.5,68.3" fill="#23262e" data-role="accent" data-lod="1" data-shadow="false"/>
+  <ellipse cx="66" cy="64" rx="24" ry="12" fill="#ffffff" data-lod="1" data-shadow="false" opacity="0.7" transform="rotate(-38 66 64)"/>
+</svg>

@@ -1,4 +1,4 @@
-=== SYSTEM PROMPT (46679 characters, about 11670 tokens) ===
+=== SYSTEM PROMPT (50351 characters, about 12588 tokens) ===
 You are the screenwriter and director of "reel", an offline renderer that turns ONE JSON scene spec into a 45-60 second vertical animated short (9:16, 1080x1920). The user sends a SCRIPT. You reply with the scene spec for it, and nothing else.
 
 Your reply is machine-validated: JSON syntax first, then the JSON schema, then a linter that checks every name, every parameter, every time window and the duration budget. Each problem it finds is sent back to you, and you must answer again with the FULL corrected JSON. So be exact: use only names from the CATALOG below, spelled as written, and never invent parameters.
@@ -272,20 +272,29 @@ OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale
 - airplane: A white passenger airplane with blue tail, wings and a row of windows, side view [size 0.49; roles accent, body; words aeroplane, plane, jet, airliner, aircraft]
 - apple: A red apple with a stem, a green leaf and a shiny highlight [size 0.23; roles body; words fruit, red apple, seb, phal]
 - auto_rickshaw: A green and yellow Indian auto rickshaw (three-wheeler) with a canopy, side view [size 0.56; roles body, accent; words rickshaw, auto, autorickshaw, auto-rickshaw, tuk tuk]
+- backpack: A blue school backpack with an orange front pocket, a top handle and straps,... [size 0.4; roles body, accent, trim; words bag, school bag, schoolbag, rucksack, basta]
+- ball: A black and white football with panels and a highlight, side view [size 0.21; roles body, accent; words football, soccer ball, soccer, footy, gend]
 - balloon: A round red balloon with a knot and a curly string, front view [size 0.59; roles body; words party balloon, birthday balloon, helium balloon, gubbara, gubbare]
 - banana: A bunch of three ripe yellow bananas [size 0.26; roles body; words fruit, bunch of bananas, kela, kele, phal]
 - bank: A columned bank building with a pediment, a coin emblem and front steps, fron... [size 1.25; roles accent, body; words bank building, bank branch, finance, treasury, financial institution]
 - bar_chart: A presentation board with four rising bars and a red upward arrow, front view [size 0.73; roles body, accent; words bar graph, chart, graph, growth, statistics]
+- basket: A woven wicker basket with a handle and a red cloth peeking out, side view [size 0.26; roles body, accent; words wicker basket, picnic basket, tokri, tokra, dalia]
 - bed: A single bed with a pillow and a teal blanket, side view [size 0.49; roles accent, body; words single bed, cot, bedding, bistar, palang]
+- bell: A golden hand bell with a wooden handle and a clapper, front view [size 0.23; roles trim, body; words school bell, hand bell, handbell, ghanti, ghantee]
 - bench: A wooden park bench with green metal legs, three-quarter view [size 0.5; roles accent, body; words benches, park bench, garden bench, wooden bench]
 - bicycle: A classic teal bicycle with spoked wheels, side view [size 0.49; words cycle, pedal bike, push bike, saikil]
+- blackboard: A green blackboard with a wooden frame, chalk writing and a chalk ledge, fron... [size 0.52; roles body; words chalkboard, board, greenboard, green board]
 - boat: A small sailing boat with a white sail and a yellow hull on a little wave, si... [size 0.7; roles accent, body; words sailboat, sailing boat, yacht, dinghy, small boat]
 - book: A closed green hardcover book with a gold star, three-quarter view, page edge... [size 0.26; roles body; words hardcover, textbook, novel, storybook, reading]
+- bottle: A blue water bottle with a red cap and a label, side view [size 0.3; roles body, accent; words water bottle, flask, botal, botle, botel]
+- bowl: A white bowl of hot orange soup with steam, side view [size 0.16; roles body; words soup, soup bowl, katori, katora, dal bowl]
+- bucket: A blue bucket with a metal handle, side view [size 0.28; roles body; words pail, balti, baalti]
 - building: A tall apartment block with rows of windows and a rooftop water tank, front view [size 2; roles body, accent; words apartment, apartment block, flat, high rise, skyscraper]
 - bus: An orange city bus with a row of windows and a front door, side view [size 0.66; roles body, accent; words buses, city bus, public bus, school bus, passenger bus]
 - cake: A pink two-layer birthday cake with white icing, cherries and three lit candles [size 0.45; roles body, accent; words birthday cake, birthday, celebration, dessert, janamdin]
 - calculator: A handheld calculator with a green screen and a grid of keys, front view [size 0.33; roles body, accent; words calc, math, mathematics, accounting, calculation]
 - camera: A compact camera with a big lens, front view [size 0.33; roles accent, body; words dslr, mirrorless, digital camera, photo camera, photography]
+- candle: A lit cream candle with melted wax on a brass dish, front view [size 0.33; roles trim, body; words mombatti, mombattiyan, candlelight, taper]
 - car: A small red car, side view [size 0.52; roles body; words taxi, automobile, vehicle, sedan]
 - cash: A neat bundle of green banknotes with a paper band, three-quarter view [size 0.21; roles body, accent; words money, notes, banknote, bundle of cash, rupee notes]
 - chair: A wooden chair, three-quarter side view [size 0.57; roles body; words seat, wooden chair, dining chair, kursi, kursiyan]
@@ -293,9 +302,13 @@ OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale
 - cloud: A fluffy white cloud with a pale blue underside [size 0.35; roles body; words cloudy, fluffy cloud, badal, baadal, megh]
 - coin: A shiny gold rupee coin, front view [size 0.17; roles body; words money, rupee, gold coin, sikka, paisa]
 - computer: A desktop computer: monitor with a lit screen, keyboard and mouse, front view [size 0.59; roles body; words desktop, desktop computer, desktop pc, pc, monitor]
+- cookie: A round chocolate chip cookie, top view [size 0.12; roles body, accent; words biscuit, chocolate chip, biskut, biscut]
 - credit_card: A blue bank card with a gold chip, front view [size 0.21; roles body; words card, debit card, atm card, bank card, payment card]
+- cricket_bat: A cricket bat with a wide wooden blade and a green rubber grip, front view [size 0.57; roles body, trim, accent; words bat, balla, willow]
 - crown: A gold royal crown with three coloured jewels, front view [size 0.28; roles body, accent; words royal, royalty, tiara, king crown, queen crown]
+- door: A wooden door with four panels, a brass knob and a frame, front view [size 0.9; roles body, accent; words doorway, entrance, darwaza, darwaja, dwar]
 - envelope: A sealed cream letter envelope with a red wax seal and heart, front view [size 0.21; roles body, accent; words letter, mail, email, invitation, chitthi]
+- fence: A white wooden picket fence, five pointed pickets and two rails, front view [size 0.38; roles body; words picket fence, railing, garden fence, baad, bada]
 - fire: A campfire: red, orange and yellow flames on two crossed logs [size 0.49; roles body, accent; words flame, campfire, bonfire, blaze, burning]
 - flower: A pink flower on a green stem with two leaves, front view [size 0.45; roles body, accent; words bloom, blossom, petal, phool, phul]
 - gear: A blue cog wheel with eight teeth and a hub hole, front view [size 0.35; roles body; words cog, cogwheel, setting, mechanism, engineering]
@@ -308,7 +321,10 @@ OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale
 - house: A cosy cottage with a tiled red roof, chimney, door and two windows, front view [size 1.25; roles body, accent; words cottage, bungalow, dwelling, ghar, makaan]
 - ice_cream: An ice cream cone with a cream scoop, a pink scoop and a cherry on top [size 0.4; roles accent, body; words icecream, ice-cream, ice cream cone, gelato, dessert]
 - indian_flag: The Indian tricolour with its navy Ashoka Chakra, waving on a pole [size 1.32; words india flag, flag of india, tiranga, national flag, flag]
+- jar: A glass jar of cookies with a red lid, front view [size 0.26; roles body, accent; words cookie jar, glass jar, maratban, jaar, dabba]
 - key: An old-fashioned golden key with a clover-shaped bow, side view [size 0.23; roles body; words old key, skeleton key, antique key, door key, unlock]
+- kite: A red and yellow diamond kite with sticks and a bow-tied tail, front view [size 0.59; roles accent, body; words patang, patangein, patangbaazi]
+- ladder: A wooden ladder with two rails and seven rungs, front view [size 0.73; roles body; words stepladder, seedhi, sidhi, seedhiyan]
 - lamp: A floor-standing lamp with a warm yellow shade and a glowing bulb, front view [size 1.08; roles accent, body; words floor lamp, standing lamp, lampshade, reading lamp, batti]
 - laptop: An open laptop, front three-quarter view, lit screen showing a dashboard [size 0.37; roles body; words notebook computer, laptop computer, macbook, ultrabook]
 - light_bulb: A glowing idea light bulb with a screw base and shining rays [size 0.47; roles body; words bulb, lightbulb, idea, bright idea, innovation]
@@ -316,14 +332,17 @@ OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale
 - magnifier: A magnifying glass with a gold rim, light blue lens and wooden handle [size 0.49; roles accent, body; words magnifying glass, magnify glass, loupe, search, find]
 - mango: A ripe yellow-orange mango with a red blush and a green leaf [size 0.26; roles body, accent; words mangoes, fruit, ripe mango, aam, phal]
 - medal: A gold medal with a star on a red, white and blue ribbon, front view [size 0.37; roles accent, body; words gold medal, award, prize, olympic, first place]
+- medicine: A brown medicine bottle with a white cap and a red cross label, front view [size 0.19; roles body, accent; words tablet, pill, syrup, drug, dawa]
 - microphone: A studio microphone on a stand with a round pop filter, front view [size 0.57; roles accent, body; words mic, mike, studio mic, pop filter, podcast]
 - money_bag: A tied cloth money sack marked with a rupee sign, front view [size 0.4; roles body, accent; words moneybag, bag of money, sack of money, money sack, cash bag]
 - moon: A yellow crescent moon with two small stars [size 0.49; roles body, accent; words crescent, half moon, moonlight, chand, chaand]
 - motorcycle: A red commuter motorbike with tank, seat, headlamp and exhaust, side view [size 0.54; roles body; words motorbike, bike, two wheeler]
 - mountain: A single snow-capped mountain with a shaded right side [size 1.36; roles body; words peak, summit, snowy peak, snow mountain, himalaya]
+- notebook: A blue school notebook with a white label and a spiral edge, front view [size 0.19; roles body; words copy, copybook, exercise book, diary, kapi]
 - phone: A smartphone, front view, with a lit screen and colourful app icons [size 0.3; roles body; words mobile, mobile phone, smartphone, smart phone, cellphone]
 - piggy_bank: A pink piggy bank with a coin slot and a gold coin, side view facing right [size 0.38; roles body; words piggy, piggybank, saving, money box, coin bank]
 - pizza: A whole pepperoni pizza seen from above with one slice cut and pulled out [size 0.38; roles body, accent; words pizza slice, pepperoni, fast food, junk food, italian food]
+- pot: A copper cooking pot with a lid, two handles and steam, side view [size 0.26; roles body, trim; words cooking pot, saucepan, stockpot, handi, degchi]
 - rainbow: A rainbow arc of six colour bands with a small cloud at each end [size 0.66; roles body; words indradhanush, indra dhanush, indradhanu]
 - rocket: A cartoon rocket pointing up, with fins, a porthole and a flame [size 1.25; roles body, accent; words spaceship, spacecraft, space rocket, launch, lift off]
 - samosa: A golden fried samosa with a small bowl of green chutney beside it [size 0.23; roles body, accent; words snack, indian snack, street food, fried snack, samose]
@@ -334,13 +353,18 @@ OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale
 - sun: A warm cartoon sun with short rays and a soft glow ring [size 0.59; roles body; words sunshine, sunlight, sunny, suraj, surya]
 - table: A wooden dining table with four legs, three-quarter view [size 0.52; roles body; words dining table, wooden table, mez, mej]
 - tea_cup: A blue cup of hot chai on a saucer with wavy steam, side view [size 0.28; roles body, accent; words chai, tea, cuppa, cup, teacup]
+- teddy_bear: A brown teddy bear with a red bow tie, front view [size 0.35; roles body, accent, trim; words teddy, teddies, soft toy, stuffed toy, stuffed animal]
 - temple: An Indian temple (mandir) with a shikhara spire, steps, a small flag and a ha... [size 1.48; roles body, accent; words mandir, hindu temple, shrine, place of worship, devalaya]
+- tomato: A ripe red tomato with a green star-shaped stalk, side view [size 0.14; roles body, accent; words tomatoes, tamatar, tamaatar]
+- torch: A yellow flashlight with a black switch and a glowing lens, standing up [size 0.26; roles body, trim; words flashlight, torches, pocket torch, tourch, torch light]
 - tractor: A green farm tractor with a big rear wheel, small front wheel and exhaust pip... [size 0.59; roles body, accent; words farm tractor, farm vehicle, vehicle, traktar, trektar]
 - train: A blue Indian railway diesel locomotive pulling one passenger coach, side view [size 0.7; roles body, accent; words railway, railroad, locomotive, express train, passenger train]
 - tree: A leafy tree [size 1.43; roles trunk, leaves; words oak, forest tree]
 - trophy: A golden winner's trophy cup with two handles on a wooden base, front view [size 0.5; roles body, accent; words trophies, winner cup, champion, championship, award]
 - truck: A cargo truck with a blue cab and a canvas-covered load, side view [size 0.66; roles accent, body; words lorry, lorries, cargo truck, goods truck, delivery truck]
 - tv: A flat-screen TV with a colourful picture on a small wooden stand, front view [size 0.7; roles accent, body; words television, telly, flat screen, flat-screen tv]
+- umbrella: A red open umbrella with a curved handle, front view [size 0.57; roles body, trim; words parasol, brolly, chhata, chhatri, chaata]
+- window: A white window with four panes of sky-blue glass and a sill, front view [size 0.45; roles body, accent; words pane, window frame, khidki, khidkiyan, jharokha]
 
 ## 6. WORKED EXAMPLE
 Two characters (scene 3 of 10 below uses them):
@@ -364,7 +388,7 @@ Grandpa walks in, yawning. "Impossible. I guarded that jar all day."
 
 Reply with the JSON object only.
 
-=== JSON SCHEMA (27260 characters; sent through the provider's structured-output channel, not in the prompt text) ===
+=== JSON SCHEMA (27647 characters; sent through the provider's structured-output channel, not in the prompt text) ===
 {
  "$defs": {
   "ActionSpec": {
@@ -1315,20 +1339,29 @@ Reply with the JSON object only.
       "airplane",
       "apple",
       "auto_rickshaw",
+      "backpack",
+      "ball",
       "balloon",
       "banana",
       "bank",
       "bar_chart",
+      "basket",
       "bed",
+      "bell",
       "bench",
       "bicycle",
+      "blackboard",
       "boat",
       "book",
+      "bottle",
+      "bowl",
+      "bucket",
       "building",
       "bus",
       "cake",
       "calculator",
       "camera",
+      "candle",
       "car",
       "cash",
       "chair",
@@ -1336,9 +1369,13 @@ Reply with the JSON object only.
       "cloud",
       "coin",
       "computer",
+      "cookie",
       "credit_card",
+      "cricket_bat",
       "crown",
+      "door",
       "envelope",
+      "fence",
       "fire",
       "flower",
       "gear",
@@ -1351,7 +1388,10 @@ Reply with the JSON object only.
       "house",
       "ice_cream",
       "indian_flag",
+      "jar",
       "key",
+      "kite",
+      "ladder",
       "lamp",
       "laptop",
       "light_bulb",
@@ -1359,14 +1399,17 @@ Reply with the JSON object only.
       "magnifier",
       "mango",
       "medal",
+      "medicine",
       "microphone",
       "money_bag",
       "moon",
       "motorcycle",
       "mountain",
+      "notebook",
       "phone",
       "piggy_bank",
       "pizza",
+      "pot",
       "rainbow",
       "rocket",
       "samosa",
@@ -1377,13 +1420,18 @@ Reply with the JSON object only.
       "sun",
       "table",
       "tea_cup",
+      "teddy_bear",
       "temple",
+      "tomato",
+      "torch",
       "tractor",
       "train",
       "tree",
       "trophy",
       "truck",
-      "tv"
+      "tv",
+      "umbrella",
+      "window"
      ]
     },
     "position": {

@@ -236,7 +236,14 @@
         "\u0939\u094b\u091f\u0932",
         "\u0922\u093e\u092c\u093e",
         "\u091a\u093e\u092f \u0915\u0940 \u0926\u0941\u0915\u093e\u0928",
-        "chai ki dukaan"
+        "chai ki dukaan",
+        "diner",
+        "canteen",
+        "eatery",
+        "tea stall",
+        "bakery",
+        "\u0915\u0948\u0902\u091f\u0940\u0928",
+        "bhojanalay"
       ],
       "slots": [
         "center",
@@ -302,7 +309,10 @@
         "\u0915\u094d\u0932\u093e\u0938\u0930\u0942\u092e",
         "\u0915\u094d\u0932\u093e\u0938",
         "kaksha",
-        "pathshala"
+        "pathshala",
+        "lecture hall",
+        "tuition",
+        "\u0915\u0915\u094d\u0937\u093e-\u0915\u0915\u094d\u0937"
       ],
       "slots": [
         "bench",
@@ -438,7 +448,17 @@
         "\u092b\u0938\u0932",
         "khet",
         "kheti",
-        "fasal"
+        "fasal",
+        "barn",
+        "barns",
+        "barnyard",
+        "farmyard",
+        "cowshed",
+        "haystack",
+        "khalihan",
+        "\u0916\u0932\u093f\u0939\u093e\u0928",
+        "\u0917\u094c\u0936\u093e\u0932\u093e",
+        "gaushala"
       ],
       "slots": [
         "center",
@@ -600,7 +620,14 @@
         "\u0935\u093e\u0930\u094d\u0921",
         "aspatal",
         "haspatal",
-        "dawakhana"
+        "dawakhana",
+        "icu",
+        "emergency room",
+        "operation theatre",
+        "operating room",
+        "nursing home",
+        "\u0906\u0908\u0938\u0940\u092f\u0942",
+        "\u091a\u093f\u0915\u093f\u0924\u094d\u0938\u093e\u0932\u092f"
       ],
       "slots": [
         "bed",
@@ -667,7 +694,12 @@
         "\u092e\u0902\u0921\u0940",
         "\u0939\u093e\u091f",
         "\u0938\u092c\u094d\u091c\u093c\u0940 \u092e\u0902\u0921\u0940",
-        "sabzi mandi"
+        "sabzi mandi",
+        "shopping street",
+        "stall",
+        "stalls",
+        "vegetable market",
+        "\u092b\u0932 \u092e\u0902\u0921\u0940"
       ],
       "slots": [
         "cart",
@@ -800,7 +832,13 @@
         "\u0911\u092b\u093f\u0938",
         "\u0911\u092b\u093c\u093f\u0938",
         "daftar",
-        "karyalay"
+        "karyalay",
+        "boardroom",
+        "cubicle",
+        "meeting room",
+        "conference room",
+        "headquarters",
+        "\u0915\u0949\u0930\u094d\u092a\u094b\u0930\u0947\u091f"
       ],
       "slots": [
         "center",
@@ -867,7 +905,12 @@
         "bagh",
         "bagicha",
         "bageecha",
-        "udyan"
+        "udyan",
+        "playground",
+        "jungle gym",
+        "\u0916\u0947\u0932 \u0915\u093e \u092e\u0948\u0926\u093e\u0928",
+        "maidan",
+        "\u092e\u0948\u0926\u093e\u0928"
       ],
       "slots": [
         "bench",
@@ -1174,7 +1217,18 @@
         "\u0906\u0915\u093e\u0936\u0917\u0902\u0917\u093e",
         "antariksh",
         "brahmand",
-        "akashganga"
+        "akashganga",
+        "planet",
+        "planets",
+        "orbit",
+        "spaceship",
+        "spacecraft",
+        "satellite",
+        "starship",
+        "zero gravity",
+        "\u0906\u0915\u093e\u0936",
+        "\u0917\u094d\u0930\u0939",
+        "grah"
       ],
       "slots": [
         "center",
@@ -1417,7 +1471,12 @@
         "gaon",
         "gaanv",
         "gram",
-        "dehat"
+        "dehat",
+        "hut",
+        "huts",
+        "cottage",
+        "\u091d\u094b\u092a\u0921\u093c\u0940",
+        "jhopdi"
       ],
       "slots": [
         "center",
@@ -3428,6 +3487,67 @@
       "library": "builtin"
     },
     {
+      "name": "backpack",
+      "summary": "A blue school backpack with an orange front pocket, a top handle and straps, front view",
+      "tags": [
+        "backpack",
+        "bag",
+        "school bag",
+        "schoolbag",
+        "rucksack",
+        "bags",
+        "\u092c\u0948\u0917",
+        "\u092c\u0938\u094d\u0924\u093e",
+        "\u0938\u094d\u0915\u0942\u0932 \u092c\u0948\u0917",
+        "\u0925\u0948\u0932\u093e",
+        "\u092c\u0938\u094d\u0924\u094b\u0902",
+        "basta",
+        "jhola"
+      ],
+      "height": 230.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent",
+        "trim"
+      ],
+      "size": 0.4,
+      "aspect": 0.7764,
+      "library": "builtin"
+    },
+    {
+      "name": "ball",
+      "summary": "A black and white football with panels and a highlight, side view",
+      "tags": [
+        "ball",
+        "football",
+        "soccer ball",
+        "soccer",
+        "footy",
+        "\u0917\u0947\u0902\u0926",
+        "\u092b\u0941\u091f\u092c\u0949\u0932",
+        "\u092b\u093c\u0941\u091f\u092c\u0949\u0932",
+        "gend",
+        "futbol",
+        "football ball"
+      ],
+      "height": 120.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.21,
+      "aspect": 1.0,
+      "library": "builtin"
+    },
+    {
       "name": "balloon",
       "summary": "A round red balloon with a knot and a curly string, front view",
       "tags": [
@@ -3546,6 +3666,35 @@
       "library": "builtin"
     },
     {
+      "name": "basket",
+      "summary": "A woven wicker basket with a handle and a red cloth peeking out, side view",
+      "tags": [
+        "basket",
+        "wicker basket",
+        "picnic basket",
+        "baskets",
+        "\u091f\u094b\u0915\u0930\u0940",
+        "\u091f\u094b\u0915\u0930\u093e",
+        "\u0921\u0932\u093f\u092f\u093e",
+        "\u091f\u094b\u0915\u0930\u093f\u092f\u093e\u0901",
+        "tokri",
+        "tokra",
+        "dalia"
+      ],
+      "height": 150.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.26,
+      "aspect": 1.0799,
+      "library": "builtin"
+    },
+    {
       "name": "bed",
       "summary": "A single bed with a pillow and a teal blanket, side view",
       "tags": [
@@ -3572,6 +3721,35 @@
       ],
       "size": 0.49,
       "aspect": 2.3214,
+      "library": "builtin"
+    },
+    {
+      "name": "bell",
+      "summary": "A golden hand bell with a wooden handle and a clapper, front view",
+      "tags": [
+        "bell",
+        "bells",
+        "school bell",
+        "hand bell",
+        "handbell",
+        "\u0918\u0902\u091f\u0940",
+        "\u0918\u0923\u094d\u091f\u0940",
+        "\u0918\u0902\u091f\u093e",
+        "ghanti",
+        "ghantee",
+        "ghanta"
+      ],
+      "height": 130.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "trim",
+        "body"
+      ],
+      "size": 0.23,
+      "aspect": 0.6578,
       "library": "builtin"
     },
     {
@@ -3623,6 +3801,33 @@
       ],
       "size": 0.49,
       "aspect": 1.8295,
+      "library": "builtin"
+    },
+    {
+      "name": "blackboard",
+      "summary": "A green blackboard with a wooden frame, chalk writing and a chalk ledge, front view",
+      "tags": [
+        "blackboard",
+        "chalkboard",
+        "blackboards",
+        "\u092c\u094d\u0932\u0948\u0915\u092c\u094b\u0930\u094d\u0921",
+        "\u0936\u094d\u092f\u093e\u092e\u092a\u091f\u094d\u091f",
+        "\u0924\u0916\u093c\u094d\u0924\u093e",
+        "\u0924\u0916\u094d\u0924\u093e",
+        "board",
+        "greenboard",
+        "green board"
+      ],
+      "height": 300.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body"
+      ],
+      "size": 0.52,
+      "aspect": 1.1515,
       "library": "builtin"
     },
     {
@@ -3688,6 +3893,84 @@
       ],
       "size": 0.26,
       "aspect": 0.8919,
+      "library": "builtin"
+    },
+    {
+      "name": "bottle",
+      "summary": "A blue water bottle with a red cap and a label, side view",
+      "tags": [
+        "bottle",
+        "water bottle",
+        "bottles",
+        "flask",
+        "\u092c\u094b\u0924\u0932",
+        "\u092c\u094b\u0924\u0932\u0947\u0902",
+        "botal",
+        "botle",
+        "botel"
+      ],
+      "height": 170.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.3,
+      "aspect": 0.3158,
+      "library": "builtin"
+    },
+    {
+      "name": "bowl",
+      "summary": "A white bowl of hot orange soup with steam, side view",
+      "tags": [
+        "bowl",
+        "bowls",
+        "soup",
+        "soup bowl",
+        "katori",
+        "\u0915\u091f\u094b\u0930\u0940",
+        "\u0915\u091f\u094b\u0930\u093e",
+        "\u0938\u0942\u092a",
+        "katora",
+        "dal bowl"
+      ],
+      "height": 90.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body"
+      ],
+      "size": 0.16,
+      "aspect": 1.2216,
+      "library": "builtin"
+    },
+    {
+      "name": "bucket",
+      "summary": "A blue bucket with a metal handle, side view",
+      "tags": [
+        "bucket",
+        "buckets",
+        "pail",
+        "\u092c\u093e\u0932\u094d\u091f\u0940",
+        "\u092c\u093e\u0932\u094d\u091f\u093f\u092f\u093e\u0901",
+        "balti",
+        "baalti"
+      ],
+      "height": 160.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body"
+      ],
+      "size": 0.28,
+      "aspect": 1.024,
       "library": "builtin"
     },
     {
@@ -3845,6 +4128,32 @@
       ],
       "size": 0.33,
       "aspect": 1.5886,
+      "library": "builtin"
+    },
+    {
+      "name": "candle",
+      "summary": "A lit cream candle with melted wax on a brass dish, front view",
+      "tags": [
+        "candle",
+        "candles",
+        "mombatti",
+        "\u092e\u094b\u092e\u092c\u0924\u094d\u0924\u0940",
+        "\u092e\u094b\u092e\u092c\u0924\u094d\u0924\u093f\u092f\u093e\u0901",
+        "mombattiyan",
+        "candlelight",
+        "taper"
+      ],
+      "height": 190.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "trim",
+        "body"
+      ],
+      "size": 0.33,
+      "aspect": 0.3763,
       "library": "builtin"
     },
     {
@@ -4053,6 +4362,35 @@
       "library": "builtin"
     },
     {
+      "name": "cookie",
+      "summary": "A round chocolate chip cookie, top view",
+      "tags": [
+        "cookie",
+        "cookies",
+        "biscuit",
+        "biscuits",
+        "chocolate chip",
+        "\u092c\u093f\u0938\u094d\u0915\u0941\u091f",
+        "\u092c\u093f\u0938\u094d\u0915\u093f\u091f",
+        "\u0915\u0941\u0915\u0940",
+        "\u0915\u0941\u0915\u0940\u091c\u093c",
+        "biskut",
+        "biscut"
+      ],
+      "height": 70.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.12,
+      "aspect": 0.9908,
+      "library": "builtin"
+    },
+    {
       "name": "credit_card",
       "summary": "A blue bank card with a gold chip, front view",
       "tags": [
@@ -4082,6 +4420,32 @@
       "library": "builtin"
     },
     {
+      "name": "cricket_bat",
+      "summary": "A cricket bat with a wide wooden blade and a green rubber grip, front view",
+      "tags": [
+        "cricket bat",
+        "bat",
+        "bats",
+        "\u092c\u0932\u094d\u0932\u093e",
+        "\u092c\u0948\u091f",
+        "balla",
+        "willow"
+      ],
+      "height": 330.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "trim",
+        "accent"
+      ],
+      "size": 0.57,
+      "aspect": 0.2222,
+      "library": "builtin"
+    },
+    {
       "name": "crown",
       "summary": "A gold royal crown with three coloured jewels, front view",
       "tags": [
@@ -4108,6 +4472,37 @@
       ],
       "size": 0.28,
       "aspect": 1.1683,
+      "library": "builtin"
+    },
+    {
+      "name": "door",
+      "summary": "A wooden door with four panels, a brass knob and a frame, front view",
+      "tags": [
+        "door",
+        "doors",
+        "doorway",
+        "entrance",
+        "\u0926\u0930\u0935\u093e\u091c\u093c\u093e",
+        "\u0926\u0930\u0935\u093e\u091c\u093e",
+        "\u0926\u0930\u0935\u093e\u091c\u093c\u0947",
+        "\u0926\u094d\u0935\u093e\u0930",
+        "\u0915\u093f\u0935\u093e\u0921\u093c",
+        "darwaza",
+        "darwaja",
+        "dwar",
+        "kivad"
+      ],
+      "height": 520.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.9,
+      "aspect": 0.5238,
       "library": "builtin"
     },
     {
@@ -4141,6 +4536,35 @@
       ],
       "size": 0.21,
       "aspect": 1.4167,
+      "library": "builtin"
+    },
+    {
+      "name": "fence",
+      "summary": "A white wooden picket fence, five pointed pickets and two rails, front view",
+      "tags": [
+        "fence",
+        "fences",
+        "picket fence",
+        "railing",
+        "garden fence",
+        "\u092c\u093e\u0921\u093c",
+        "\u092c\u093e\u0921\u093c\u093e",
+        "\u0918\u0947\u0930\u093e",
+        "baad",
+        "bada",
+        "ghera",
+        "boundary"
+      ],
+      "height": 220.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body"
+      ],
+      "size": 0.38,
+      "aspect": 2.4557,
       "library": "builtin"
     },
     {
@@ -4515,6 +4939,36 @@
       "library": "builtin"
     },
     {
+      "name": "jar",
+      "summary": "A glass jar of cookies with a red lid, front view",
+      "tags": [
+        "jar",
+        "jars",
+        "cookie jar",
+        "glass jar",
+        "\u092e\u0930\u094d\u0924\u092c\u093e\u0928",
+        "\u091c\u093e\u0930",
+        "\u0921\u093f\u092c\u094d\u092c\u093e",
+        "\u0921\u092c\u094d\u092c\u093e",
+        "maratban",
+        "jaar",
+        "dabba",
+        "dibba"
+      ],
+      "height": 150.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.26,
+      "aspect": 0.7097,
+      "library": "builtin"
+    },
+    {
       "name": "key",
       "summary": "An old-fashioned golden key with a clover-shaped bow, side view",
       "tags": [
@@ -4542,6 +4996,58 @@
       ],
       "size": 0.23,
       "aspect": 2.4101,
+      "library": "builtin"
+    },
+    {
+      "name": "kite",
+      "summary": "A red and yellow diamond kite with sticks and a bow-tied tail, front view",
+      "tags": [
+        "kite",
+        "kites",
+        "\u092a\u0924\u0902\u0917",
+        "\u092a\u0924\u0902\u0917\u0947\u0902",
+        "\u092a\u0924\u0902\u0917\u092c\u093e\u091c\u093c\u0940",
+        "patang",
+        "patangein",
+        "patangbaazi"
+      ],
+      "height": 340.0,
+      "anchor": [
+        0.5,
+        0.3
+      ],
+      "roles": [
+        "accent",
+        "body"
+      ],
+      "size": 0.59,
+      "aspect": 0.4639,
+      "library": "builtin"
+    },
+    {
+      "name": "ladder",
+      "summary": "A wooden ladder with two rails and seven rungs, front view",
+      "tags": [
+        "ladder",
+        "ladders",
+        "stepladder",
+        "\u0938\u0940\u0922\u093c\u0940",
+        "\u0938\u0940\u0922\u093c\u093f\u092f\u093e\u0901",
+        "\u0938\u0940\u0922\u093c\u093f\u092f\u093e\u0902",
+        "seedhi",
+        "sidhi",
+        "seedhiyan"
+      ],
+      "height": 420.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body"
+      ],
+      "size": 0.73,
+      "aspect": 0.287,
       "library": "builtin"
     },
     {
@@ -4756,6 +5262,39 @@
       "library": "builtin"
     },
     {
+      "name": "medicine",
+      "summary": "A brown medicine bottle with a white cap and a red cross label, front view",
+      "tags": [
+        "medicine",
+        "medicines",
+        "tablet",
+        "tablets",
+        "pill",
+        "pills",
+        "syrup",
+        "drug",
+        "\u0926\u0935\u093e",
+        "\u0926\u0935\u093e\u0908",
+        "\u0926\u0935\u093e\u0907\u092f\u093e\u0901",
+        "\u0917\u094b\u0932\u0940",
+        "dawa",
+        "dawai",
+        "goli"
+      ],
+      "height": 110.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.19,
+      "aspect": 0.4848,
+      "library": "builtin"
+    },
+    {
       "name": "microphone",
       "summary": "A studio microphone on a stand with a round pop filter, front view",
       "tags": [
@@ -4911,6 +5450,34 @@
       "library": "builtin"
     },
     {
+      "name": "notebook",
+      "summary": "A blue school notebook with a white label and a spiral edge, front view",
+      "tags": [
+        "notebook",
+        "notebooks",
+        "copy",
+        "copybook",
+        "exercise book",
+        "diary",
+        "\u0915\u0949\u092a\u0940",
+        "\u0928\u094b\u091f\u092c\u0941\u0915",
+        "\u0921\u093e\u092f\u0930\u0940",
+        "kapi",
+        "copybooks"
+      ],
+      "height": 110.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body"
+      ],
+      "size": 0.19,
+      "aspect": 0.7339,
+      "library": "builtin"
+    },
+    {
       "name": "phone",
       "summary": "A smartphone, front view, with a lit screen and colourful app icons",
       "tags": [
@@ -4994,6 +5561,37 @@
       ],
       "size": 0.38,
       "aspect": 1.0755,
+      "library": "builtin"
+    },
+    {
+      "name": "pot",
+      "summary": "A copper cooking pot with a lid, two handles and steam, side view",
+      "tags": [
+        "pot",
+        "cooking pot",
+        "saucepan",
+        "stockpot",
+        "handi",
+        "degchi",
+        "patila",
+        "\u0939\u093e\u0902\u0921\u0940",
+        "\u0939\u093e\u0901\u0921\u0940",
+        "\u092a\u0924\u0940\u0932\u093e",
+        "\u0926\u0947\u0917\u091a\u0940",
+        "\u092c\u0930\u094d\u0924\u0928",
+        "bartan"
+      ],
+      "height": 150.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "trim"
+      ],
+      "size": 0.26,
+      "aspect": 1.3807,
       "library": "builtin"
     },
     {
@@ -5289,6 +5887,35 @@
       "library": "builtin"
     },
     {
+      "name": "teddy_bear",
+      "summary": "A brown teddy bear with a red bow tie, front view",
+      "tags": [
+        "teddy bear",
+        "teddy",
+        "teddies",
+        "soft toy",
+        "stuffed toy",
+        "stuffed animal",
+        "\u091f\u0947\u0921\u0940",
+        "\u091f\u0947\u0921\u0940 \u092c\u093f\u092f\u0930",
+        "\u092d\u093e\u0932\u0942 \u0915\u093e \u0916\u093f\u0932\u094c\u0928\u093e",
+        "teddy bear toy"
+      ],
+      "height": 200.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent",
+        "trim"
+      ],
+      "size": 0.35,
+      "aspect": 0.9147,
+      "library": "builtin"
+    },
+    {
       "name": "temple",
       "summary": "An Indian temple (mandir) with a shikhara spire, steps, a small flag and a hanging bell",
       "tags": [
@@ -5319,6 +5946,56 @@
       ],
       "size": 1.48,
       "aspect": 0.729,
+      "library": "builtin"
+    },
+    {
+      "name": "tomato",
+      "summary": "A ripe red tomato with a green star-shaped stalk, side view",
+      "tags": [
+        "tomato",
+        "tomatoes",
+        "\u091f\u092e\u093e\u091f\u0930",
+        "tamatar",
+        "tamaatar",
+        "tomatos"
+      ],
+      "height": 80.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.14,
+      "aspect": 1.0,
+      "library": "builtin"
+    },
+    {
+      "name": "torch",
+      "summary": "A yellow flashlight with a black switch and a glowing lens, standing up",
+      "tags": [
+        "torch",
+        "flashlight",
+        "torches",
+        "pocket torch",
+        "\u091f\u0949\u0930\u094d\u091a",
+        "\u091f\u093e\u0930\u094d\u091a",
+        "tourch",
+        "torch light"
+      ],
+      "height": 150.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "trim"
+      ],
+      "size": 0.26,
+      "aspect": 0.3429,
       "library": "builtin"
     },
     {
@@ -5494,6 +6171,63 @@
       ],
       "size": 0.7,
       "aspect": 1.26,
+      "library": "builtin"
+    },
+    {
+      "name": "umbrella",
+      "summary": "A red open umbrella with a curved handle, front view",
+      "tags": [
+        "umbrella",
+        "umbrellas",
+        "parasol",
+        "brolly",
+        "\u091b\u093e\u0924\u093e",
+        "\u091b\u0924\u0930\u0940",
+        "\u091b\u093e\u0924\u0947",
+        "chhata",
+        "chhatri",
+        "chaata",
+        "chhaata"
+      ],
+      "height": 330.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "trim"
+      ],
+      "size": 0.57,
+      "aspect": 0.9877,
+      "library": "builtin"
+    },
+    {
+      "name": "window",
+      "summary": "A white window with four panes of sky-blue glass and a sill, front view",
+      "tags": [
+        "window",
+        "windows",
+        "pane",
+        "window frame",
+        "\u0916\u093f\u0921\u093c\u0915\u0940",
+        "\u0916\u093f\u0921\u093c\u0915\u093f\u092f\u093e\u0901",
+        "\u091d\u0930\u094b\u0916\u093e",
+        "khidki",
+        "khidkiyan",
+        "jharokha"
+      ],
+      "height": 260.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "body",
+        "accent"
+      ],
+      "size": 0.45,
+      "aspect": 0.9342,
       "library": "builtin"
     }
   ],

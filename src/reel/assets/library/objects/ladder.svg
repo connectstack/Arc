@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 460">
+  <rect x="14" y="0" width="18" height="460" rx="6" fill="#c98a4b" data-role="body"/>
+  <rect x="128" y="0" width="18" height="460" rx="6" fill="#c98a4b" data-role="body"/>
+  <rect x="30" y="36" width="100" height="14" rx="4" fill="#a8672d" data-role="body_dark"/>
+  <rect x="30" y="98" width="100" height="14" rx="4" fill="#a8672d" data-role="body_dark"/>
+  <rect x="30" y="160" width="100" height="14" rx="4" fill="#a8672d" data-role="body_dark"/>
+  <rect x="30" y="222" width="100" height="14" rx="4" fill="#a8672d" data-role="body_dark"/>
+  <rect x="30" y="284" width="100" height="14" rx="4" fill="#a8672d" data-role="body_dark"/>
+  <rect x="30" y="346" width="100" height="14" rx="4" fill="#a8672d" data-role="body_dark"/>
+  <rect x="30" y="408" width="100" height="14" rx="4" fill="#a8672d" data-role="body_dark"/>
+  <rect x="24" y="6" width="6" height="448" fill="#e0aa72" data-lod="1" data-shadow="false"/>
+  <rect x="138" y="6" width="6" height="448" fill="#e0aa72" data-lod="1" data-shadow="false"/>
+</svg>

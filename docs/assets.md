@@ -178,7 +178,8 @@ Every planner reads the library through the assets' **tags** (and names), so wha
 * **The offline planner** matches the same words: a place named in a scene is used, a creature or role the library draws ("Max the dog", "a farmer") becomes
   that character, objects a scene names are placed clear of the cast (a vehicle in a sentence that says it drives crosses the frame). A word several things
   answer to ("fruit", "vehicle") is never guessed, and a word that names a place ("school", "hospital") draws the place and not also
-  the building object of the same word (unless the text says "school building"). In a script that is not in English (Hindi, say) there is no "the dog" for the rules to read, so a
+  the building object of the same word (unless the text says "school building"). A place a story names holds from scene to scene until the text names another,
+  and a creature or role that comes in once ("An elephant arrived") is a guest in that scene. In a script that is not in English (Hindi, say) there is no "the dog" for the rules to read, so a
   character it names ("किसान", "गाय") is cast as the asset that answers to the word, under the same rule as English role nouns: it counts when it
   recurs, or when nothing else is named.
 * **What the library lacks.** `reel assets coverage script.txt` (and the New reel page) reads a script before anything is planned and lists what the

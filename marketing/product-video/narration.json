@@ -1,0 +1,14 @@
+{
+  "voice": "Tara (English (India))",
+  "rate": 168,
+  "lines": [
+    { "id": "L1", "text": "Making a short video usually means a timeline, a voice-over, an export, and a lot of waiting." },
+    { "id": "L2", "text": "Reel Studio turns a script into a finished vertical video, on your own machine." },
+    { "id": "L3", "text": "Paste a script in English, Hindi or Hinglish. The planner lays out scenes, characters, camera moves and sound, offline, in seconds." },
+    { "id": "L4", "text": "Then edit it like a real video editor. A live preview that plays with the voice, a lane for every character, and an inspector for every detail." },
+    { "id": "L5", "text": "No script? Build it by hand. Pick a background, cast characters, add objects, actions, sounds and words, one scene at a time, all from the library." },
+    { "id": "L6", "text": "That library holds thirty-nine characters, seventy-two objects and twenty places, and you can add your own artwork." },
+    { "id": "L7", "text": "Export a Full HD vertical video in about eighty seconds on a laptop. The same script and settings always give the same video, and nothing leaves your machine unless you choose it." },
+    { "id": "L8", "text": "Reel Studio. Script in, video out. As a product, as a service, or as an engine inside your own platform." }
+  ]
+}

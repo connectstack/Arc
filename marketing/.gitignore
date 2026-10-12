@@ -1,0 +1,15 @@
+# The tools and the words are the source; what they make (screenshots, frames, audio, video) is rebuilt by the steps in README.md.
+/*
+!/.gitignore
+!/README.md
+!/tools/
+# one-off debugging helpers
+/tools/dbg.mjs
+/tools/smoke.mjs
+/tools/probe_save.mjs
+!/product-video/
+/product-video/*
+!/product-video/narration.json
+!/product-video/player/
+# written by tools/storyboard.mjs
+/product-video/player/timeline.js

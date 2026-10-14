@@ -36,8 +36,9 @@ KIND_FOLDERS: dict[str, AssetKind] = {
     "backgrounds": "place",
 }
 #: what only a jointed body does: on a picture character these take their time and nothing moves (``look_at`` still turns
-#: it to face its target)
-ARMS_ONLY = frozenset({"wave", "point", "pick_up"})
+#: it to face its target).  ``pick_up`` is not here: the crouch tips the whole picture forward, which is how an animal bows to
+#: the ground (to pick something up, or to drink)
+ARMS_ONLY = frozenset({"wave", "point"})
 SVG_EXT = (".svg",)
 RASTER_EXT = (".png", ".jpg", ".jpeg", ".webp")
 ART_EXT = SVG_EXT + RASTER_EXT

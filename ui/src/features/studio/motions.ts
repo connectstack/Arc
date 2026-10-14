@@ -1,4 +1,4 @@
-// What an object can do over time: the eight motions of the engine (reel/assets/objects.py), what each needs, how a new one starts,
+// What an object can do over time: the nine motions of the engine (reel/assets/objects.py), what each needs, how a new one starts,
 // and where a move goes on the stage. The timeline, the inspector and the stage all read this one table.
 import type { Catalog, ObjectMotion, Scene, SceneObject, Vec2 } from '@/api/types'
 import { entry, objectPoint } from '@/lib/spec'
@@ -63,6 +63,16 @@ export const MOTIONS: MotionDef[] = [
     fields: [
       { kind: 'number', key: 'from', label: 'From size', hint: 'times its own size', fallback: 0, min: 0, max: 6, step: 0.05 },
       { kind: 'number', key: 'to', label: 'To size', hint: 'times its own size', fallback: 1, min: 0, max: 6, step: 0.05 },
+    ],
+  },
+  {
+    type: 'rise',
+    label: 'Rise',
+    summary: 'Stands taller without getting wider, like water filling a jug or a plant growing. By default it rises from nothing to its full height.',
+    length: 2,
+    fields: [
+      { kind: 'number', key: 'from', label: 'From height', hint: 'share of its full height; the water alone, when the picture has water to fill', fallback: 0, min: 0, max: 4, step: 0.05 },
+      { kind: 'number', key: 'to', label: 'To height', hint: 'share of its full height', fallback: 1, min: 0, max: 4, step: 0.05 },
     ],
   },
   { type: 'shake', label: 'Shake', summary: 'Trembles in place, like an engine or a fright.', length: 0.8, fields: [{ kind: 'number', key: 'amount', label: 'Strength', hint: 'as a share of its height', fallback: 0.02, min: 0, max: 0.3, step: 0.005 }] },
@@ -155,6 +165,7 @@ export function motionDetail(m: ObjectMotion): string {
       return `×${m.count ?? 3}`
     case 'fade':
     case 'grow':
+    case 'rise':
       return typeof m.from === 'number' || typeof m.to === 'number' ? `${fmt(typeof m.from === 'number' ? m.from : 0)} → ${fmt(typeof m.to === 'number' ? m.to : 1)}` : ''
     default:
       return ''

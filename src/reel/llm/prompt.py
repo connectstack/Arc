@@ -336,6 +336,7 @@ MOTION_HINTS: dict[str, str] = {
     "pulse": "amount, count",
     "fade": "from, to = 0..1",
     "grow": "from, to = times its size",
+    "rise": "from, to = share of its height standing (water filling a jug)",
     "shake": "amount",
 }
 

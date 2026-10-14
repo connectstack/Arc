@@ -11,12 +11,13 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from functools import cached_property
 from typing import Any
 
 from reel.assets.art import load_art, recolor
 from reel.assets.model import Art, AssetDef
 from reel.core.easing import ease
-from reel.core.ir import Shape
+from reel.core.ir import Shape, Xf
 from reel.core.planner import CHAR_UNIT
 from reel.core.spec import ObjectMotionSpec, ObjectSpec
 
@@ -32,6 +33,8 @@ MOTIONS: dict[str, str] = {
     "pulse": "swell and shrink by `amount` (default 0.1) `count` times (default 3) during t0..t1",
     "fade": "change opacity from `from` (default 0) to `to` (default 1) over t0..t1",
     "grow": "change size from `from` (default 0) to `to` (default 1) times its size over t0..t1",
+    "rise": "stand taller from `from` (default 0) to `to` (default 1) times its height over t0..t1, as wide as before: the water of a "
+    "jug filling, a plant growing (a picture with a part tagged `fill` raises only that part)",
     "shake": "tremble by `amount` of its height (default 0.02) during t0..t1",
 }
 
@@ -46,6 +49,8 @@ class ObjState:
     alpha: float
     dx: float = 0.0  # extra offset in design px (hops, floating, shaking)
     dy: float = 0.0
+    # how much of its height stands (of the `fill` part, when the picture has one)
+    rise: float = 1.0
 
     def key(self) -> tuple[Any, ...]:
         return (
@@ -57,6 +62,7 @@ class ObjState:
             round(self.alpha, 3),
             round(self.dx, 2),
             round(self.dy, 2),
+            round(self.rise, 4),
         )
 
 
@@ -100,6 +106,7 @@ class ObjectInstance:
         rot, size, alpha = float(s.rotation), 1.0, float(s.alpha)
         dx = dy = 0.0
         h = self.asset.height
+        rise = self._rise_at(t)
         for m in s.motions:
             if t < m.t0 and m.type != "fade":
                 if (
@@ -146,14 +153,35 @@ class ObjectInstance:
                 a = (amount if amount is not None else 0.02) * h
                 dx += a * math.sin(2 * math.pi * 11.0 * t)
                 dy += a * 0.6 * math.sin(2 * math.pi * 7.3 * t + 1.3)
-        return ObjState(visible, x, y, rot, size, alpha, dx, dy)
+        return ObjState(visible, x, y, rot, size, alpha, dx, dy, rise)
+
+    def _rise_at(self, t: float) -> float:
+        """How tall the object stands at ``t``: 1 unless it has a ``rise``.  The rises are read in time order and the latest one to
+        have begun decides (a rise that has not begun is where it starts, until an earlier one has set a level)."""
+        level: float | None = None
+        for m in sorted((m for m in self.spec.motions if m.type == "rise"), key=lambda m: m.t0):
+            r0 = 0.0 if m.from_ is None else float(m.from_)
+            if t < m.t0:
+                if level is None:
+                    level = r0
+                continue
+            r1 = 1.0 if not isinstance(m.to, (int, float)) else float(m.to)
+            level = r0 + (r1 - r0) * float(ease(m.ease, _u(t, m.t0, m.t1)))
+        return 1.0 if level is None else max(0.0, level)
 
     def shapes_at(self, t: float) -> list[Shape]:
         st = self.state(t)
         return self.shapes_for(st)
 
+    @cached_property
+    def fill_parts(self) -> bool:
+        """Does the picture have a part tagged ``fill`` (the water of a jug): a ``rise`` then raises that part alone."""
+        return any(s.tag == "fill" for s in self.shapes)
+
     def shapes_for(self, st: ObjState) -> list[Shape]:
         if not st.visible or st.alpha <= 0.002 or st.size <= 0.0:
+            return []
+        if st.rise <= 0.0 and not self.fill_parts:
             return []
         sc = CHAR_UNIT * self.spec.scale * self.depth_scale(st.y) * st.size
         xf = (
@@ -165,9 +193,23 @@ class ObjectInstance:
             0.0,
             0.0,
         )
-        if st.alpha < 0.999:
-            return [replace(s, xf=xf, alpha=s.alpha * st.alpha) for s in self.shapes]
-        return [replace(s, xf=xf) for s in self.shapes]
+        if st.rise == 1.0:
+            raised: Xf | None = None
+        else:  # the same place and turn, taller or shorter about the foot
+            raised = (xf[0], xf[1], xf[2], xf[3], sc * st.rise, 0.0, 0.0)
+        out: list[Shape] = []
+        for s in self.shapes:
+            part = xf
+            if raised is not None and (s.tag == "fill" or not self.fill_parts):
+                if st.rise <= 0.0:
+                    continue  # nothing of it stands
+                part = raised
+            out.append(
+                replace(s, xf=part, alpha=s.alpha * st.alpha)
+                if st.alpha < 0.999
+                else replace(s, xf=part)
+            )
+        return out
 
     def key(self, t: float) -> bytes:
         return repr(self.state(t).key()).encode()
@@ -257,6 +299,10 @@ def motion_problems(m: ObjectMotionSpec) -> list[tuple[str, str]]:
         out.append(
             ("OBJECT_MOTION", "`to` of a move is a position ([x, y] or a slot), not a number")
         )
-    if m.type in ("fade", "grow") and m.to is not None and not isinstance(m.to, (int, float)):
+    if (
+        m.type in ("fade", "grow", "rise")
+        and m.to is not None
+        and not isinstance(m.to, (int, float))
+    ):
         out.append(("OBJECT_MOTION", f"`to` of a {m.type} is a number"))
     return out

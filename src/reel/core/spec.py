@@ -167,18 +167,20 @@ class LayerSpec(_Strict):
 
 
 class ObjectMotionSpec(_Strict):
-    """One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``shake``.
+    """One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``rise`` | ``shake``.
 
-    ``to`` is where a move goes ([x, y] or a slot) and the final value of a fade or grow; ``from`` is where a fade or
-    grow starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).
+    ``to`` is where a move goes ([x, y] or a slot) and the final value of a fade, grow or rise; ``from`` is where a fade,
+    grow or rise starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).
     """
 
-    type: str = Field(description="move | hop | float | spin | pulse | fade | grow | shake")
+    type: str = Field(description="move | hop | float | spin | pulse | fade | grow | rise | shake")
     t0: Seconds
     t1: Seconds
-    from_: float | None = Field(None, alias="from", description="fade and grow: the start value")
+    from_: float | None = Field(
+        None, alias="from", description="fade, grow and rise: the start value"
+    )
     to: float | str | Vec2 | None = Field(
-        None, description="move: [x, y] or a slot; fade and grow: the end value"
+        None, description="move: [x, y] or a slot; fade, grow and rise: the end value"
     )
     amount: float | None = Field(None, description="size of the effect (see the motion)")
     count: int | None = Field(None, ge=1, le=20, description="hop and pulse: how many times")

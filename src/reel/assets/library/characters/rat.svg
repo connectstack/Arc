@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 44 296 170">
+  <path data-stroke-role="accent" data-lod="0" d="M72 156 C34 168 6 148 12 116 C17 92 42 90 46 66" fill="none" stroke="#f0a3b3" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect data-role="fur_dark" data-lod="0" x="150" y="160" width="22" height="42" rx="10" fill="#7d7a8a"/>
+  <ellipse data-role="accent" data-lod="1" data-shadow="false" cx="161" cy="202" rx="13" ry="6.5" fill="#f0a3b3"/>
+  <rect data-role="fur_dark" data-lod="0" x="92" y="150" width="26" height="52" rx="12" fill="#7d7a8a"/>
+  <ellipse data-role="accent" data-lod="1" data-shadow="false" cx="108" cy="202" rx="20" ry="7" fill="#f0a3b3"/>
+  <ellipse data-role="fur" cx="122" cy="134" rx="76" ry="48" transform="rotate(-6 122 134)" fill="#a09eae"/>
+  <ellipse data-role="belly" data-lod="1" data-shadow="false" cx="134" cy="160" rx="54" ry="22" transform="rotate(-6 134 160)" fill="#e6e3ee"/>
+  <ellipse data-role="fur_dark" data-lod="1" data-shadow="false" cx="84" cy="146" rx="32" ry="34" fill="#8c8a99"/>
+  <rect data-role="fur" x="72" y="150" width="30" height="50" rx="14" fill="#a09eae"/>
+  <ellipse data-role="accent" data-lod="0" cx="90" cy="202" rx="23" ry="8" fill="#f0a3b3"/>
+  <rect data-role="fur" x="168" y="158" width="24" height="44" rx="11" fill="#a09eae"/>
+  <ellipse data-role="accent" data-lod="0" cx="181" cy="202" rx="15" ry="7" fill="#f0a3b3"/>
+  <circle data-role="fur_dark" cx="164" cy="86" r="22" fill="#8c8a99"/>
+  <circle data-role="accent" data-lod="1" data-shadow="false" cx="164" cy="88" r="13" fill="#f0a3b3"/>
+  <path data-role="fur" d="M146 118 C146 90 170 76 198 82 C224 88 248 106 268 126 C248 146 224 156 198 156 C168 156 146 142 146 118 Z" fill="#a09eae"/>
+  <path data-role="belly" data-lod="1" data-shadow="false" d="M206 150 C228 152 248 142 266 128 C250 150 226 160 204 158 Z" fill="#e6e3ee"/>
+  <circle data-role="fur" cx="192" cy="78" r="27" fill="#a09eae"/>
+  <circle data-role="accent" data-lod="1" data-shadow="false" cx="193" cy="80" r="17" fill="#f0a3b3"/>
+  <ellipse data-role="accent" data-lod="1" data-shadow="false" data-tag="blush" cx="226" cy="134" rx="9" ry="6" opacity="0.65" fill="#f0a3b3"/>
+  <ellipse data-lod="0" data-tag="eye" cx="218" cy="110" rx="8" ry="9.5" fill="#fff"/>
+  <ellipse data-lod="0" data-tag="pupil" cx="220.5" cy="111.5" rx="4.8" ry="6.2" fill="#23262e"/>
+  <circle data-lod="0" data-tag="glint" cx="222.4" cy="108.8" r="2" fill="#fff"/>
+  <ellipse data-role="accent_dark" data-lod="0" data-tag="nose" cx="265" cy="124" rx="8" ry="6.5" fill="#e27c95"/>
+  <path data-lod="1" d="M262 134 C252 142 238 142 230 136" fill="none" stroke="#5b4b56" stroke-width="2.6" stroke-linecap="round" data-shadow="false"/>
+  <path data-lod="1" d="M247 125 L290 110" fill="none" stroke="#6d6676" stroke-width="2" stroke-linecap="round" data-shadow="false"/>
+  <path data-lod="1" d="M247 129 L292 128" fill="none" stroke="#6d6676" stroke-width="2" stroke-linecap="round" data-shadow="false"/>
+  <path data-lod="1" d="M247 133 L288 146" fill="none" stroke="#6d6676" stroke-width="2" stroke-linecap="round" data-shadow="false"/>
+</svg>

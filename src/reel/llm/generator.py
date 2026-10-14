@@ -622,7 +622,7 @@ def _fix_motion(m: dict[str, Any], log: _Log, cat: Catalog) -> dict[str, Any] | 
         elif not (isinstance(to, str) and to.strip()):
             log.hit("dropped object moves without a destination")
             return None
-    elif m["type"] in ("fade", "grow"):
+    elif m["type"] in ("fade", "grow", "rise"):
         val = _num(to)
         if val is None:
             m.pop("to", None)

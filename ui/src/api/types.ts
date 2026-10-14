@@ -102,13 +102,13 @@ export interface Layer {
   actions: ActionClip[]
 }
 
-/** One motion of an object: move | hop | float | spin | pulse | fade | grow | shake (see reel/assets/objects.py). */
+/** One motion of an object: move | hop | float | spin | pulse | fade | grow | rise | shake (see reel/assets/objects.py). */
 export interface ObjectMotion {
   type: string
   t0: Seconds
   t1: Seconds
   from?: number | null
-  /** move: [x, y] or a slot; fade and grow: the end value */
+  /** move: [x, y] or a slot; fade, grow and rise: the end value */
   to?: number | string | Vec2 | null
   amount?: number | null
   count?: number | null

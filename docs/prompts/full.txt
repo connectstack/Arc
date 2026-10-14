@@ -1,4 +1,4 @@
-=== SYSTEM PROMPT (50351 characters, about 12588 tokens) ===
+=== SYSTEM PROMPT (50918 characters, about 12730 tokens) ===
 You are the screenwriter and director of "reel", an offline renderer that turns ONE JSON scene spec into a 45-60 second vertical animated short (9:16, 1080x1920). The user sends a SCRIPT. You reply with the scene spec for it, and nothing else.
 
 Your reply is machine-validated: JSON syntax first, then the JSON schema, then a linter that checks every name, every parameter, every time window and the duration budget. Each problem it finds is sent back to you, and you must answer again with the FULL corrected JSON. So be exact: use only names from the CATALOG below, spelled as written, and never invent parameters.
@@ -242,6 +242,7 @@ ARCHETYPES - characters[].archetype; [picture] ones are one drawing: they cannot
 - peacock: A blue peacock with a three-feather crest and a long trailing eyed... [picture; size 0.63; roles accent, feathers; words peafowl, mor, mayur, mayoor]
 - police: An Indian police constable in khaki uniform with cap, belt and bato... [picture; size 1.01; roles shoes, pants, shirt, skin, hair, accent; words policeman, police officer, cop, officer, sipahi]
 - rabbit: A cute white rabbit sitting, with tall pink-lined ears and a fluffy... [picture; size 0.4; roles accent, fur, belly; words bunny, bunnies, hare, khargosh, kharghosh]
+- rat: A little grey rat on all fours with big round pink-lined ears, a po... [picture; size 0.21; roles accent, fur, belly; words mouse, mice, rodent, chuha, chuhe]
 - robot: Boxy metal body, visor eyes and an antenna.
 - shopkeeper: An Indian shopkeeper with a moustache, apron and white topi, pencil... [picture; size 0.97; roles shoes, pants, shirt, skin, accent, hair; words shop owner, storekeeper, trader, dukaandaar, dukandar]
 - soldier: An Indian army soldier in camouflage and helmet, standing at attent... [picture; size 1.01; roles shoes, pants, shirt, skin, hair, accent; words army man, army, indian army, military, fauji]
@@ -268,7 +269,7 @@ PROPS - characters[].props (the character has it for the whole story)
 - umbrella: Umbrella held in the front hand
 
 OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale": n, "layer": "behind"|"front", "t0": s, "t1": s, "motions": [{"type": MOTION, "t0": s, "t1": s, ...}], "palette": {ROLE: "#rrggbb"}}; size = height as a share of a person (1 = a person), roles = the colours "palette" can change, words = what a script may call it
-  MOTION types: move (to=[x,y] or SLOT); hop (count, amount); float (amount); spin (amount = turns); pulse (amount, count); fade (from, to = 0..1); grow (from, to = times its size); shake (amount)
+  MOTION types: move (to=[x,y] or SLOT); hop (count, amount); float (amount); spin (amount = turns); pulse (amount, count); fade (from, to = 0..1); grow (from, to = times its size); rise (from, to = share of its height standing (water filling a jug)); shake (amount)
 - airplane: A white passenger airplane with blue tail, wings and a row of windows, side view [size 0.49; roles accent, body; words aeroplane, plane, jet, airliner, aircraft]
 - apple: A red apple with a stem, a green leaf and a shiny highlight [size 0.23; roles body; words fruit, red apple, seb, phal]
 - auto_rickshaw: A green and yellow Indian auto rickshaw (three-wheeler) with a canopy, side view [size 0.56; roles body, accent; words rickshaw, auto, autorickshaw, auto-rickshaw, tuk tuk]
@@ -314,7 +315,7 @@ OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale
 - gear: A blue cog wheel with eight teeth and a hub hole, front view [size 0.35; roles body; words cog, cogwheel, setting, mechanism, engineering]
 - gift: A red gift box with a gold ribbon and a bow, front view [size 0.38; roles body, accent; words present, gift box, surprise, birthday gift, tohfa]
 - globe: A desk globe on a stand: blue ocean, green continents, gold ring and wooden foot [size 0.59; roles body; words world, earth, global, geography, atlas]
-- headphones: Over-ear headphones with red ear cups, front view [size 0.3; roles body; words headphone, headset, earphone, music, listening]
+- headphones: Over-ear headphones with red ear cups, front view [size 0.3; roles body; words headphone, headset, earphone]
 - heart: A glossy red love heart, front view [size 0.31; roles body; words love, romance, valentine, pyaar, pyar]
 - helicopter: A red and white helicopter with spinning main and tail rotors, side view [size 0.52; roles body, accent; words chopper, copter, rotorcraft, heli, helicoptar]
 - hospital_building: A white hospital building with a big red cross sign and an entrance canopy, f... [size 1.43; roles body, accent; words hospital, clinic, medical centre, medical center, nursing home]
@@ -339,8 +340,10 @@ OBJECTS - scenes[].objects[] = {"asset": NAME, "position": [x,y] or SLOT, "scale
 - motorcycle: A red commuter motorbike with tank, seat, headlamp and exhaust, side view [size 0.54; roles body; words motorbike, bike, two wheeler]
 - mountain: A single snow-capped mountain with a shaded right side [size 1.36; roles body; words peak, summit, snowy peak, snow mountain, himalaya]
 - notebook: A blue school notebook with a white label and a spiral edge, front view [size 0.19; roles body; words copy, copybook, exercise book, diary, kapi]
+- pebbles: A little pile of four smooth grey stones with pale highlights [size 0.1; roles stone; words stone, pebble, small stones, gravel, kankad]
 - phone: A smartphone, front view, with a lit screen and colourful app icons [size 0.3; roles body; words mobile, mobile phone, smartphone, smart phone, cellphone]
 - piggy_bank: A pink piggy bank with a coin slot and a gold coin, side view facing right [size 0.38; roles body; words piggy, piggybank, saving, money box, coin bank]
+- pitcher: A clay water pot cut open so the water inside shows, with a lip and two paint... [size 0.26; roles inside, clay; words pot of water, water pot, water pitcher, pitcher of water, earthen pot]
 - pizza: A whole pepperoni pizza seen from above with one slice cut and pulled out [size 0.38; roles body, accent; words pizza slice, pepperoni, fast food, junk food, italian food]
 - pot: A copper cooking pot with a lid, two handles and steam, side view [size 0.26; roles body, trim; words cooking pot, saucepan, stockpot, handi, degchi]
 - rainbow: A rainbow arc of six colour bands with a small cloud at each end [size 0.66; roles body; words indradhanush, indra dhanush, indradhanu]
@@ -388,7 +391,7 @@ Grandpa walks in, yawning. "Impossible. I guarded that jar all day."
 
 Reply with the JSON object only.
 
-=== JSON SCHEMA (27647 characters; sent through the provider's structured-output channel, not in the prompt text) ===
+=== JSON SCHEMA (27736 characters; sent through the provider's structured-output channel, not in the prompt text) ===
 {
  "$defs": {
   "ActionSpec": {
@@ -815,6 +818,7 @@ Reply with the JSON object only.
       "peacock",
       "police",
       "rabbit",
+      "rat",
       "robot",
       "shopkeeper",
       "soldier",
@@ -1230,10 +1234,10 @@ Reply with the JSON object only.
   },
   "ObjectMotionSpec": {
    "additionalProperties": false,
-   "description": "One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``shake``.\n\n``to`` is where a move goes ([x, y] or a slot) and the final value of a fade or grow; ``from`` is where a fade or\ngrow starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).",
+   "description": "One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``rise`` | ``shake``.\n\n``to`` is where a move goes ([x, y] or a slot) and the final value of a fade, grow or rise; ``from`` is where a fade,\ngrow or rise starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).",
    "properties": {
     "type": {
-     "description": "move | hop | float | spin | pulse | fade | grow | shake",
+     "description": "move | hop | float | spin | pulse | fade | grow | rise | shake",
      "title": "Type",
      "type": "string"
     },
@@ -1257,7 +1261,7 @@ Reply with the JSON object only.
       }
      ],
      "default": null,
-     "description": "fade and grow: the start value",
+     "description": "fade, grow and rise: the start value",
      "title": "From"
     },
     "to": {
@@ -1281,7 +1285,7 @@ Reply with the JSON object only.
       }
      ],
      "default": null,
-     "description": "move: [x, y] or a slot; fade and grow: the end value",
+     "description": "move: [x, y] or a slot; fade, grow and rise: the end value",
      "title": "To"
     },
     "amount": {
@@ -1406,8 +1410,10 @@ Reply with the JSON object only.
       "motorcycle",
       "mountain",
       "notebook",
+      "pebbles",
       "phone",
       "piggy_bank",
+      "pitcher",
       "pizza",
       "pot",
       "rainbow",

@@ -3042,6 +3042,37 @@
       "library": "builtin"
     },
     {
+      "name": "rat",
+      "summary": "A little grey rat on all fours with big round pink-lined ears, a pointed snout, whiskers and a long thin tail, side view",
+      "category": "sprite",
+      "tags": [
+        "rat",
+        "rats",
+        "mouse",
+        "mice",
+        "rodent",
+        "\u091a\u0942\u0939\u093e",
+        "\u091a\u0942\u0939\u0947",
+        "\u091a\u0942\u0939\u094b\u0902",
+        "\u091a\u0941\u0939\u093f\u092f\u093e",
+        "\u092e\u0942\u0937\u0915",
+        "chuha",
+        "chuhe",
+        "chooha",
+        "chuhiya",
+        "mushak"
+      ],
+      "height": 120.0,
+      "roles": [
+        "accent",
+        "fur",
+        "belly"
+      ],
+      "size": 0.21,
+      "aspect": 1.7565,
+      "library": "builtin"
+    },
+    {
       "name": "robot",
       "summary": "Boxy metal body, visor eyes and an antenna.",
       "category": "robot",
@@ -4734,9 +4765,6 @@
         "headset",
         "earphones",
         "earphone",
-        "music",
-        "listening",
-        "audio",
         "\u0939\u0947\u0921\u092b\u094b\u0928",
         "\u0939\u0947\u0921\u092b\u093c\u094b\u0928",
         "\u0939\u0947\u0921\u092b\u094b\u0928\u094d\u0938",
@@ -5478,6 +5506,38 @@
       "library": "builtin"
     },
     {
+      "name": "pebbles",
+      "summary": "A little pile of four smooth grey stones with pale highlights",
+      "tags": [
+        "pebbles",
+        "stone",
+        "stones",
+        "pebble",
+        "small stones",
+        "gravel",
+        "\u092a\u0924\u094d\u0925\u0930",
+        "\u092a\u0924\u094d\u0925\u0930\u094b\u0902",
+        "\u0915\u0902\u0915\u0921\u093c",
+        "\u0915\u0902\u0915\u0921",
+        "\u0915\u0902\u0915\u0930",
+        "kankad",
+        "kankar",
+        "patthar",
+        "pathar"
+      ],
+      "height": 60.0,
+      "anchor": [
+        0.5,
+        0.96
+      ],
+      "roles": [
+        "stone"
+      ],
+      "size": 0.1,
+      "aspect": 2.113,
+      "library": "builtin"
+    },
+    {
       "name": "phone",
       "summary": "A smartphone, front view, with a lit screen and colourful app icons",
       "tags": [
@@ -5534,6 +5594,56 @@
       ],
       "size": 0.38,
       "aspect": 1.3129,
+      "library": "builtin"
+    },
+    {
+      "name": "pitcher",
+      "summary": "A clay water pot cut open so the water inside shows, with a lip and two painted bands",
+      "tags": [
+        "pitcher",
+        "pot of water",
+        "water pot",
+        "water pitcher",
+        "pitcher of water",
+        "earthen pot",
+        "clay pot",
+        "water jug",
+        "jug",
+        "matka",
+        "matki",
+        "ghada",
+        "ghara",
+        "surahi",
+        "matkey",
+        "matkon",
+        "matke",
+        "ghadey",
+        "ghado",
+        "ghade",
+        "\u0918\u0921\u093c\u093e",
+        "\u0918\u0921\u093c\u0947",
+        "\u092e\u091f\u0915\u093e",
+        "\u092e\u091f\u0915\u0947",
+        "\u092e\u091f\u0915\u0940",
+        "\u0938\u0941\u0930\u093e\u0939\u0940",
+        "\u092a\u093e\u0928\u0940 \u0915\u093e \u0918\u0921\u093c\u093e",
+        "\u092a\u093e\u0928\u0940 \u0915\u093e \u092e\u091f\u0915\u093e",
+        "paani ka ghada",
+        "pani ka ghada",
+        "paani ka matka",
+        "pani ka matka"
+      ],
+      "height": 150.0,
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "roles": [
+        "inside",
+        "clay"
+      ],
+      "size": 0.26,
+      "aspect": 0.9459,
       "library": "builtin"
     },
     {

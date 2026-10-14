@@ -96,7 +96,7 @@ Things from the [asset library](assets.md) placed in a scene: a tree, a car, a c
 | `facing`, `rotation`, `alpha` | `auto left right` (art is drawn facing right; `left` mirrors it), degrees clockwise, 0-1 |
 | `t0`, `t1` | on screen from / until, scene-local seconds (`t1` absent: to the end of the scene) |
 | `palette` | colours of the roles its drawing marks (`{"body": "#2a6fdb"}`: a blue car); shades like `body_dark` follow |
-| `motions[]` | `{type, t0, t1, from?, to?, amount?, count?, ease}`: `move` (to `[x,y]` or a slot, then stays), `hop` (`count`, `amount` of its height), `float`, `spin` (`amount` turns), `pulse`, `fade` (`from`/`to` opacity), `grow` (`from`/`to` times its size), `shake` |
+| `motions[]` | `{type, t0, t1, from?, to?, amount?, count?, ease}`: `move` (to `[x,y]` or a slot, then stays), `hop` (`count`, `amount` of its height), `float`, `spin` (`amount` turns), `pulse`, `fade` (`from`/`to` opacity), `grow` (`from`/`to` times its size), `rise` (`from`/`to` share of its height: it stands taller, as wide as before; a picture with a part tagged `fill` raises only that part), `shake` |
 
 Unknown names are `REGISTRY_MISSING` errors with the way to add them; `--lenient` leaves an unknown object out. Planners that cannot find
 a thing in the library leave it out (or use a stand-in) and record it in `meta.library_gaps`.

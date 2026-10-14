@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 34 204 204">
+  <path d="M24 124 C-8 120 -8 180 24 182" fill="none" stroke="#c96d3d" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" data-stroke-role="clay"/>
+  <path d="M76 54 L124 54 L124 90 C124 108 164 112 164 134 L164 206 Q164 218 152 218 L48 218 Q36 218 36 206 L36 134 C36 112 76 108 76 90 Z" fill="#f1e4d2" data-role="inside"/>
+  <path d="M36.5 134 C52 128 66 140 82 134 S112 128 128 134 S148 138 163.5 134 L163.5 226 L36.5 226 Z" fill="#46a6e6" data-tag="fill"/>
+  <path d="M36.5 134 C52 128 66 140 82 134 S112 128 128 134 S148 138 163.5 134 L163.5 160 L36.5 160 Z" fill="#8fd2f7" data-lod="1" data-shadow="false" data-tag="fill"/>
+  <path d="M62 54 L62 86 C62 104 22 108 22 130 L22 210 Q22 232 44 232 L156 232 Q178 232 178 210 L178 130 C178 108 138 104 138 86 L138 54 L124 54 L124 90 C124 108 164 112 164 134 L164 206 Q164 218 152 218 L48 218 Q36 218 36 206 L36 134 C36 112 76 108 76 90 L76 54 Z" fill="#c96d3d" data-role="clay"/>
+  <rect x="52" y="38" width="96" height="16" rx="8" fill="#e39a63" data-role="clay_light"/>
+  <rect x="22" y="172" width="14" height="7" fill="#a4552e" data-role="clay_dark" data-lod="1" data-shadow="false"/>
+  <rect x="164" y="172" width="14" height="7" fill="#a4552e" data-role="clay_dark" data-lod="1" data-shadow="false"/>
+  <rect x="22" y="186" width="14" height="4" fill="#a4552e" data-role="clay_dark" data-lod="1" data-shadow="false"/>
+  <rect x="164" y="186" width="14" height="4" fill="#a4552e" data-role="clay_dark" data-lod="1" data-shadow="false"/>
+  <ellipse cx="56" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <ellipse cx="69" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <ellipse cx="82" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <ellipse cx="95" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <ellipse cx="108" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <ellipse cx="121" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <ellipse cx="134" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <ellipse cx="147" cy="225" rx="2.6" ry="2.6" fill="#f6dfb8" data-lod="1" data-shadow="false"/>
+  <rect x="26" y="142" width="4" height="40" rx="2" fill="#ffffff" data-lod="1" data-shadow="false" opacity="0.3"/>
+</svg>

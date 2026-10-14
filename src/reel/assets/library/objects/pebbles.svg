@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 8 154 72">
+  <ellipse cx="80" cy="74" rx="70" ry="6" fill="#000000" data-lod="1" data-shadow="false" opacity="0.12"/>
+  <path d="M14 70 C6 56 14 38 34 34 C54 30 72 40 74 56 C76 68 66 76 46 76 C30 76 18 76 14 70 Z" fill="#9b9ba3" data-role="stone"/>
+  <path d="M62 72 C58 58 68 44 86 42 C106 40 122 50 122 62 C122 72 110 76 92 76 C76 76 64 76 62 72 Z" fill="#7d7d86" data-role="stone_dark"/>
+  <path d="M38 44 C34 30 44 16 60 14 C76 12 90 22 90 34 C90 44 80 50 64 50 C52 50 40 50 38 44 Z" fill="#b7b7bf" data-role="stone_light"/>
+  <path d="M112 72 C108 62 116 52 128 52 C140 52 148 60 146 68 C144 75 134 76 126 76 C118 76 114 76 112 72 Z" fill="#9b9ba3" data-role="stone"/>
+  <path d="M24 48 C28 42 36 40 44 41" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
+  <path d="M48 22 C52 18 60 17 66 19" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+  <path d="M76 50 C82 46 90 45 98 47" fill="none" data-lod="1" data-shadow="false" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+</svg>

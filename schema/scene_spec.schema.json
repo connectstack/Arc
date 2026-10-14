@@ -722,10 +722,10 @@
     },
     "ObjectMotionSpec": {
       "additionalProperties": false,
-      "description": "One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``shake``.\n\n``to`` is where a move goes ([x, y] or a slot) and the final value of a fade or grow; ``from`` is where a fade or\ngrow starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).",
+      "description": "One motion of an object: ``move`` | ``hop`` | ``float`` | ``spin`` | ``pulse`` | ``fade`` | ``grow`` | ``rise`` | ``shake``.\n\n``to`` is where a move goes ([x, y] or a slot) and the final value of a fade, grow or rise; ``from`` is where a fade,\ngrow or rise starts; ``amount`` and ``count`` tune hop, float, spin, pulse and shake (each has a default).",
       "properties": {
         "type": {
-          "description": "move | hop | float | spin | pulse | fade | grow | shake",
+          "description": "move | hop | float | spin | pulse | fade | grow | rise | shake",
           "title": "Type",
           "type": "string"
         },
@@ -749,7 +749,7 @@
             }
           ],
           "default": null,
-          "description": "fade and grow: the start value",
+          "description": "fade, grow and rise: the start value",
           "title": "From"
         },
         "to": {
@@ -773,7 +773,7 @@
             }
           ],
           "default": null,
-          "description": "move: [x, y] or a slot; fade and grow: the end value",
+          "description": "move: [x, y] or a slot; fade, grow and rise: the end value",
           "title": "To"
         },
         "amount": {

@@ -114,6 +114,7 @@ They can sit on any element and are inherited by what is inside it.
 | `data-shadow="false"` | no paper shadow under this piece (stripes, windows, spots painted on a bigger shape) |
 | `data-elev="2"` | how far above the one below it this piece floats in paper cutout (default 1.5, details 0.6) |
 | `data-material="emissive"` | a light source: a lamp, the sun, a screen. It is not darkened at night |
+| `data-tag="fill"` | objects: the part that fills up (the water of a jug, the mercury of a thermometer). Draw it **full**, behind the walls that hold it: a `rise` motion of the object (`from`/`to` = how much of it stands) then stretches only this part upwards, so the walls cut it to the inside of the thing at every level. Without such a part, a `rise` stretches the whole picture |
 | `data-tag`, `data-plane` | places: see below |
 
 Rules of thumb that make assets look like they belong to the built-in ones:
@@ -148,7 +149,7 @@ wider asset by `reel assets fill`. Scenes of engine bodies are never touched, an
 
 Objects sit in `scenes[].objects[]` with `position` (where the anchor goes), `scale`, `depth` (`background` | `mid` |
 `foreground`), `layer` (`behind` | `front` of the characters), `facing`, `rotation`, `alpha`, `t0`/`t1` (visible from/until)
-and `palette`. They can move: `move`, `hop`, `float`, `spin`, `pulse`, `fade`, `grow`, `shake` (see `docs/spec.md`).
+and `palette`. They can move: `move`, `hop`, `float`, `spin`, `pulse`, `fade`, `grow`, `rise`, `shake` (see `docs/spec.md`).
 
 ### Places
 
@@ -214,8 +215,8 @@ Every planner reads the library through the assets' **tags** (and names), so wha
 
 ## Limits
 
-* A **picture character** is one piece: it cannot wave an arm, point or hold a prop (the action takes its time and the linter says so). For those, the jointed built-in people
-  are the right tool.
+* A **picture character** is one piece: it cannot wave an arm, point or hold a prop (the action takes its time and the linter says so). `pick_up` still works as a bow: the whole
+  picture tips forward and comes back up, which is how an animal picks something up or drinks. For the rest, the jointed built-in people are the right tool.
 * SVG **text, filters, masks, clip paths, patterns, radial gradients and embedded pictures** are not drawn (`reel assets check` says so). Convert text to outlines.
 * Paper cutout shows each piece with a slight hand-cut wobble: thin tall filled shapes (poles, slats) look better drawn as strokes, and round things from circles; a single path
   made of several separate pieces is warped as one, so draw windows or wheels as separate shapes.

@@ -22,7 +22,7 @@ const motion = (type: string, t0: number, t1: number, extra: Partial<ObjectMotio
 
 describe('the motions of an object', () => {
   it('are the eight the engine knows, each with a sentence and the settings it takes', () => {
-    expect(MOTIONS.map((m) => m.type)).toEqual(['move', 'hop', 'float', 'spin', 'pulse', 'fade', 'grow', 'shake'])
+    expect(MOTIONS.map((m) => m.type)).toEqual(['move', 'hop', 'float', 'spin', 'pulse', 'fade', 'grow', 'rise', 'shake'])
     for (const m of MOTIONS) {
       expect(m.summary.length).toBeGreaterThan(10)
       expect(m.length).toBeGreaterThan(0)
@@ -91,6 +91,7 @@ describe('the motions of an object', () => {
     expect(motionDetail(motion('pulse', 0, 1))).toBe('×3')
     expect(motionDetail(motion('fade', 0, 1, { from: 1, to: 0 }))).toBe('1 → 0')
     expect(motionDetail(motion('grow', 0, 1))).toBe('')
+    expect(motionDetail(motion('rise', 0, 1, { from: 0.3, to: 1 }))).toBe('0.3 → 1')
   })
 })
 

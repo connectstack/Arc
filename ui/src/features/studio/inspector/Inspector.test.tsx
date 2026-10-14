@@ -242,7 +242,7 @@ describe('the motions of an object', () => {
     await renderScreen(<Inspector />, { api })
     await user.click(await screen.findByRole('button', { name: 'Add a motion' }))
     const items = await screen.findAllByRole('menuitem')
-    expect(items.map((i) => i.textContent?.split(/(?<=[a-z])(?=[A-Z])/)[0])).toEqual(['Move', 'Hop', 'Float', 'Spin', 'Pulse', 'Fade', 'Grow', 'Shake'].map((n) => expect.stringContaining(n)))
+    expect(items.map((i) => i.textContent?.split(/(?<=[a-z])(?=[A-Z])/)[0])).toEqual(['Move', 'Hop', 'Float', 'Spin', 'Pulse', 'Fade', 'Grow', 'Rise', 'Shake'].map((n) => expect.stringContaining(n)))
     expect(screen.getByRole('menuitem', { name: /spin.*turns around/i })).toBeInTheDocument()
   })
 

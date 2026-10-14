@@ -80,6 +80,8 @@ CUE_WORDS: dict[str, tuple[str, ...]] = {
                  "surprised", "surprising", "startle", "startled", "astonished", "amazed",
                  "stunned", "wow", "whoa", "scream", "screams", "screamed", "scared", "frozen",
                  "froze", "freeze", "freezes", "empty", "gone", "missing", "vanished"),
+    "drink": ("drink", "drinks", "drank", "drinking", "drunk", "sip", "sips", "sipped", "sipping",
+              "gulp", "gulps", "gulped", "slurp", "slurps", "slurped"),
     "look": ("look", "looks", "looked", "looking", "glance", "glances", "glanced", "stare",
              "stares", "stared", "watch", "watches", "watched", "notice", "notices", "noticed",
              "spot", "spots", "spotted", "peek", "peeks", "peeked", "gaze", "gazes", "gazed",
@@ -190,11 +192,14 @@ def extract_cues(text: str, default_subject: str | None, cast: Cast) -> list[Cue
     hits.sort()
     kinds = {k for _, k, _ in hits}
     cues: list[Cue] = []
-    seen: set[str] = set()
+    seen: set[tuple[str, str | None]] = set()
     n_actions = n_moods = 0
     for pos, kind, form in hits:
+        before = [cid for p, cid in ments if p <= pos]
+        subject = before[-1] if before else default_subject
+        # the same thing again for the same one is one cue; for somebody else it is another ("... and then the crow drank too")
         if (
-            kind in seen
+            (kind, subject) in seen
             or (kind == "walk" and "enter" in kinds)
             or (kind == "walk" and "exit" in kinds)
         ):
@@ -202,9 +207,8 @@ def extract_cues(text: str, default_subject: str | None, cast: Cast) -> list[Cue
         is_mood = kind.startswith("mood:")
         if (is_mood and n_moods >= 1) or (not is_mood and n_actions >= 2):
             continue
-        before = [cid for p, cid in ments if p <= pos]
-        cues.append(Cue(kind, before[-1] if before else default_subject, form))
-        seen.add(kind)
+        cues.append(Cue(kind, subject, form))
+        seen.add((kind, subject))
         n_moods += is_mood
         n_actions += not is_mood
     return cues

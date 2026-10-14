@@ -7,7 +7,7 @@ drove past" puts the car on the set and drives it across.  The same words come f
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -60,6 +60,17 @@ ENGINE_PLACE_WORDS: dict[str, tuple[str, ...]] = {
     "forest": ("जंगल", "जंगलों", "वन", "झील", "नदी", "पेड़ों", "jungle", "jangal", "van", "jheel", "nadi", "woods"),
     "stage": ("मंच", "स्टेज", "manch", "stage"),
 }  # fmt: skip
+
+
+@dataclass(frozen=True)
+class Named:
+    """A library object a line of the script names: the asset, the line (with when it is on screen) and where in it."""
+
+    asset: AssetDef
+    start: float
+    end: float
+    text: str
+    at: tuple[int, int]  # the span of the words in ``text``
 
 
 def _inside(inner: tuple[int, int], outer: tuple[int, int]) -> bool:
@@ -134,6 +145,94 @@ class LibraryPlanner:
         return out
 
     # -- objects ----------------------------------------------------------------------------
+    def refers_to(self, phrase: str, candidates: Sequence[AssetDef]) -> AssetDef | None:
+        """The one of ``candidates`` that ``phrase`` is another way of saying: "the pot" is the "pot of water" that came
+        before it, "the jug" is the water jug.  A candidate answers when it has the phrase among its own words, or when the
+        phrase is part of one of its longer ones.  The first (the most recent) that does wins."""
+        key = phrase_key(phrase)
+        if not key:
+            return None
+        for a in candidates:
+            for tag in (a.name, *a.tags):
+                tk = phrase_key(tag)
+                if tk == key or (len(tk) > len(key) and _contains(tk, key)):
+                    return a
+        return None
+
+    def named_objects(
+        self,
+        units: Sequence[tuple[float, float, str]],
+        established: Sequence[AssetDef] = (),
+        cast: Container[str] = (),
+    ) -> list[Named]:
+        """Every library object the lines name, in reading order (the same one again where a line says it again).
+
+        ``established`` are the things already on the set, most recent first: a word that is part of how one of them was named
+        ("pot" after "a pot of water") means that one, not the first thing in the library the word fits.  ``cast`` are the library
+        characters the story has: a word one of them answers to is that character, not also a picture of it standing about."""
+        out: list[Named] = []
+        for s, e, text in units:
+            sets = [(h.start, h.end) for h in self.places.scan(text)]
+            for h in self.objects.scan(text):
+                a = h.asset
+                if any(_inside((h.start, h.end), p) for p in sets):
+                    continue  # a word that names the set ("school", "hospital") is not also a thing standing on it
+                actor = self.characters.lookup(h.phrase)
+                if actor is not None and actor.name in cast:
+                    continue  # "the rat" is the rat of the cast, whatever a photo of a mouse in the library is also called
+                same = self.refers_to(h.phrase, established)
+                if same is not None:
+                    a = same
+                elif h.alternatives and h.phrase.lower().replace(" ", "_") != a.name:
+                    continue  # a word several things answer to ("fruit", "vehicle"): do not guess which
+                out.append(Named(a, s, e, text, (h.start, h.end)))
+        return out
+
+    def place_object(
+        self,
+        a: AssetDef,
+        scene: Mapping[str, Any],
+        text: str,
+        start: float,
+        end: float,
+        duration: float,
+        boost: float = 1.0,
+        x: float | None = None,
+    ) -> dict[str, Any]:
+        """One object as a spec dict on a spot clear of what is in ``scene`` (or on ``x``).  A vehicle in a line that says
+        something drives, flies or sails crosses the frame; a thing that floats (a balloon, the sun) hangs high and drifts.
+        ``boost`` makes a small thing bigger when the cast is small (see :func:`reel.assets.gaps.object_scale`)."""
+        floats = a.anchor[1] <= _FLOATERS_MAX_ANCHOR_Y
+        if x is None:
+            # the sun does not take the spot of a pot on the ground, nor the pot the sun's
+            same_height = [
+                o for o in scene.get("objects", []) if (o["position"][1] <= _SKY_Y + 0.1) == floats
+            ]
+            x = free_spot({"layers": scene.get("layers", []), "objects": same_height})
+        y = _SKY_Y if floats else _GROUND_Y
+        ob: dict[str, Any] = {
+            "asset": a.name,
+            "position": [x, y],
+            "scale": object_scale(a, boost),
+        }
+        motions: list[dict[str, Any]] = []
+        words = set(text.lower().replace(",", " ").replace(".", " ").split())
+        if (set(a.tags) & _VEHICLE_TAGS) and words & _TRAVEL_VERBS:
+            going_left = x >= 0.5
+            t0 = round(max(0.2, start - 0.2), 2)
+            t1 = round(min(duration - 0.1, max(t0 + 1.4, end + 0.8)), 2)
+            if t1 - t0 >= 0.6:
+                motions.append(
+                    {"type": "move", "t0": t0, "t1": t1, "to": [-0.3 if going_left else 1.3, y]}
+                )
+                if going_left:
+                    ob["facing"] = "left"
+        elif floats:
+            motions.append({"type": "float", "t0": 0.0, "t1": round(duration, 2)})
+        if motions:
+            ob["motions"] = motions
+        return ob
+
     def scene_objects(
         self,
         units: Sequence[tuple[float, float, str]],
@@ -146,54 +245,28 @@ class LibraryPlanner:
         At most :data:`MAX_OBJECTS_PER_SCENE`; each stands on a spot clear of the characters.  A vehicle in a line that says
         something drives, flies or sails crosses the frame; a thing that floats (a balloon, the sun) hangs high and drifts.
         """
-        found: list[tuple[AssetDef, float, float, str]] = []
+        found: list[Named] = []
         seen: set[str] = set(taken or ())
-        for s, e, text in units:
-            sets = [(h.start, h.end) for h in self.places.scan(text)]
-            for h in self.objects.scan(text):
-                a = h.asset
-                if any(_inside((h.start, h.end), p) for p in sets):
-                    continue  # a word that names the set ("school", "hospital") is not also a thing standing on it
-                if h.alternatives and h.phrase.lower().replace(" ", "_") != a.name:
-                    continue  # a word several things answer to ("fruit", "vehicle"): do not guess which
-                if a.name in seen:
-                    continue
-                seen.add(a.name)
-                found.append((a, s, e, text))
-                if len(found) >= MAX_OBJECTS_PER_SCENE:
-                    break
+        for n in self.named_objects(units):
+            if n.asset.name in seen:
+                continue
+            seen.add(n.asset.name)
+            found.append(n)
             if len(found) >= MAX_OBJECTS_PER_SCENE:
                 break
-        scene = {"layers": list(layers), "objects": []}
+        scene: dict[str, Any] = {"layers": list(layers), "objects": []}
         out: list[dict[str, Any]] = []
-        for a, s, e, text in found:
-            floats = a.anchor[1] <= _FLOATERS_MAX_ANCHOR_Y
-            x = free_spot(scene)
-            y = _SKY_Y if floats else _GROUND_Y
-            ob: dict[str, Any] = {
-                "asset": a.name,
-                "position": [x, y],
-                "scale": object_scale(a),
-            }
-            motions: list[dict[str, Any]] = []
-            words = set(text.lower().replace(",", " ").replace(".", " ").split())
-            if (set(a.tags) & _VEHICLE_TAGS) and words & _TRAVEL_VERBS:
-                going_left = x >= 0.5
-                t0 = round(max(0.2, s - 0.2), 2)
-                t1 = round(min(duration - 0.1, max(t0 + 1.4, e + 0.8)), 2)
-                if t1 - t0 >= 0.6:
-                    motions.append(
-                        {"type": "move", "t0": t0, "t1": t1, "to": [-0.3 if going_left else 1.3, y]}
-                    )
-                    if going_left:
-                        ob["facing"] = "left"
-            elif floats:
-                motions.append({"type": "float", "t0": 0.0, "t1": round(duration, 2)})
-            if motions:
-                ob["motions"] = motions
+        for n in found:
+            ob = self.place_object(n.asset, scene, n.text, n.start, n.end, duration)
             scene["objects"].append(ob)
             out.append(ob)
         return out
+
+
+def _contains(words: tuple[str, ...], part: tuple[str, ...]) -> bool:
+    """Is ``part`` a run of consecutive words of ``words``?"""
+    n = len(part)
+    return any(words[i : i + n] == part for i in range(len(words) - n + 1))
 
 
 def _phrases_of(text: str) -> set[str]:
@@ -303,4 +376,4 @@ def gap_status(
     return out[:24]
 
 
-__all__ = ["LibraryPlanner", "attach_library_gaps", "gap_status", "scene_texts"]
+__all__ = ["LibraryPlanner", "Named", "attach_library_gaps", "gap_status", "scene_texts"]

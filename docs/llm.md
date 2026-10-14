@@ -206,8 +206,9 @@ always giving the same output.
    guessed from the words round the name (kid / grandma / robot / boss / hero, default everyman; somebody met at school is a kid) and drawn as what the
    script says they are: "Max the dog", "Chef Marco", "Dr. Meera", "a monkey named Chiku", "His cow, Gauri," and "Her boss, Mr. Rao," are the dog, the chef,
    the doctor, the monkey, the cow and the boss, and the role is then another name for them ("the boss" is Mr. Rao, not a second boss). A creature or role
-   that comes in once as the subject of a clause ("An elephant arrived", "... and the tiger watched") is a *guest*: in the scene that names it and gone in the
-   next. A capitalised thing ("Earth", "Moon") is not somebody. Distinct stable colours;
+   that comes in once as the subject of a clause ("An elephant arrived", "... and the tiger watched", "a little girl came in") is a *guest*: in the scene that names it and gone in the
+   next. A capitalised thing ("Earth", "Moon") is not somebody; a name written only once ("Sita carried a bucket. She ...") is somebody when it opens the first sentence
+   and the story goes on with *he* or *she* (a time, a season or the weather that opens a sentence is nobody). Distinct stable colours;
 3. **plan**: units are grouped into 8-14 scenes sized by reading time (~2.6 words/s + 1 s); short scripts get silent "bridge" scenes, long ones are condensed
    to their most salient sentences; the first scene gets a `title`, the last exclamation a `shout`;
 4. **stage**: per scene a background chosen from the text (only templates that exist), time of day and mood, characters on slots with entrances, actions
@@ -215,13 +216,36 @@ always giving the same output.
    camera move, a rotating transition. The set holds from scene to scene: the story starts on the first set it names (its title first), and a scene leaves
    it only for a place the text names (two points of evidence; a song, a desk or an idea is not one, and neither is a place only spoken of in a quote:
    "I forgot my book at home"). Somebody whose trade belongs to a set (the shopkeeper's market, the teacher's classroom) stays on it when the story moves on,
-   and the things a scene names stay on the set for two more scenes;
+   and the things a scene names stay on the set for two more scenes (a thing the story names again, and a thing so big it is part of the place, like a tree,
+   stay until the story leaves the set; at most three things are on a set at a time). A story of animals that names no place is in the woods (cows and
+   horses on the farm) rather than on a bare gradient, and a place named only near the end ("went home") is where the story goes, not where it starts;
 5. **fit**: the same `normalize_spec` rescales to the 45-60 s budget, and the linter has the last word.
 
 The asset library takes part through the assets' own words (`reel.llm.library_plan`): a place named in a scene (`village`, `गाँव`) outweighs the
 engine's keyword tables, a creature or role the library draws ("Max the dog", "a farmer") becomes that character, and an object a scene names
 (a tree, a car) is placed on a spot clear of the cast, sized to fit, a vehicle driving across the frame when the text says it drives. A word several things
 answer to ("fruit", "vehicle") never guesses. What the script mentions that no asset draws is recorded in `meta.library_gaps`.
+
+The planner follows what the story does with those things (`reel.llm.props_plan`, one `PropTracker` per story):
+
+* **what a word means**: "the pot" after "a pot of water" is that pot (a word that is part of how an earlier line named a thing means that thing, not another
+  one the library also calls by the word); a word a cast member answers to ("rat") is the character, not also a picture of it on the set;
+* **how full**: a picture with a part that fills up (`data-tag="fill"`, see `docs/assets.md`; the water of the pot) shows what the lines say of it: low from the
+  start when a later line says it is low or that it rose, rising (a `rise` motion) while the line that says it rose is read, full after;
+* **what is moved**: "dropped them into the pot", "put the cake on the table": the thing starts beside whoever does it, travels to where the line says (a
+  `move`) and, when it went *into* something, is gone (a `fade`);
+* **what goes away**: "the kite flew away", "the balloon popped": it leaves the frame (or is gone where it stood) and is not on the set again until the story
+  brings a new one;
+* **what grows**: "the flower bloomed", "the tree grew taller" (a growth word just after the thing's own word): it grows from a small one while the line is read
+  (a `grow` motion), and is small in the scenes before when a later line says it grew;
+* **how big**: "a tiny flag", "a small tree": drawn smaller and not part of the place;
+* **small animals**: a cast whose tallest member is under 330 px (a crow, a rat; a person is 575) is drawn up to 1.3 times bigger, with the small things it
+  uses, and the subtitles sit at the middle of the frame instead of over its feet; an animal that drinks or picks something up steps to it and bows
+  (`pick_up` tips a picture character forward), and when two characters do the same thing in one line ("... drank, and then the crow drank too") the second
+  does it when the line has got that far.
+
+A script is read as Hinglish (nouns without "the" or "a") only when it has at least three different Hindi function words in a good share of its words; "the" alone,
+however often an English script says it, is not one.
 
 Hindi is read in Devanagari and in Latin letters (Hinglish): `Name:` lines give the cast in any script, the words round a name say what it is
 ("बूढ़े पिप जी" is old, a `बीप` is a robot), the library's words find creatures and roles ("कुत्ता", "kutta", "teacher ne kaha" without a "the") and the engine's own

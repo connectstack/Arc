@@ -19,6 +19,8 @@ from reel.core.catalog import CATALOG, Catalog
 _SLOT_X = {"far_left": 0.1, "left": 0.27, "center": 0.5, "right": 0.73, "far_right": 0.9}
 _FREE_X = (0.14, 0.86, 0.5, 0.3, 0.7)
 _OBJECT_Y = 0.8
+#: a thing shorter than this share of the frame is "small": it grows with a small cast
+_SMALL_OBJECT = 0.2
 FRAME_W, FRAME_H = 1080.0, 1920.0
 
 
@@ -53,8 +55,9 @@ def free_spot(scene: Mapping[str, Any]) -> float:
     return best
 
 
-def object_scale(asset: AssetDef) -> float:
-    """A scale that keeps a newly placed object a reasonable size (never enlarged)."""
+def object_scale(asset: AssetDef, boost: float = 1.0) -> float:
+    """A scale that keeps a newly placed object a reasonable size: never enlarged, except that a small thing (under a fifth of
+    the frame's height) grows by ``boost`` (a small cast is drawn bigger, and what it uses with it)."""
     from reel.assets.art import ArtError, load_art
     from reel.core.planner import CHAR_UNIT
 
@@ -63,7 +66,8 @@ def object_scale(asset: AssetDef) -> float:
     except ArtError:
         return 1.0
     w, h = max(art.width, 1.0) * CHAR_UNIT, max(art.height, 1.0) * CHAR_UNIT
-    return round(max(0.1, min(1.0, 0.42 * FRAME_W / w, 0.5 * FRAME_H / h)), 3)
+    grow = boost if h / FRAME_H < _SMALL_OBJECT else 1.0
+    return round(max(0.1, min(max(grow, 1.0), 0.42 * FRAME_W / w, 0.5 * FRAME_H / h)), 3)
 
 
 def _accepted_params(cat: Catalog, template: str, params: Mapping[str, Any]) -> dict[str, Any]:
